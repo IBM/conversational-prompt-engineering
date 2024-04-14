@@ -4,4 +4,4 @@ RUN pip install -r requirements.txt
 COPY . /
 EXPOSE 8000
 WORKDIR ./conversational_prompt_engineering
-CMD streamlit run cpe.py --server.port 8080
+CMD streamlit run cpe.py --server.port 8000
