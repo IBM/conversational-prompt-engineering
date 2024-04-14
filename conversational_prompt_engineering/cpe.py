@@ -1,3 +1,5 @@
+import os
+
 import streamlit as st
 
 from conversational_prompt_engineering.backend.manager import Manager, REQUEST_APIKEY_STRING
@@ -8,7 +10,10 @@ if "manager" not in st.session_state:
     st.session_state.manager = Manager()
 
 if "messages" not in st.session_state:
-    st.session_state.messages = [{'role': 'assistant', 'content': REQUEST_APIKEY_STRING}]
+    if 'BAM_APIKEY' not in os.environ:
+        st.session_state.messages = [{'role': 'assistant', 'content': REQUEST_APIKEY_STRING}]
+    else:
+        st.session_state.messages = []
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
