@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 
 import pandas as pd
 #from dotenv import load_dotenv
@@ -17,9 +18,11 @@ from tqdm import tqdm
 # GENAI_KEY=<your-genai-key>
 # GENAI_API=<genai-api-endpoint>
 
+class HumanRole(Enum):
+    User="user"
+    Admin="admin"
 
 class BAMChat:
-
     def __init__(self, params):
         #load_dotenv()
         self.client = Client(credentials=Credentials(api_key=params['api_key'], api_endpoint=params['api_endpoint']))
@@ -30,7 +33,8 @@ class BAMChat:
         self.system_prompt = params['system_prompt']
         self.conversation_id = None
 
-    def send_message(self, text):
+    def send_message(self, text, message_human_role:HumanRole):
+        text = f'{message_human_role.name}: {text}'
         messages = [HumanMessage(content=text)]
         if self.conversation_id is None:
             messages = [SystemMessage(content=self.system_prompt)] + messages
