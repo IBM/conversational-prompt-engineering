@@ -1,7 +1,7 @@
 import os
 
 import pandas as pd
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
 from genai.client import Client
 from genai.credentials import Credentials
@@ -21,7 +21,7 @@ from tqdm import tqdm
 class BAMChat:
 
     def __init__(self, params):
-        load_dotenv()
+        #load_dotenv()
         self.client = Client(credentials=Credentials(api_key=params['api_key'], api_endpoint=params['api_endpoint']))
         self.parameters = TextGenerationParameters(
             decoding_method=DecodingMethod.GREEDY, max_new_tokens=500, min_new_tokens=1

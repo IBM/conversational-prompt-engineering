@@ -4,7 +4,8 @@ from conversational_prompt_engineering.backend.manager import Manager, REQUEST_A
 
 st.title("IBM Conversational Prompt Tuning")
 
-manager = Manager()
+if "manager" not in st.session_state:
+    st.session_state.manager = Manager()
 
 if "messages" not in st.session_state:
     st.session_state.messages = [{'role': 'assistant', 'content': REQUEST_APIKEY_STRING}]
@@ -20,7 +21,7 @@ if prompt := st.chat_input("What is up?"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        response = manager.call(
+        response = st.session_state.manager.call(
             messages=[
                 {"role": m["role"], "content": m["content"]}
                 for m in st.session_state.messages
