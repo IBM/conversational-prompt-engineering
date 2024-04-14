@@ -3,7 +3,7 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
-from conversational_prompt_engineering.util.bam import Chat
+from conversational_prompt_engineering.util.bam import BAMChat
 
 system_text = """You are an assistant that builds an instruction for a text summarization task. Please ask me questions and use my answers to build an initial instruction for this task:
 
@@ -28,18 +28,17 @@ BAM_END_POINT = "https://bam-api.res.ibm.com"
 def test_chat():
     params = {'model_id': 'mistralai/mixtral-8x7b-instruct-v0-1', 'api_key': os.getenv('BAM_API_KEY'),
               'api_endpoint': BAM_END_POINT, 'system_prompt': system_text}
-    chat = Chat(params)
-    conv_id = chat.conversation_id
+    chat = BAMChat(params)
     while True:
         user_input = input("Enter input:")
-        response, conv_id = chat.send_message(conv_id=conv_id, text=user_input)
+        response = chat.send_message(text=user_input)
         print(f"AI: {response}")
 
 
 def test_infer():
     params = {'model_id': 'mistralai/mixtral-8x7b-instruct-v0-1', 'api_key': os.getenv('BAM_API_KEY'),
               'api_endpoint': BAM_END_POINT, 'system_prompt': ""}
-    chat = Chat(params=params)
+    chat = BAMChat(params=params)
     instruction = "Create an informal, abstractive summary that is approximately 20% the length of the original text."
     test_df = pd.read_csv("data/legal_plain_english/test.csv")
     texts = test_df.text.tolist()

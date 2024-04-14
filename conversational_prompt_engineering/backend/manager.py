@@ -1,5 +1,8 @@
+import json
 import logging
 import os
+
+from conversational_prompt_engineering.util.bam import BAMChat
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
@@ -8,12 +11,15 @@ REQUEST_APIKEY_STRING = "Hello!\nPlease provide your BAM API key with no spaces"
 
 class Manager():
     def __init__(self):
-        # init BAM client
+        with open("backend/params.json", "r") as f:
+            params = json.load(f)
         if "BAM_APIKEY" in os.environ:
             self.apikey_set = True
+            params['api_key'] = os.getenv("BAM_APIKEY")
         else:
-            self.apikey_set = False
-        pass
+            self.apikey_set = False # TODO: handle this flow
+
+        self.bam_client = BAMChat(params)
 
     def call(self, messages):
         logging.info("conversation so far:")
@@ -24,6 +30,7 @@ class Manager():
                 return "Successfully connected to BAM.\nCan you tell me about your summarization task?"
             else:
                 return REQUEST_APIKEY_STRING
-        for message in messages:
-            print(f"{message['role']}:{message['content']}")
-        return "BAM client is not implemented yet"
+        user_message = messages[-1]
+        response = self.bam_client.send_message(user_message['content'])
+        return response
+

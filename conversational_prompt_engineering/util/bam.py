@@ -18,7 +18,7 @@ from tqdm import tqdm
 # GENAI_API=<genai-api-endpoint>
 
 
-class Chat:
+class BAMChat:
 
     def __init__(self, params):
         load_dotenv()
@@ -30,18 +30,18 @@ class Chat:
         self.system_prompt = params['system_prompt']
         self.conversation_id = None
 
-    def send_message(self, conv_id, text):
+    def send_message(self, text):
         messages = [HumanMessage(content=text)]
-        if conv_id is None:
+        if self.conversation_id is None:
             messages = [SystemMessage(content=self.system_prompt)] + messages
         response = self.client.text.chat.create(
-            conversation_id=conv_id,
+            conversation_id=self.conversation_id,
             model_id=self.model_id,
             messages=messages,
             parameters=self.parameters,
         )
         self.conversation_id = response.conversation_id
-        return response.results[0].generated_text, self.conversation_id
+        return response.results[0].generated_text # TODO: return conversation_id ?
 
     # TODO: inference for few-shot examples should use generate?
     def bam_infer(self):
