@@ -8,8 +8,8 @@ from conversational_prompt_engineering.util.bam import BAMChat, HumanRole
 logging.basicConfig(format='%(asctime)s %(message)s')
 
 REQUEST_APIKEY_STRING = "Hello!\nPlease provide your BAM API key with no spaces"
-OK_OR_CHANGE = "After that, ask USER if the summary is ok for them, or would they like to change anything. " \
-               "Wait for their response. Based on their response, update the instruction, and share it with them with the prefix 'updated instruction:'"
+OK_OR_CHANGE = "After that, ask User if the summary is ok for them, or would they like to change anything. " \
+               "Wait for their response. Based on their response, update the instruction. Continue this process until User has no additional feedback. Write 'I understand that the summary is ok.'"
 
 
 class DialogState(Enum):
@@ -54,23 +54,21 @@ class Manager():
 
     def interfer_if_needed(self, response_to_user):
         include_admin_response = True
-        if "instruction:" in response_to_user.lower() and self.dialog_state == DialogState.Intro:
+        response_to_admin = ""
+        if "i have all the necessary information to build an initial instruction for your text summarization task" in response_to_user.lower() and self.dialog_state == DialogState.Intro:
             response_to_admin = self.bam_client.send_message(
-                "Thanks. Now ask USER to send you a text that you will summarize with this instruction. Do not provide any other information.\n" +
+                "Now ask User to send you a text that you will summarize with this instruction. I will pass this question to User. Do not provide any other information.\n" +
                 OK_OR_CHANGE,
                 HumanRole.Admin)
             self.dialog_state = DialogState.InstructionReceived
-        elif self.dialog_state == DialogState.InstructionReceived:
-            response_to_admin = self.bam_client.send_message("Is the user satisfied with the summary?\nAnswer ONLY yes or no without any additional text.", HumanRole.Admin)
-            if response_to_admin.lower()=='yes':
-                response_to_admin = self.bam_client.send_message(
-                    "Thanks. Now combine the instruction, text and summary to share with the USER a prompt that they can use to fully utilize the power of your model in text summarization.",
-                    HumanRole.Admin)
-            else:
-                include_admin_response = False
+        elif "i understand that the summary is ok." in response_to_user.lower() and self.dialog_state == DialogState.InstructionReceived:
+            response_to_admin = self.bam_client.send_message(
+                "Now combine the updated instruction, the text and the summary to share with User a prompt that they can use to fully utilize the power of your model in text summarization. I will pass the prompt to User.",
+                HumanRole.Admin)
+            self.dialog_state = DialogState.GenerateSummaryReceiveFeedback
         else:
             return response_to_user
         if include_admin_response:
-            return response_to_user + "\n" + response_to_admin
+            return response_to_user + "\n\n" + response_to_admin
         else:
             return response_to_user
