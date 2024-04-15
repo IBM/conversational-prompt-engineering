@@ -44,7 +44,7 @@ class Manager():
                 params = self.load_bam_params()
                 params['api_key'] = messages[-1]['content']
                 self.bam_client = BAMChat(params)
-                return "Successfully connected to BAM.\nCan you tell me about your summarization task?"
+                return "Successfully connected to BAM.\nHi"
             else:
                 return REQUEST_APIKEY_STRING
         user_message = messages[-1]
