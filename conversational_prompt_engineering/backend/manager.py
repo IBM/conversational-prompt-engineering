@@ -15,7 +15,8 @@ OK_OR_CHANGE = "After that, ask User if the summary is ok for them, or would the
 class DialogState(Enum):
     PredefinedQuestions = 1
     ExampleDrivenPromptUpdate = 2
-    FinalInstruction = 3
+    SummarizeExample = 3
+    FinalInstruction = 4
 
 
 class Manager():
@@ -59,20 +60,38 @@ class Manager():
         response = self.interfer_if_needed(response)
         return response
 
+    # # From stage 1 to 2
     def interfer_if_needed(self, response_to_user):
         include_admin_response = True
         response_to_admin = ""
-        if self.admin_params['stage_1']['finish_signal'] in response_to_user and self.dialog_state == DialogState.PredefinedQuestions:
+        if self.admin_params['stage_1']['finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.PredefinedQuestions:
             response_to_admin = self.bam_client.send_message(self.admin_params['stage_2']['prompt'], HumanRole.Admin)
             self.dialog_state = DialogState.ExampleDrivenPromptUpdate
             return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
         elif self.admin_params['stage_2']['finish_signal'] in response_to_user and self.dialog_state == DialogState.ExampleDrivenPromptUpdate:
             response_to_admin = self.bam_client.send_message(self.admin_params['stage_3']['prompt'], HumanRole.Admin)
+            self.dialog_state = DialogState.SummarizeExample
+            return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
+        elif self.admin_params['stage_3'][
+                 'finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.SummarizeExample:
+            response_to_admin = self.bam_client.send_message(self.admin_params['stage_4']['prompt'], HumanRole.Admin)
             self.dialog_state = DialogState.FinalInstruction
             return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
         else:
             return response_to_user
-        # if include_admin_response:
-        #     return response_to_user + "\n\n" + response_to_admin
-        # else:
-        #     return response_to_user
+
+    # # From stage 1 to stage 3
+    # def interfer_if_needed(self, response_to_user):
+    #     include_admin_response = True
+    #     response_to_admin = ""
+    #     if self.admin_params['stage_1']['finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.PredefinedQuestions:
+    #         response_to_admin = self.bam_client.send_message(self.admin_params['stage_3']['prompt'], HumanRole.Admin) ### changed from 2
+    #         self.dialog_state = DialogState.SummarizeExample
+    #         return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
+    #     elif self.admin_params['stage_3'][
+    #              'finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.SummarizeExample:
+    #         response_to_admin = self.bam_client.send_message(self.admin_params['stage_4']['prompt'], HumanRole.Admin)
+    #         self.dialog_state = DialogState.FinalInstruction
+    #         return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
+    #     else:
+    #         return response_to_user
