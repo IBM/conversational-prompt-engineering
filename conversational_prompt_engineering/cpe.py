@@ -5,6 +5,12 @@ import streamlit as st
 from conversational_prompt_engineering.backend.manager import Manager, REQUEST_APIKEY_STRING
 
 st.title("IBM Conversational Prompt Engineering")
+if st.button("Reset chat"):
+    st.session_state.manager = Manager()
+    if 'BAM_APIKEY' not in os.environ:
+        st.session_state.messages = [{'role': 'assistant', 'content': REQUEST_APIKEY_STRING}]
+    else:
+        st.session_state.messages = []
 
 if "manager" not in st.session_state:
     st.session_state.manager = Manager()
