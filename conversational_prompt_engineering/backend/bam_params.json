@@ -1,0 +1,4 @@
+{
+  "model_id": "mistralai/mixtral-8x7b-instruct-v0-1",
+  "api_endpoint": "https://bam-api.res.ibm.com"
+}

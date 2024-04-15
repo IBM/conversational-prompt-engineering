@@ -23,14 +23,14 @@ class HumanRole(Enum):
     Admin="admin"
 
 class BAMChat:
-    def __init__(self, params):
+    def __init__(self, params, system_prompt=""):
         #load_dotenv()
         self.client = Client(credentials=Credentials(api_key=params['api_key'], api_endpoint=params['api_endpoint']))
         self.parameters = TextGenerationParameters(
             decoding_method=DecodingMethod.GREEDY, max_new_tokens=500, min_new_tokens=1
         )
         self.model_id = params['model_id']
-        self.system_prompt = params['system_prompt']
+        self.system_prompt = system_prompt
         self.conversation_id = None
 
     def send_message(self, text, message_human_role:HumanRole):
