@@ -4,7 +4,7 @@ import streamlit as st
 
 from conversational_prompt_engineering.backend.manager import Manager, REQUEST_APIKEY_STRING
 
-st.title("IBM Conversational Prompt Tuning")
+st.title("IBM Conversational Prompt Engineering")
 
 if "manager" not in st.session_state:
     st.session_state.manager = Manager()
