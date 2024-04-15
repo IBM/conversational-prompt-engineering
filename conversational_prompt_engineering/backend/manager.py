@@ -43,6 +43,8 @@ class Manager():
 
     def call(self, messages):
         logging.info("conversation so far:")
+        for message in messages:
+            logging.info(f"{message['role']}:{message['content']}")
         if not self.apikey_set:
             if len(messages[-1]['content']) == 47:
                 self.apikey_set = True

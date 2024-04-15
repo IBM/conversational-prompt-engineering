@@ -1,7 +1,8 @@
 import os
 
 import streamlit as st
-
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 from conversational_prompt_engineering.backend.manager import Manager, REQUEST_APIKEY_STRING
 
 st.title("IBM Conversational Prompt Engineering")
