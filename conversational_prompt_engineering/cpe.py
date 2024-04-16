@@ -20,13 +20,19 @@ if st.button("Reset chat"):
     reset_chat()
 
 mode = st.radio(label="Mode", options=["Basic", "Advanced"],
-                captions=["basic zero-shot -> few-shot (default)", "basic zero-shot -> custom zero-shot -> few-shot"],
-                on_change=reset_chat)
+                captions=["basic zero-shot -> few-shot (default)", "basic zero-shot -> custom zero-shot -> few-shot"])
 
+if "mode" not in st.session_state:
+    st.session_state.mode = Mode.Basic
+
+old_mode = st.session_state.mode
 if mode == "Basic":
     st.session_state.mode = Mode.Basic
 else:
     st.session_state.mode = Mode.Advanced
+new_mode = st.session_state.mode
+if old_mode != new_mode:
+    reset_chat()
 
 if "manager" not in st.session_state:
     st.session_state.manager = Manager(st.session_state.mode)

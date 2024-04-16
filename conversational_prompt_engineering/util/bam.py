@@ -27,7 +27,7 @@ class BAMChat:
         #load_dotenv()
         self.client = Client(credentials=Credentials(api_key=params['api_key'], api_endpoint=params['api_endpoint']))
         self.parameters = TextGenerationParameters(
-            decoding_method=DecodingMethod.GREEDY, max_new_tokens=500, min_new_tokens=1
+            decoding_method=DecodingMethod.GREEDY, max_new_tokens=params['max_new_tokens']
         )
         self.model_id = params['model_id']
         self.system_prompt = system_prompt
