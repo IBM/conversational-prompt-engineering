@@ -19,6 +19,11 @@ class DialogState(Enum):
     FinalInstruction = 4
 
 
+class Mode(Enum):
+    Basic = 1
+    Advanced = 2
+
+
 def build_final_prompt(response_to_admin):
     try:
         prompt_json = json.loads(response_to_admin)
@@ -31,7 +36,7 @@ def build_final_prompt(response_to_admin):
 
 
 class Manager():
-    def __init__(self):
+    def __init__(self, mode):
         self.dialog_state = DialogState.PredefinedQuestions
         self.admin_params = self.load_admin_params()
         if "BAM_APIKEY" in os.environ:
@@ -41,6 +46,7 @@ class Manager():
         else:
             self.apikey_set = False  # TODO: handle this flow
             self.bam_client = None
+        self.mode = mode
 
     def load_admin_params(self):
         with open("backend/admin_params.json", "r") as f:
@@ -68,11 +74,14 @@ class Manager():
                 return REQUEST_APIKEY_STRING
         user_message = messages[-1]
         response = self.bam_client.send_message(user_message['content'], HumanRole.User)
-        response = self.interfer_if_needed(response)
+        if self.mode == Mode.Basic:
+            response = self.basic_interfere_if_needed(response)
+        else:
+            response = self.interfere_if_needed(response)
         return response
 
     # # # From stage 1 to 2
-    def interfer_if_needed(self, response_to_user):
+    def interfere_if_needed(self, response_to_user):
         include_admin_response = True
         response_to_admin = ""
         if self.admin_params['stage_1']['finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.PredefinedQuestions:
@@ -93,18 +102,18 @@ class Manager():
             return response_to_user
 
     # From stage 1 to stage 3
-    # def interfer_if_needed(self, response_to_user):
-    #     include_admin_response = True
-    #     response_to_admin = ""
-    #     if self.admin_params['stage_1']['finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.PredefinedQuestions:
-    #         response_to_admin = self.bam_client.send_message(self.admin_params['stage_3']['prompt'], HumanRole.Admin) ### changed from 2
-    #         self.dialog_state = DialogState.SummarizeExample
-    #         return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
-    #     elif self.admin_params['stage_3'][
-    #              'finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.SummarizeExample:
-    #         response_to_admin = self.bam_client.send_message(self.admin_params['stage_4']['prompt'], HumanRole.Admin)
-    #         self.dialog_state = DialogState.FinalInstruction
-    #         prompt = build_final_prompt(response_to_admin)
-    #         return response_to_user + "\n\n[RESPONSE TO ADMIN] Here is the final few-shot prompt:\n\n" + prompt
-    #     else:
-    #         return response_to_user
+    def basic_interfere_if_needed(self, response_to_user):
+        include_admin_response = True
+        response_to_admin = ""
+        if self.admin_params['stage_1']['finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.PredefinedQuestions:
+            response_to_admin = self.bam_client.send_message(self.admin_params['stage_3']['prompt'], HumanRole.Admin) ### changed from 2
+            self.dialog_state = DialogState.SummarizeExample
+            return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
+        elif self.admin_params['stage_3'][
+                 'finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.SummarizeExample:
+            response_to_admin = self.bam_client.send_message(self.admin_params['stage_4']['prompt'], HumanRole.Admin)
+            self.dialog_state = DialogState.FinalInstruction
+            prompt = build_final_prompt(response_to_admin)
+            return response_to_user + "\n\n[RESPONSE TO ADMIN] Here is the final few-shot prompt:\n\n" + prompt
+        else:
+            return response_to_user

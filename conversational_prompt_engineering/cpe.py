@@ -3,18 +3,33 @@ import os
 import streamlit as st
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-from conversational_prompt_engineering.backend.manager import Manager, REQUEST_APIKEY_STRING
+from conversational_prompt_engineering.backend.manager import Manager, REQUEST_APIKEY_STRING, Mode
 
 st.title("IBM Conversational Prompt Engineering")
-if st.button("Reset chat"):
-    st.session_state.manager = Manager()
+
+
+def reset_chat():
+    st.session_state.manager = Manager(st.session_state.mode)
     if 'BAM_APIKEY' not in os.environ:
         st.session_state.messages = [{'role': 'assistant', 'content': REQUEST_APIKEY_STRING}]
     else:
         st.session_state.messages = []
 
+
+if st.button("Reset chat"):
+    reset_chat()
+
+mode = st.radio(label="Mode", options=["Basic", "Advanced"],
+                captions=["basic zero-shot -> few-shot (default)", "basic zero-shot -> custom zero-shot -> few-shot"],
+                on_change=reset_chat)
+
+if mode == "Basic":
+    st.session_state.mode = Mode.Basic
+else:
+    st.session_state.mode = Mode.Advanced
+
 if "manager" not in st.session_state:
-    st.session_state.manager = Manager()
+    st.session_state.manager = Manager(st.session_state.mode)
 
 if "messages" not in st.session_state:
     if 'BAM_APIKEY' not in os.environ:
