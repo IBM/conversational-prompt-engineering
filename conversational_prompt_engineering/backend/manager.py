@@ -19,6 +19,17 @@ class DialogState(Enum):
     FinalInstruction = 4
 
 
+def build_final_prompt(response_to_admin):
+    try:
+        prompt_json = json.loads(response_to_admin)
+        prompt = prompt_json['instruction'] + "\n\n" + "\n\n".join([f'Text: {t}\n\nSummary: {s}' for t, s in
+                                                                zip(prompt_json['texts'], prompt_json[
+                                                                    'summaries'])]) + "\n\nText: {your_text}\n\nSummary: "
+    except:
+        prompt = f"Something went wrong with building the final instruction:\n\n{response_to_admin}"
+    return prompt
+
+
 class Manager():
     def __init__(self):
         self.dialog_state = DialogState.PredefinedQuestions
@@ -60,7 +71,7 @@ class Manager():
         response = self.interfer_if_needed(response)
         return response
 
-    # # From stage 1 to 2
+    # # # From stage 1 to 2
     def interfer_if_needed(self, response_to_user):
         include_admin_response = True
         response_to_admin = ""
@@ -76,11 +87,12 @@ class Manager():
                  'finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.SummarizeExample:
             response_to_admin = self.bam_client.send_message(self.admin_params['stage_4']['prompt'], HumanRole.Admin)
             self.dialog_state = DialogState.FinalInstruction
-            return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
+            prompt = build_final_prompt(response_to_admin)
+            return response_to_user + "\n\n[RESPONSE TO ADMIN] Here is the final few-shot prompt:\n\n" + prompt
         else:
             return response_to_user
 
-    # # From stage 1 to stage 3
+    # From stage 1 to stage 3
     # def interfer_if_needed(self, response_to_user):
     #     include_admin_response = True
     #     response_to_admin = ""
@@ -92,6 +104,7 @@ class Manager():
     #              'finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.SummarizeExample:
     #         response_to_admin = self.bam_client.send_message(self.admin_params['stage_4']['prompt'], HumanRole.Admin)
     #         self.dialog_state = DialogState.FinalInstruction
-    #         return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
+    #         prompt = build_final_prompt(response_to_admin)
+    #         return response_to_user + "\n\n[RESPONSE TO ADMIN] Here is the final few-shot prompt:\n\n" + prompt
     #     else:
     #         return response_to_user
