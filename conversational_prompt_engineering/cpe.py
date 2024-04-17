@@ -2,35 +2,18 @@ import os
 
 import streamlit as st
 
-from conversational_prompt_engineering.backend.manager import Manager, REQUEST_APIKEY_STRING
+from conversational_prompt_engineering.backend.double_chat_manager import DoubleChatManager
 
 st.title("IBM Conversational Prompt Tuning")
 
+assert 'BAM_APIKEY' in os.environ, 'please set the environment variable BAM_APIKEY'
+
 if "manager" not in st.session_state:
-    st.session_state.manager = Manager()
+    st.session_state.manager = DoubleChatManager()
 
-if "messages" not in st.session_state:
-    if 'BAM_APIKEY' not in os.environ:
-        st.session_state.messages = [{'role': 'assistant', 'content': REQUEST_APIKEY_STRING}]
-    else:
-        st.session_state.messages = []
+out_messages = st.session_state.manager.process_user_input(st.chat_input(''))
 
-for message in st.session_state.messages:
+for message in out_messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# st.write("Hi, please provide your BAM API key")
-if prompt := st.chat_input("What is up?"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        response = st.session_state.manager.call(
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ]
-        )
-        st.write(response)
-    st.session_state.messages.append({"role": "assistant", "content": response})

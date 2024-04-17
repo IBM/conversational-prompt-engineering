@@ -2,7 +2,7 @@ import os
 from enum import Enum
 
 import pandas as pd
-#from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
 from genai.client import Client
 from genai.credentials import Credentials
@@ -10,21 +10,23 @@ from genai.schema import (
     DecodingMethod,
     HumanMessage,
     SystemMessage,
-    TextGenerationParameters,
+    TextGenerationParameters, ChatRole,
 )
 from tqdm import tqdm
+
 
 # make sure you have a .env file under genai root with
 # GENAI_KEY=<your-genai-key>
 # GENAI_API=<genai-api-endpoint>
 
 class HumanRole(Enum):
-    User="user"
-    Admin="admin"
+    User = "user"
+    Admin = "admin"
+
 
 class BAMChat:
     def __init__(self, params):
-        #load_dotenv()
+        # load_dotenv()
         self.client = Client(credentials=Credentials(api_key=params['api_key'], api_endpoint=params['api_endpoint']))
         self.parameters = TextGenerationParameters(
             decoding_method=DecodingMethod.GREEDY, max_new_tokens=500, min_new_tokens=1
@@ -33,7 +35,7 @@ class BAMChat:
         self.system_prompt = params['system_prompt']
         self.conversation_id = None
 
-    def send_message(self, text, message_human_role:HumanRole):
+    def send_message(self, text, message_human_role: HumanRole):
         text = f'{message_human_role.name}: {text}'
         messages = [HumanMessage(content=text)]
         if self.conversation_id is None:
@@ -45,8 +47,26 @@ class BAMChat:
             parameters=self.parameters,
         )
         self.conversation_id = response.conversation_id
-        return response.results[0].generated_text # TODO: return conversation_id ?
+        return response.results[0].generated_text  # TODO: return conversation_id ?
 
     # TODO: inference for few-shot examples should use generate?
     def bam_infer(self):
         pass
+
+
+class BamGenerate:
+    def __init__(self, params):
+        self.client = Client(credentials=Credentials(api_key=params['api_key'], api_endpoint=params['api_endpoint']))
+        self.parameters = TextGenerationParameters(
+            decoding_method=DecodingMethod.GREEDY, max_new_tokens=500, min_new_tokens=1
+        )
+        self.model_id = params['model_id']
+
+    def send_messages(self, conversation):
+        response = self.client.text.generation.create(
+            model_id=self.model_id,
+            input=conversation,
+            parameters=self.parameters,
+        )
+        texts = [res.generated_text.strip() for resp in response for res in resp.results]
+        return texts
