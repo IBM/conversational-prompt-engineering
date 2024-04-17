@@ -12,10 +12,10 @@ OK_OR_CHANGE = "After that, ask User if the summary is ok for them, or would the
 
 
 class DialogState(Enum):
-    PredefinedQuestions = 1
-    ExampleDrivenPromptUpdate = 2
-    SummarizeExample = 3
-    FinalInstruction = 4
+    PredefinedQuestions = "stage_1"
+    ExampleDrivenPromptUpdate = "stage_2"
+    SummarizeExample = "stage_3"
+    FinalInstruction = "stage_4"
 
 
 class Mode(Enum):
@@ -42,7 +42,7 @@ class Manager():
         self.apikey_set = True
         params = self.load_bam_params()
         params['api_key'] = bam_api_key
-        self.bam_client = BAMChat(params, self.admin_params['stage_1']['prompt'])
+        self.bam_client = BAMChat(params, self.admin_params[self.dialog_state.value]['prompt'])
         self.mode = mode
 
     def load_admin_params(self):
@@ -62,50 +62,47 @@ class Manager():
             logging.info(f"{message['role']}:{message['content']}")
         user_message = messages[-1]
         response = self.bam_client.send_message(user_message['content'], HumanRole.User)
-        if self.mode == Mode.Basic:
-            response = self.basic_interfere_if_needed(response)
-        else:
-            response = self.interfere_if_needed(response)
+        response = self.interfere_if_needed(response)
+        logging.info(f"Stage {self.dialog_state}")
         return response
 
-    # # # From stage 1 to 2
+    def interference_condition(self, response_to_user):
+        logging.info(f"trying interference in stage {self.dialog_state}")
+        stage_str = self.dialog_state.value
+        if stage_str == "stage_2":  # manual signal
+            return self.admin_params[stage_str]['finish_signal'] in response_to_user
+        if stage_str != 'stage_4':
+            response_to_admin = self.bam_client.send_message(self.admin_params[stage_str]['interference'],
+                                                             HumanRole.Admin, override_params={'max_new_tokens': 1})
+        else:
+            response_to_admin = "no"
+        logging.info(f"response to interference in stage {self.dialog_state}: {response_to_admin}")
+        return response_to_admin.lower().strip().startswith("yes")
+
+    def get_next_stage(self):
+        if self.dialog_state == DialogState.PredefinedQuestions:
+            return DialogState.ExampleDrivenPromptUpdate if self.mode == Mode.Advanced else DialogState.SummarizeExample
+        elif self.dialog_state == DialogState.ExampleDrivenPromptUpdate:
+            return DialogState.SummarizeExample
+        elif self.dialog_state == DialogState.SummarizeExample:
+            return DialogState.FinalInstruction
+        else:
+            return None
+
+    def generate_response_to_user(self, response_to_user, response_to_admin):
+        if self.dialog_state != DialogState.FinalInstruction:
+            return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
+        prompt = build_final_prompt(response_to_admin)
+        return response_to_user + "\n\n[RESPONSE TO ADMIN] Here is the final few-shot prompt:\n\n" + prompt
+
     def interfere_if_needed(self, response_to_user):
-        include_admin_response = True
-        response_to_admin = ""
-        if self.admin_params['stage_1'][
-            'finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.PredefinedQuestions:
-            response_to_admin = self.bam_client.send_message(self.admin_params['stage_2']['prompt'], HumanRole.Admin)
-            self.dialog_state = DialogState.ExampleDrivenPromptUpdate
-            return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
-        elif self.admin_params['stage_2'][
-            'finish_signal'] in response_to_user and self.dialog_state == DialogState.ExampleDrivenPromptUpdate:
-            response_to_admin = self.bam_client.send_message(self.admin_params['stage_3']['prompt'], HumanRole.Admin)
-            self.dialog_state = DialogState.SummarizeExample
-            return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
-        elif self.admin_params['stage_3'][
-            'finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.SummarizeExample:
-            response_to_admin = self.bam_client.send_message(self.admin_params['stage_4']['prompt'], HumanRole.Admin)
-            self.dialog_state = DialogState.FinalInstruction
-            prompt = build_final_prompt(response_to_admin)
-            return response_to_user + "\n\n[RESPONSE TO ADMIN] Here is the final few-shot prompt:\n\n" + prompt
+        if self.interference_condition(response_to_user):
+            self.dialog_state = self.get_next_stage()
+            response_to_admin = self.bam_client.send_message(self.admin_params[self.dialog_state.value]['prompt'],
+                                                             HumanRole.Admin)
+            response_to_user = self.generate_response_to_user(response_to_user, response_to_admin)
+            return response_to_user
         else:
             return response_to_user
 
-    # From stage 1 to stage 3
-    def basic_interfere_if_needed(self, response_to_user):
-        include_admin_response = True
-        response_to_admin = ""
-        if self.admin_params['stage_1'][
-            'finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.PredefinedQuestions:
-            response_to_admin = self.bam_client.send_message(self.admin_params['stage_3']['prompt'],
-                                                             HumanRole.Admin)  ### changed from 2
-            self.dialog_state = DialogState.SummarizeExample
-            return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
-        elif self.admin_params['stage_3'][
-            'finish_signal'] in response_to_user.lower() and self.dialog_state == DialogState.SummarizeExample:
-            response_to_admin = self.bam_client.send_message(self.admin_params['stage_4']['prompt'], HumanRole.Admin)
-            self.dialog_state = DialogState.FinalInstruction
-            prompt = build_final_prompt(response_to_admin)
-            return response_to_user + "\n\n[RESPONSE TO ADMIN] Here is the final few-shot prompt:\n\n" + prompt
-        else:
-            return response_to_user
+
