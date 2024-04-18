@@ -5,26 +5,12 @@ from genai.schema import ChatRole
 
 from conversational_prompt_engineering.util.bam import BamGenerate
 
-SYSTEM_INSTRUCTIONS = """You are an IBM prompt building assistant that helps the user build an instruction for a text summarization task. 
-You will be interacting with two actors: system and user. The direct interaction will be only with system. 
-The system will guide you through the stages necessary to build the prompt.
-Please answer only the word 'understood' if you understand these instructions.  
-"""
-
-INTRODUCE = """Introduce yourself to the user, 
-then ask if they can provide any insights about the texts to summarize and/or the summaries to produce, 
-or maybe they have an example of the text, or even an example of an acceptable summary. 
-This information can be helpful to figure out the texts domain, and required properties of the summary"""
-
-ASK_EXAMPLE_1 = """In order to build a good prompt, you need to figure out the required properties of a summary. 
-If the user has a typical example of a text to summarize, you could deduce these properties yourself.
-Ask the user for an example."""
-
 
 class ConversationState:
     INTRODUCTION = 'introduction'
-    CONFIRM_CHARACTERISTICS = 'validate_conclusions'
-    CONFIRM_PROMPT = 'validate_prompt'
+    CONFIRM_CHARACTERISTICS = 'confirm_characteristics'
+    CONFIRM_PROMPT = 'confirm_prompt'
+    CONFIRM_SUMMARY = 'confirm_summary'
 
 
 def extract_delimited_text(txt, delim):
@@ -42,11 +28,10 @@ class DoubleChatManager:
         params['api_key'] = os.getenv("BAM_APIKEY")
         self.bam_client = BamGenerate(params)
 
-        self.user_chat = []
-        self.hidden_chat = []
-        self.text_examples = []
-        self.approved_prompts = []
-
+        self.user_chat = None
+        self.hidden_chat = None
+        self.text_examples = None
+        self.approved_prompts = None
         self.state = None
 
     def _add_msg(self, chat, role, msg):
@@ -87,13 +72,26 @@ class DoubleChatManager:
         return agent_response.strip()
 
     def _init_chats(self):
-        self._add_system_msg(SYSTEM_INSTRUCTIONS)
+        self.user_chat = []
+        self.hidden_chat = []
+        self.text_examples = []
+        self.approved_prompts = []
+
+        self._add_system_msg("""You are an IBM prompt building assistant that helps the user build an instruction for a text summarization task. 
+You will be interacting with two actors: system and user. The direct interaction will be only with system. 
+The system will guide you through the stages necessary to build the prompt.
+Please answer only the word 'understood' if you understand these instructions.  
+""")
         resp = self._get_assistant_response()
-        if resp.lower().startswith('understood'):
-            self._add_system_msg(INTRODUCE)
-            resp = self._get_assistant_response()
-            self._add_assistant_msg(resp, 'both')
-            self.state = ConversationState.INTRODUCTION
+        assert resp.lower().startswith('understood')
+
+        self._add_system_msg("""Introduce yourself to the user, 
+then ask if they can provide any insights about the texts to summarize and/or the summaries to produce, 
+or maybe they have an example of the text, or even an example of an acceptable summary. 
+This information can be helpful to figure out the texts domain, and required properties of the summary""")
+        resp = self._get_assistant_response()
+        self._add_assistant_msg(resp, 'both')
+        self.state = ConversationState.INTRODUCTION
 
     def _extract_text_example(self):
         self._add_system_msg(
@@ -145,6 +143,23 @@ class DoubleChatManager:
         assert is_accepted != is_corrected
         return is_accepted
 
+    def _evaluate_prompt(self):
+        # TODO: handle the cases when there's no example yet, or multiple examples
+        eval_chat = []
+        self._add_msg(eval_chat, ChatRole.SYSTEM, self.approved_prompts[-1])
+        example = self.text_examples[0]
+        self._add_msg(eval_chat, ChatRole.USER, example)
+        summary = self._get_assistant_response(eval_chat)
+
+        self._add_system_msg(
+            f'When the latest prompt was use for summarization of the example ```{example}``` it produced the result ```{summary}```')
+        self._add_system_msg(f'Present these results to the user and ask if they want any changes.')
+        resp = self._get_assistant_response()
+        self.hidden_chat = self.hidden_chat[:-2]  # remove the last messages
+
+        self._add_assistant_msg(resp, 'both')
+        self.state = ConversationState.CONFIRM_SUMMARY
+
     def process_user_input(self, user_message):
         if self.state is None:
             self._init_chats()
@@ -163,8 +178,15 @@ class DoubleChatManager:
 
             elif self.state == ConversationState.CONFIRM_PROMPT:
                 if self._suggestion_accepted():
-                    print('over here')
+                    self._evaluate_prompt()
                 else:
                     self._confirm_prompt(is_new=False)
+
+            elif self.state == ConversationState.CONFIRM_SUMMARY:
+                if self._suggestion_accepted():
+                    self._add_assistant_msg('BYE', self.user_chat)
+                    self.state = None
+                else:
+                    self._confirm_prompt(is_new=True)
 
         return self.user_chat
