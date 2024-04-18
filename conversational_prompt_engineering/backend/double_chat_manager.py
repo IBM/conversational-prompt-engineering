@@ -23,7 +23,16 @@ Ask the user for an example."""
 
 class ConversationState:
     INTRODUCTION = 'introduction'
-    VALIDATE_CONCLUSIONS = 'validate_conclusions'
+    CONFIRM_CHARACTERISTICS = 'validate_conclusions'
+    CONFIRM_PROMPT = 'validate_prompt'
+
+
+def extract_delimited_text(txt, delim):
+    if delim not in txt:
+        return None
+    begin = txt.index(delim) + len(delim)
+    end = begin + txt[begin:].index(delim)
+    return txt[begin:end]
 
 
 class DoubleChatManager:
@@ -36,6 +45,8 @@ class DoubleChatManager:
         self.user_chat = []
         self.hidden_chat = []
         self.text_examples = []
+        self.approved_prompts = []
+
         self.state = None
 
     def _add_msg(self, chat, role, msg):
@@ -85,37 +96,75 @@ class DoubleChatManager:
             self.state = ConversationState.INTRODUCTION
 
     def _extract_text_example(self):
-        self._add_system_msg("Did you obtain a text example from the user? If you did, write 'yes' and the text enclosed in triple quotes. If no, just write 'no'")
+        self._add_system_msg(
+            'Did you obtain a text example from the user? If you did, write "yes" and the text enclosed in triple quotes (```). If no, just write "no"')
         resp = self._get_assistant_response()
         self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
         if resp.lower().startswith('yes'):
-            delim = "```"
-            begin = resp.index(delim) + len(delim)
-            end = begin + resp[begin:].index(delim)
-            self.text_examples.append(resp[begin:end])
+            self.text_examples.append(extract_delimited_text(resp, "```"))
             return True
         return False
 
-    def _next_move(self):
-        if self.state in [ConversationState.INTRODUCTION]:
-            self._extract_text_example()
-            self._add_system_msg("What can you say so far about the texts that should be summarized and suggested characteristics of the summaries?")
-            resp = self._get_assistant_response()
-            self._add_assistant_msg(resp, 'hidden')
-            self._add_system_msg('Please validate your conclusions with the user, and update them if necessary.')
-            resp = self._get_assistant_response()
-            self._add_assistant_msg(resp, 'both')
-            self.state = ConversationState.VALIDATE_CONCLUSIONS
+    def _confirm_characteristics(self):
+        self._add_system_msg(
+            "What is your current understanding of the input texts and the expected properties of the summaries?")
+        resp = self._get_assistant_response()
+        # keep only the first paragraph, the model can go on
+        if '\n' in resp:
+            resp = resp[: resp.index('\n')]
+        self._add_assistant_msg(resp, 'hidden')
+        self._add_system_msg('Please validate your suggestion with the user, and update it if necessary.')
+        resp = self._get_assistant_response()
+        self._add_assistant_msg(resp, 'both')
+        self.state = ConversationState.CONFIRM_CHARACTERISTICS
 
-        elif self.state == ConversationState.VALIDATE_CONCLUSIONS:
-            # ask if we are good and
-            print('over here')
+    def _confirm_prompt(self, is_new):
+        self._add_system_msg(
+            'Build the summarization prompt based on your current understanding. Enclose the prompt text in triple quotes (```).')
+        resp = self._get_assistant_response()
+        prompt = extract_delimited_text(resp, '```')
+        if is_new:
+            self.approved_prompts.append(prompt)
+        else:
+            self.approved_prompts[-1] = prompt
+
+        self._add_assistant_msg(prompt, 'hidden')
+        self._add_system_msg('Please validate your suggestion with the user, and update it if necessary.')
+        resp = self._get_assistant_response()
+        self._add_assistant_msg(resp, 'both')
+        self.state = ConversationState.CONFIRM_PROMPT
+
+    def _suggestion_accepted(self):
+        self._add_system_msg(
+            'Has the user accepted your suggestion or corrected it? Answer either "accepted" or "corrected"')
+        resp = self._get_assistant_response()
+        self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
+
+        is_accepted = 'accepted' in resp.lower()
+        is_corrected = 'corrected' in resp.lower()
+        assert is_accepted != is_corrected
+        return is_accepted
 
     def process_user_input(self, user_message):
         if self.state is None:
             self._init_chats()
         elif user_message:
             self._add_usr_msg(user_message)
-            self._next_move()
+
+            if self.state in [ConversationState.INTRODUCTION]:
+                self._extract_text_example()
+                self._confirm_characteristics()
+
+            elif self.state == ConversationState.CONFIRM_CHARACTERISTICS:
+                if self._suggestion_accepted():
+                    self._confirm_prompt(is_new=True)
+                else:
+                    self._confirm_characteristics()
+
+            elif self.state == ConversationState.CONFIRM_PROMPT:
+                if self._suggestion_accepted():
+                    print('over here')
+                else:
+                    self._confirm_prompt(is_new=False)
 
         return self.user_chat
