@@ -7,68 +7,110 @@ from conversational_prompt_engineering.util.bam import BAMChat, HumanRole
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
-REQUEST_APIKEY_STRING = "Hello!\nPlease provide your BAM API key with no spaces"
 OK_OR_CHANGE = "After that, ask User if the summary is ok for them, or would they like to change anything. " \
                "Wait for their response. Based on their response, update the instruction. Continue this process until User has no additional feedback. Write 'I understand that the summary is ok.'"
 
 
 class DialogState(Enum):
-    Intro = 1
-    InstructionReceived = 2
-    GenerateSummaryReceiveFeedback = 3
-    UpdateInstruction = 4
+    PredefinedQuestions = "stage_1"
+    ExampleDrivenPromptUpdate = "stage_2"
+    ExampleDrivenPromptUpdate1 = "stage_2_1"
+    ExampleDrivenPromptUpdate2 = "stage_2_2"
+    SummarizeExample = "stage_3"
+    FinalInstruction = "stage_4"
+    # EditSummaries = "stage_5"
+
+
+
+class Mode(Enum):
+    Basic = 1
+    Advanced = 2
+
+
+def build_final_prompt(response_to_admin):
+    try:
+        prompt_json = json.loads(response_to_admin)
+        prompt = prompt_json['instruction'] + "\n\n" + "\n\n".join([f'Text: {t}\n\nSummary: {s}' for t, s in
+                                                                    zip(prompt_json['texts'], prompt_json[
+                                                                        'summaries'])]) + "\n\nText: {your_text}\n\nSummary: "
+    except:
+        prompt = f"Something went wrong with building the final instruction:\n\n{response_to_admin}"
+    return prompt
 
 
 class Manager():
-    def __init__(self):
-        self.dialog_state = DialogState.Intro
-        if "BAM_APIKEY" in os.environ:
-            self.apikey_set = True
-            params = self.load_bam_params()
-            self.bam_client = BAMChat(params)
-        else:
-            self.apikey_set = False  # TODO: handle this flow
-            self.bam_client = None
+    def __init__(self, mode, bam_api_key):
+        self.dialog_state = DialogState.PredefinedQuestions
+        self.admin_params = self.load_admin_params()
+
+        self.apikey_set = True
+        params = self.load_bam_params()
+        params['api_key'] = bam_api_key
+        self.bam_client = BAMChat(params, self.admin_params[self.dialog_state.value]['prompt'])
+        self.mode = mode
+
+    def load_admin_params(self):
+        with open("backend/admin_params.json", "r") as f:
+            params = json.load(f)
+        return params
 
     def load_bam_params(self):
-        with open("backend/params.json", "r") as f:
+        with open("backend/bam_params.json", "r") as f:
             params = json.load(f)
         params['api_key'] = os.getenv("BAM_APIKEY")
         return params
 
     def call(self, messages):
         logging.info("conversation so far:")
-        if not self.apikey_set:
-            if len(messages[-1]['content']) == 47:
-                self.apikey_set = True
-                params = self.load_bam_params()
-                params['api_key'] = messages[-1]['content']
-                self.bam_client = BAMChat(params)
-                return "Successfully connected to BAM.\nHi"
-            else:
-                return REQUEST_APIKEY_STRING
+        for message in messages:
+            logging.info(f"{message['role']}:{message['content']}")
         user_message = messages[-1]
         response = self.bam_client.send_message(user_message['content'], HumanRole.User)
-        response = self.interfer_if_needed(response)
+        response = self.interfere_if_needed(response)
+        logging.info(f"Stage {self.dialog_state}")
         return response
 
-    def interfer_if_needed(self, response_to_user):
-        include_admin_response = True
-        response_to_admin = ""
-        if "i have all the necessary information to build an initial instruction for your text summarization task" in response_to_user.lower() and self.dialog_state == DialogState.Intro:
-            response_to_admin = self.bam_client.send_message(
-                "Now ask User to send you a text that you will summarize with this instruction. I will pass this question to User. Do not provide any other information.\n" +
-                OK_OR_CHANGE,
-                HumanRole.Admin)
-            self.dialog_state = DialogState.InstructionReceived
-        elif "i understand that the summary is ok." in response_to_user.lower() and self.dialog_state == DialogState.InstructionReceived:
-            response_to_admin = self.bam_client.send_message(
-                "Now combine the updated instruction, the text and the summary to share with User a prompt that they can use to fully utilize the power of your model in text summarization. I will pass the prompt to User.",
-                HumanRole.Admin)
-            self.dialog_state = DialogState.GenerateSummaryReceiveFeedback
+    def interference_condition(self, response_to_user):
+        logging.info(f"trying interference in stage {self.dialog_state}")
+        stage_str = self.dialog_state.value
+        if stage_str == "stage_2_1":  # manual signal
+            return self.admin_params[stage_str]['finish_signal'] in response_to_user.lower()
+        if stage_str != 'stage_4':
+            response_to_admin = self.bam_client.send_message(self.admin_params[stage_str]['interference'],
+                                                             HumanRole.Admin, override_params={'max_new_tokens': 1})
+        else:
+            response_to_admin = "no"
+        logging.info(f"response to interference in stage {self.dialog_state}: {response_to_admin}")
+        return response_to_admin.lower().strip().startswith("yes")
+
+    def get_next_stage(self):
+        if self.dialog_state == DialogState.PredefinedQuestions:
+            return DialogState.ExampleDrivenPromptUpdate if self.mode == Mode.Advanced else DialogState.SummarizeExample
+        elif self.dialog_state == DialogState.ExampleDrivenPromptUpdate:
+            return DialogState.ExampleDrivenPromptUpdate1
+        # elif self.dialog_state == DialogState.ExampleDrivenPromptUpdate1:
+        #     return DialogState.ExampleDrivenPromptUpdate2
+        elif self.dialog_state == DialogState.ExampleDrivenPromptUpdate1:
+            return DialogState.SummarizeExample
+        elif self.dialog_state == DialogState.SummarizeExample:
+            return DialogState.FinalInstruction
+        else:
+            return None
+
+    def generate_response_to_user(self, response_to_user, response_to_admin):
+        if self.dialog_state != DialogState.FinalInstruction:
+            return response_to_user + "\n\n[RESPONSE TO ADMIN]" + response_to_admin
+        prompt = build_final_prompt(response_to_admin)
+        return response_to_user + "\n\n[RESPONSE TO ADMIN] Here is the final few-shot prompt:\n\n" + prompt
+
+    def interfere_if_needed(self, response_to_user):
+        if self.interference_condition(response_to_user):
+            self.dialog_state = self.get_next_stage()
+            response_to_admin = self.bam_client.send_message(self.admin_params[self.dialog_state.value]['prompt'],
+                                                             HumanRole.Admin)
+            response_to_user = self.generate_response_to_user(response_to_user, response_to_admin)
+            return response_to_user
         else:
             return response_to_user
-        if include_admin_response:
-            return response_to_user + "\n\n" + response_to_admin
-        else:
-            return response_to_user
+
+
