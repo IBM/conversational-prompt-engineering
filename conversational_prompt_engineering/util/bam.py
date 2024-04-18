@@ -61,14 +61,14 @@ class BamGenerate:
     def __init__(self, params):
         self.client = Client(credentials=Credentials(api_key=params['api_key'], api_endpoint=params['api_endpoint']))
         self.parameters = TextGenerationParameters(
-            decoding_method=DecodingMethod.GREEDY, max_new_tokens=500, min_new_tokens=1
+            decoding_method=DecodingMethod.GREEDY, max_new_tokens=params['max_new_tokens'], min_new_tokens=1
         )
         self.model_id = params['model_id']
 
     def send_messages(self, conversation):
         response = self.client.text.generation.create(
             model_id=self.model_id,
-            input=conversation,
+            inputs=[conversation],
             parameters=self.parameters,
         )
         texts = [res.generated_text.strip() for resp in response for res in resp.results]

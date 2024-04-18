@@ -12,15 +12,37 @@ def reset_chat():
     st.session_state.messages = []
 
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+st.title("IBM Research Conversational Prompt Engineering")
+if 'BAM_APIKEY' in os.environ:
+    st.session_state['key'] = os.environ['BAM_APIKEY']
+
+if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
+    with st.form("my_form", clear_on_submit=True):
+        st.write("Welcome to IBM Research LMU CPE")
+        st.write("Do not share any confidential information in this conversation")
+        st.write("To proceed, please provide your BAM API key")
+        key = st.text_input(label="BAM API key")
+        submit = st.form_submit_button()
+        if submit:
+            st.session_state.key = key
+
+if "key" in st.session_state:
+    if st.button("Reset chat"):
+        reset_chat()
+
+
 def new_cycle():
-    if "manager" not in st.session_state:
-        st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
+    if "key" in st.session_state:
+        if "manager" not in st.session_state:
+            st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
 
-    out_messages = st.session_state.manager.process_user_input(st.chat_input(''))
+        out_messages = st.session_state.manager.process_user_input(st.chat_input(''))
 
-    for message in out_messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        for message in out_messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
 
 def old_cycle():
@@ -74,25 +96,6 @@ def old_cycle():
             show_and_call(prompt)
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-st.title("IBM Research Conversational Prompt Engineering")
-if 'BAM_APIKEY' in os.environ:
-    st.session_state['key'] = os.environ['BAM_APIKEY']
-
-if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
-    with st.form("my_form", clear_on_submit=True):
-        st.write("Welcome to IBM Research LMU CPE")
-        st.write("Do not share any confidential information in this conversation")
-        st.write("To proceed, please provide your BAM API key")
-        key = st.text_input(label="BAM API key")
-        submit = st.form_submit_button()
-        if submit:
-            st.session_state.key = key
-
-if "key" in st.session_state:
-    if st.button("Reset chat"):
-        reset_chat()
-
-# new_cycle()
-old_cycle()
+new_cycle()
+# old_cycle()
