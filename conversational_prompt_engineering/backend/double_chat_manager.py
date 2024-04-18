@@ -22,10 +22,10 @@ def extract_delimited_text(txt, delim):
 
 
 class DoubleChatManager:
-    def __init__(self) -> None:
-        with open("backend/params.json", "r") as f:
+    def __init__(self, bam_api_key) -> None:
+        with open("backend/bam_params.json", "r") as f:
             params = json.load(f)
-        params['api_key'] = os.getenv("BAM_APIKEY")
+        params['api_key'] = bam_api_key
         self.bam_client = BamGenerate(params)
 
         self.user_chat = None
