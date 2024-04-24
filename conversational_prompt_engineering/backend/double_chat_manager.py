@@ -13,12 +13,13 @@ class ConversationState:
     INTRODUCTION = 'introduction'
     CONFIRM_CHARACTERISTICS = 'confirm_characteristics'
     CONFIRM_PROMPT = 'confirm_prompt'
+    EVALUATE_PROMPT = 'evaluate_prompt'
     CONFIRM_SUMMARY = 'confirm_summary'
 
 
 def extract_delimited_text(txt, delim):
     if delim not in txt:
-        return None
+        return txt #None
     begin = txt.index(delim) + len(delim)
     end = begin + txt[begin:].index(delim)
     return txt[begin:end]
@@ -34,17 +35,25 @@ class DoubleChatManager:
         self.user_chat = None
         self.hidden_chat = None
         self.text_examples = None
+        self.summaries = {}
         self.approved_prompts = None
         self.state = None
+
+    def _load_admin_params(self):
+        with open("backend/admin_params.json", "r") as f:
+            params = json.load(f)
+        return params
 
     def _add_msg(self, chat, role, msg):
         chat.append({'role': role, 'content': msg})
 
     def _add_usr_msg(self, msg):
+        logging.info(f"got input from user: {msg}")
         self._add_msg(self.user_chat, ChatRole.USER, msg)
         self._add_msg(self.hidden_chat, ChatRole.USER, msg)
 
     def _add_system_msg(self, msg):
+        logging.info(f"adding system msg: {msg}")
         self._add_msg(self.hidden_chat, ChatRole.SYSTEM, msg)
 
     def _add_assistant_msg(self, messages, to_chat):
@@ -72,6 +81,7 @@ class DoubleChatManager:
                 agent_response += txt[: txt.index('<|')]
                 break
             agent_response += txt
+        logging.info(f"got response from model: {agent_response}")
         return agent_response.strip()
 
     def _init_chats(self):
@@ -87,15 +97,33 @@ Please answer only the word 'understood' if you understand these instructions.
 """)
         resp = self._get_assistant_response()
         assert resp.lower().startswith('understood')
+        logging.info("initializing chat")
 
         self._add_system_msg("""Introduce yourself to the user, 
-then ask if they can provide any insights about the texts to summarize and/or the summaries to produce, 
-or maybe they have an example of the text, or even an example of an acceptable summary. 
-This information can be helpful to figure out the texts domain, and required properties of the summary""")
+Then please ask the user questions and use his answers to build an initial instruction for his summarization task:
+Would you like the summary to focus on specific entities, and if so which ones? 
+In what style would you the summary to be written?
+How long would you like the summary to be?
+Please ask the user the questions one at a time. Please avoid suggesting to add new questions.""")
         resp = self._get_assistant_response()
         self._add_assistant_msg(resp, 'both')
         self.state = ConversationState.INTRODUCTION
-        logging.info("initializing chat")
+
+    def _got_introduction_responses(self):
+        self._add_system_msg(
+            'Did User already respond to all of the questions you should be asking? Answer yes or no ONLY.')
+        resp = self._get_assistant_response()
+        self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
+        if resp.lower().startswith('yes'):
+            return True
+        return False
+
+    def _continue_ask_introduction_questions(self):
+        self._add_system_msg(
+            'Ok, please ask the user the next question.')
+        resp = self._get_assistant_response()
+        self.hidden_chat = self.hidden_chat[:-1]
+        self._add_assistant_msg(resp, 'both')
 
     def _extract_text_example(self):
         self._add_system_msg(
@@ -147,6 +175,15 @@ This information can be helpful to figure out the texts domain, and required pro
         assert is_accepted != is_corrected
         return is_accepted
 
+    def _ask_for_text(self):
+        self._add_system_msg(
+            f'Please ask user to share a text example.')
+        resp = self._get_assistant_response()
+        self.hidden_chat = self.hidden_chat[:-1]
+        self._add_assistant_msg(resp, 'both')
+        self.state = ConversationState.EVALUATE_PROMPT
+        return resp
+
     def _evaluate_prompt(self):
         # TODO: handle the cases when there's no example yet, or multiple examples
         eval_chat = []
@@ -154,15 +191,29 @@ This information can be helpful to figure out the texts domain, and required pro
         example = self.text_examples[0]
         self._add_msg(eval_chat, ChatRole.USER, example)
         summary = self._get_assistant_response(eval_chat)
-
+        if self.approved_prompts[-1] not in self.summaries:
+            self.summaries[self.approved_prompts[-1]] = {}
+        self.summaries[self.approved_prompts[-1]][example] = summary
         self._add_system_msg(
-            f'When the latest prompt was use for summarization of the example ```{example}``` it produced the result ```{summary}```')
+            f'When the latest prompt was used for summarization of the example ```{example}``` it produced the result ```{summary}```')
         self._add_system_msg(f'Present these results to the user and ask if they want any changes.')
         resp = self._get_assistant_response()
         self.hidden_chat = self.hidden_chat[:-2]  # remove the last messages
 
         self._add_assistant_msg(resp, 'both')
         self.state = ConversationState.CONFIRM_SUMMARY
+
+    def _share_prompt(self):
+        prompt = self.approved_prompts[-1]
+        if self.approved_prompts[-1] in self.summaries:
+            prompt += "\n\n"
+            texts_and_summaries = self.summaries[self.approved_prompts[-1]]
+            prompt += "\n\n".join(["Text: " + t + "\n\nSummary: " + s for t, s in texts_and_summaries.items()])
+        self._add_assistant_msg("Here is the final prompt: \n\n" + prompt, 'both')
+        self.state = None
+
+    def _no_texts(self):
+        return len(self.text_examples) == 0
 
     def process_user_input(self, user_message):
         if self.state is None:
@@ -171,38 +222,50 @@ This information can be helpful to figure out the texts domain, and required pro
             self._add_usr_msg(user_message)
 
             if self.state in [ConversationState.INTRODUCTION]:
-                self._extract_text_example()
-                logging.info("in introduction, user shared info or text example so moving to confirm_characteristics")
-                self._confirm_characteristics()
-
-            elif self.state == ConversationState.CONFIRM_CHARACTERISTICS:
-                if self._suggestion_accepted():
-                    logging.info("in confirm_characteristics, user approved them "
-                                 "so moving to confirm_prompt")
-                    self._confirm_prompt(is_new=True)
+                if self._got_introduction_responses():
+                    logging.info("in introduction, "
+                                 "user shared info or text example so moving to confirm_characteristics")
+                    self._confirm_prompt(is_new=True)  # self._confirm_characteristics()
                 else:
-                    logging.info(
-                        "in confirm_characteristics, user did not approve them so staying")
-                    self._confirm_characteristics()
+                    self._continue_ask_introduction_questions()
+
+            # elif self.state == ConversationState.CONFIRM_CHARACTERISTICS:
+            #     if self._suggestion_accepted():
+            #         logging.info("in confirm_characteristics, user approved them "
+            #                      "so moving to confirm_prompt")
+            #         self._confirm_prompt(is_new=True)
+            #     else:
+            #         logging.info(
+            #             "in confirm_characteristics, user did not approve them so staying")
+            #         self._confirm_characteristics()
 
             elif self.state == ConversationState.CONFIRM_PROMPT:
                 if self._suggestion_accepted():
                     logging.info(
-                        "in confirm_prompt, user approved it "
-                        "so moving to confirm_summary (evaluating the prompt on a text")
-                    self._evaluate_prompt()
+                        "in confirm_prompt, user approved it")
+                    if self._no_texts():
+                        logging.info(f"asking for text to summarize")
+                        self._ask_for_text()
+                    else:
+                        logging.info(f"text exists, summarizing it")
+                        self._evaluate_prompt()
                 else:
                     logging.info(
                         "in confirm_prompt, user did not approve so staying (making changes to prompt)")
                     self._confirm_prompt(is_new=False)
 
+            elif self.state == ConversationState.EVALUATE_PROMPT:
+                if self._extract_text_example():
+                    self._evaluate_prompt()
+
             elif self.state == ConversationState.CONFIRM_SUMMARY:
                 if self._suggestion_accepted():
                     logging.info(
                         "in confirm_summary, user approved the summary so ending the chat")
-                    self._add_assistant_msg('BYE', 'both')
-                    self.state = None
+                    self._share_prompt()
                 else:
                     self._confirm_prompt(is_new=True)
 
         return self.user_chat
+
+
