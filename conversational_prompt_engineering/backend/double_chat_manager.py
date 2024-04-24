@@ -200,7 +200,7 @@ This information can be helpful to figure out the texts domain, and required pro
                 if self._suggestion_accepted():
                     logging.info(
                         "in confirm_summary, user approved the summary so ending the chat")
-                    self._add_assistant_msg('BYE', self.user_chat)
+                    self._add_assistant_msg('BYE', 'both')
                     self.state = None
                 else:
                     self._confirm_prompt(is_new=True)
