@@ -6,6 +6,10 @@ from genai.schema import ChatRole
 
 from conversational_prompt_engineering.util.bam import BamGenerate
 
+app_logger = logging.getLogger()
+app_logger.addHandler(logging.StreamHandler())
+app_logger.setLevel(logging.INFO)
+
 
 class ConversationState:
     INTRODUCTION = 'introduction'

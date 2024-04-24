@@ -5,7 +5,9 @@ from enum import Enum
 
 from conversational_prompt_engineering.util.bam import BAMChat, HumanRole
 
-logging.basicConfig(format='%(asctime)s %(message)s')
+app_logger = logging.getLogger()
+app_logger.addHandler(logging.StreamHandler())
+app_logger.setLevel(logging.INFO)
 
 OK_OR_CHANGE = "After that, ask User if the summary is ok for them, or would they like to change anything. " \
                "Wait for their response. Based on their response, update the instruction. Continue this process until User has no additional feedback. Write 'I understand that the summary is ok.'"
