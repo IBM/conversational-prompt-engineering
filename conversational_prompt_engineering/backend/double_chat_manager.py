@@ -101,8 +101,8 @@ Please answer only the word 'understood' if you understand these instructions.
 
         self._add_system_msg("""Introduce yourself to the user, 
 Then please ask the user questions and use his answers to build an initial instruction for his summarization task:
-Would you like the summary to focus on specific entities, and if so which ones? 
-In what style would you the summary to be written?
+Would you like the summary to be more extractive or abstractive? 
+Would you like the summary to be formal or informal?
 How long would you like the summary to be?
 Please ask the user the questions one at a time. Please avoid suggesting to add new questions.""")
         resp = self._get_assistant_response()
