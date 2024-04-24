@@ -100,11 +100,11 @@ Please answer only the word 'understood' if you understand these instructions.
         logging.info("initializing chat")
 
         self._add_system_msg("""Introduce yourself to the user, 
-Then please ask the user questions and use his answers to build an initial instruction for his summarization task:
-Would you like the summary to be more extractive or abstractive? 
-Would you like the summary to be formal or informal?
-How long would you like the summary to be?
-Please ask the user the questions one at a time. Please avoid suggesting to add new questions.""")
+Then please ask the user questions and use his answers to build an initial instruction for his summarization task:\n\n
+Would you like the summary to be more extractive or abstractive? \n\n
+Would you like the summary to be formal or informal?\n\n
+How long would you like the summary to be?\n\n
+Please ask the user the questions one at a time. \n\nPlease avoid suggesting to add new questions.""")
         resp = self._get_assistant_response()
         self._add_assistant_msg(resp, 'both')
         self.state = ConversationState.INTRODUCTION
