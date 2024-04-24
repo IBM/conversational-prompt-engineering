@@ -1,5 +1,6 @@
 import json
 import os
+import logging
 
 from genai.schema import ChatRole
 
@@ -92,6 +93,7 @@ This information can be helpful to figure out the texts domain, and required pro
         resp = self._get_assistant_response()
         self._add_assistant_msg(resp, 'both')
         self.state = ConversationState.INTRODUCTION
+        logging.info("initializing chat")
 
     def _extract_text_example(self):
         self._add_system_msg(
@@ -168,22 +170,34 @@ This information can be helpful to figure out the texts domain, and required pro
 
             if self.state in [ConversationState.INTRODUCTION]:
                 self._extract_text_example()
+                logging.info("in introduction, user shared info or text example so moving to confirm_characteristics")
                 self._confirm_characteristics()
 
             elif self.state == ConversationState.CONFIRM_CHARACTERISTICS:
                 if self._suggestion_accepted():
+                    logging.info("in confirm_characteristics, user approved them "
+                                 "so moving to confirm_prompt")
                     self._confirm_prompt(is_new=True)
                 else:
+                    logging.info(
+                        "in confirm_characteristics, user did not approve them so staying")
                     self._confirm_characteristics()
 
             elif self.state == ConversationState.CONFIRM_PROMPT:
                 if self._suggestion_accepted():
+                    logging.info(
+                        "in confirm_prompt, user approved it "
+                        "so moving to confirm_summary (evaluating the prompt on a text")
                     self._evaluate_prompt()
                 else:
+                    logging.info(
+                        "in confirm_prompt, user did not approve so staying (making changes to prompt)")
                     self._confirm_prompt(is_new=False)
 
             elif self.state == ConversationState.CONFIRM_SUMMARY:
                 if self._suggestion_accepted():
+                    logging.info(
+                        "in confirm_summary, user approved the summary so ending the chat")
                     self._add_assistant_msg('BYE', self.user_chat)
                     self.state = None
                 else:

@@ -34,15 +34,14 @@ if "key" in st.session_state:
 
 
 def new_cycle():
-    if "key" in st.session_state:
-        if "manager" not in st.session_state:
-            st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
+    if "manager" not in st.session_state:
+        st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
 
-        out_messages = st.session_state.manager.process_user_input(st.chat_input(''))
+    out_messages = st.session_state.manager.process_user_input(st.chat_input(''))
 
-        for message in out_messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+    for message in out_messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
 
 def old_cycle():
@@ -62,7 +61,6 @@ def old_cycle():
             st.write(response)
         st.session_state.messages.append({"role": "assistant", "content": response, "show": True})
 
-    if "key" in st.session_state:
         mode = st.radio(label="Mode", options=["Basic", "Advanced"],
                         captions=["basic zero-shot -> few-shot (default)",
                                   "basic zero-shot -> custom zero-shot -> few-shot"])
@@ -96,6 +94,6 @@ def old_cycle():
             show_and_call(prompt)
 
 
-
-# new_cycle()
-old_cycle()
+if "key" in st.session_state:
+    new_cycle()
+    # old_cycle()
