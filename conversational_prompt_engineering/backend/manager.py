@@ -73,8 +73,8 @@ class Manager():
     def interference_condition(self, response_to_user):
         logging.info(f"trying interference in stage {self.dialog_state}")
         stage_str = self.dialog_state.value
-        if stage_str == "stage_2_2":  # manual signal
-            return self.admin_params[stage_str]['finish_signal'] in response_to_user.lower()
+        # if stage_str == "stage_2_1":  # manual signal
+        #     return self.admin_params[stage_str]['finish_signal'] in response_to_user.lower()
         if stage_str != 'stage_4':
             response_to_admin = self.bam_client.send_message(self.admin_params[stage_str]['interference'],
                                                              HumanRole.Admin, override_params={'max_new_tokens': 1})
@@ -89,8 +89,8 @@ class Manager():
         elif self.dialog_state == DialogState.ExampleDrivenPromptUpdate:
             return DialogState.ExampleDrivenPromptUpdate1
         elif self.dialog_state == DialogState.ExampleDrivenPromptUpdate1:
-            return DialogState.ExampleDrivenPromptUpdate2
-        elif self.dialog_state == DialogState.ExampleDrivenPromptUpdate2:
+        #     return DialogState.ExampleDrivenPromptUpdate2
+        # elif self.dialog_state == DialogState.ExampleDrivenPromptUpdate2:
             return DialogState.SummarizeExample
         elif self.dialog_state == DialogState.SummarizeExample:
             return DialogState.FinalInstruction
