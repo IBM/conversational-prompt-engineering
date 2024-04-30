@@ -97,6 +97,7 @@ Please answer only the word 'understood' if you understand these instructions.
 """)
         resp = self._get_assistant_response()
         assert resp.lower().startswith('understood')
+        self._add_assistant_msg(resp, 'hidden')
         logging.info("initializing chat")
 
         self._add_system_msg("""Introduce yourself to the user, 
