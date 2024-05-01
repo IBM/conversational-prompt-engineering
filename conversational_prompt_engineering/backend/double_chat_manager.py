@@ -277,6 +277,6 @@ Please answer only the word 'understood' if you understand these instructions.
                     self._confirm_prompt(is_new=True)
                     self.state = ConversationState.CONFIRM_PROMPT
 
-        return self.user_chat
+        return self.user_chat[-1]['content']
 
 

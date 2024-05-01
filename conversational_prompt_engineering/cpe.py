@@ -38,15 +38,34 @@ if "key" in st.session_state:
 
 
 def new_cycle():
+
+    def show_and_call(prompt, show_message=True):
+        st.session_state.messages.append({"role": "user", "content": prompt, "show": show_message})
+        if show_message:
+            with st.chat_message("user"):
+                st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                response = st.session_state.manager.process_user_input(prompt)
+                st.write(response)
+        st.session_state.messages.append({"role": "assistant", "content": response, "show": True})
+
     if "key" in st.session_state:
         if "manager" not in st.session_state:
             st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
 
-        out_messages = st.session_state.manager.process_user_input(st.chat_input(''))
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
 
-        for message in out_messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+        for message in st.session_state.messages:
+            if message["show"]:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
+        if 'messages' in st.session_state and len(st.session_state.messages) == 0:
+            show_and_call(f"", show_message=False)
+        if prompt := st.chat_input("Write your message here"):
+            show_and_call(prompt)
 
 
 def old_cycle():
