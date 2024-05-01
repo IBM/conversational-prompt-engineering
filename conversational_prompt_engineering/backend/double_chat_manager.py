@@ -207,11 +207,24 @@ Please answer only the word 'understood' if you understand these instructions.
 
     def _share_prompt(self):
         prompt = self.approved_prompts[-1]
+        temp_chat = []
+        self._add_msg(temp_chat, ChatRole.USER,
+                      'Suggest a name for the following summarization prompt. '
+                      'The name should be short and descriptive, it will be used as a title in the prompt library. '
+                      f'Enclose the suggested name in triple quotes (```). The prompt is "{prompt}"')
+        resp = self._get_assistant_response(temp_chat)
+        name = extract_delimited_text(resp, "```").strip().replace('"', '')
+
         if self.approved_prompts[-1] in self.summaries:
             prompt += "\n\n"
             texts_and_summaries = self.summaries[self.approved_prompts[-1]]
             prompt += "\n\n".join(["Text: " + t + "\n\nSummary: " + s for t, s in texts_and_summaries.items()])
-        self._add_assistant_msg("Here is the final prompt: \n\n" + prompt, 'both')
+
+        final_msg = "Here is the final prompt: \n\n" + prompt
+        saved_name, bam_url = self.bam_client.save_prompt(name, prompt)
+        final_msg += f'\n\nThis prompt has been saved to your prompt Library under the name "{saved_name}". ' \
+                     f'You can try it in the [BAM Prompt Lab]({bam_url})'
+        self._add_assistant_msg(final_msg, 'user')
         self.state = None
 
     def _no_texts(self):

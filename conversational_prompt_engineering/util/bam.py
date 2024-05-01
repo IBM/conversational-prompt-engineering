@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+from urllib.parse import quote_plus
 
 import pandas as pd
 # from dotenv import load_dotenv
@@ -73,3 +74,14 @@ class BamGenerate:
         )
         texts = [res.generated_text.strip() for resp in response for res in resp.results]
         return texts
+
+    def save_prompt(self, name, text):
+        count = 0
+        res_name = name
+        while res_name in [found.name for found in self.client.prompt.list(search=name).results]:
+            count += 1
+            res_name = f'{name}_{count}'
+
+        self.client.prompt.create(name=res_name, model_id=self.model_id, input=text, task_id='summarization')
+        link = f'https://bam.res.ibm.com/lab?model={quote_plus(self.model_id)}&mode=freeform'
+        return res_name, link
