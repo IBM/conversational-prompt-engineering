@@ -14,6 +14,7 @@ def old_reset_chat():
 
 def reset_chat():
     st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
+    st.session_state.messages = []
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
