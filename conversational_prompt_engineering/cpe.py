@@ -47,9 +47,8 @@ def new_cycle():
                 st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                response = st.session_state.manager.process_user_input(prompt)
-                st.write(response)
+            response = st.session_state.manager.process_user_input(prompt)
+            st.write(response)
         st.session_state.messages.append({"role": "assistant", "content": response, "show": True})
 
     if "key" in st.session_state:
