@@ -7,9 +7,13 @@ from conversational_prompt_engineering.backend.double_chat_manager import Double
 from conversational_prompt_engineering.backend.manager import Manager, Mode
 
 
-def reset_chat():
+def old_reset_chat():
     st.session_state.manager = Manager(st.session_state.mode, st.session_state.key)
     st.session_state.messages = []
+
+
+def reset_chat():
+    st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -77,7 +81,7 @@ def old_cycle():
             st.session_state.mode = Mode.Advanced
         new_mode = st.session_state.mode
         if old_mode != new_mode:
-            reset_chat()
+            old_reset_chat()
 
         if "manager" not in st.session_state:
             st.session_state.manager = Manager(st.session_state.mode, st.session_state.key)
