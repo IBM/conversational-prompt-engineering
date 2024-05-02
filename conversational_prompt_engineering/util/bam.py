@@ -61,16 +61,18 @@ class BAMChat:
 class BamGenerate:
     def __init__(self, params):
         self.client = Client(credentials=Credentials(api_key=params['api_key'], api_endpoint=params['api_endpoint']))
-        self.parameters = TextGenerationParameters(
-            decoding_method=DecodingMethod.GREEDY, max_new_tokens=params['max_new_tokens'], min_new_tokens=1
-        )
-        self.model_id = params['model_id']
+        self.parameters = params
 
-    def send_messages(self, conversation):
+    def send_messages(self, conversation, max_new_tokens=None):
+        parameters = TextGenerationParameters(
+            decoding_method=DecodingMethod.GREEDY,
+            max_new_tokens=max_new_tokens if max_new_tokens else self.parameters['max_new_tokens'],
+            min_new_tokens=1
+        )
         response = self.client.text.generation.create(
-            model_id=self.model_id,
+            model_id=self.parameters['model_id'],
             inputs=[conversation],
-            parameters=self.parameters,
+            parameters=parameters,
         )
         texts = [res.generated_text.strip() for resp in response for res in resp.results]
         return texts
@@ -81,7 +83,7 @@ class BamGenerate:
         while res_name in [found.name for found in self.client.prompt.list(search=name).results]:
             count += 1
             res_name = f'{name}_{count}'
-
-        self.client.prompt.create(name=res_name, model_id=self.model_id, input=text, task_id='summarization')
-        link = f'https://bam.res.ibm.com/lab?model={quote_plus(self.model_id)}&mode=freeform'
+        model_id = self.parameters['model_id']
+        self.client.prompt.create(name=res_name, model_id=model_id, input=text, task_id='summarization')
+        link = f'https://bam.res.ibm.com/lab?model={quote_plus(model_id)}&mode=freeform'
         return res_name, link

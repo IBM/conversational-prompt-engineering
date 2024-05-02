@@ -1,7 +1,9 @@
 import json
 import os
 import logging
+import time
 
+import pandas as pd
 from genai.schema import ChatRole
 
 from conversational_prompt_engineering.util.bam import BamGenerate
@@ -41,6 +43,7 @@ class DoubleChatManager:
         self.approved_prompts = None
         self.state = None
         self.user_has_more_texts = True
+        self.timing_report = []
 
     def _load_admin_params(self):
         with open("backend/admin_params.json", "r") as f:
@@ -72,12 +75,16 @@ class DoubleChatManager:
             for chat in chats:
                 self._add_msg(chat, ChatRole.ASSISTANT, msg)
 
-    def _get_assistant_response(self, chat=None):
+    def _get_assistant_response(self, chat=None, max_new_tokens=None):
         chat = chat or self.hidden_chat
         conversation = ''.join([f'\n<|{m["role"]}|>\n{m["content"]}\n' for m in chat])
         conversation += f'<|{ChatRole.ASSISTANT}|>'
-
-        generated_texts = self.bam_client.send_messages(conversation)
+        start_time = time.time()
+        generated_texts = self.bam_client.send_messages(conversation, max_new_tokens=max_new_tokens)
+        elapsed_time = time.time()-start_time
+        timing_dict = {"state": self.state, "context_length": len(conversation), "output_length": sum([len(gt) for gt in generated_texts]), "time": elapsed_time}
+        logging.info(timing_dict)
+        self.timing_report.append(timing_dict)
         agent_response = ''
         for txt in generated_texts:
             if any([f'<|{r}|>' in txt for r in [ChatRole.SYSTEM, ChatRole.USER]]):
@@ -101,7 +108,6 @@ Please answer only the word 'understood' if you understand these instructions.
         resp = self._get_assistant_response()
         self._add_assistant_msg(resp, 'hidden')
         assert resp.lower().startswith('understood')
-        self._add_assistant_msg(resp, 'hidden')
         logging.info("initializing chat")
 
         self.approved_prompts.append(
@@ -171,7 +177,7 @@ Please validate your suggestion with the user, and update it if necessary.""")
     def _suggestion_accepted(self):
         self._add_system_msg(
             'Has the user accepted your suggestion or corrected it? Answer either "accepted" or "corrected"')
-        resp = self._get_assistant_response()
+        resp = self._get_assistant_response(max_new_tokens=10)
         self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
 
         is_accepted = 'accepted' in resp.lower()
@@ -197,7 +203,7 @@ Do not share your insights until you have collected all examples.""")
         if self.user_has_more_texts:
             self._add_system_msg(
                 'Has the user indicated they finished sharing texts, or not? Answer either "finished" or "not"')
-            resp = self._get_assistant_response()
+            resp = self._get_assistant_response(max_new_tokens=10)
             self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
             self.user_has_more_texts = "not" in resp.lower()
         return self.user_has_more_texts
@@ -253,6 +259,14 @@ Ask the user to answer all the questions at the same turn.""")
 
     def _no_texts(self):
         return len(self.text_examples) == 0
+
+    def print_timing_report(self):
+        df = pd.DataFrame(self.timing_report)
+        logging.info(df)
+        logging.info(f"Average processing time: {df['time'].mean()}")
+        self.timing_report = sorted(self.timing_report, key=lambda row: row['time'])
+        logging.info(f"Highest processing time: {self.timing_report[-1]}")
+        logging.info(f"Lowest processing time: {self.timing_report[0]}")
 
     def process_user_input(self, user_message):
         if self.state is None:
@@ -316,6 +330,7 @@ Ask the user to answer all the questions at the same turn.""")
                 if self._suggestion_accepted():
                     logging.info("user approved the summary so ending the chat")
                     self._share_prompt()
+                    self.print_timing_report()
                 else:
                     logging.info("user did not approve so making changes to prompt")
                     self._confirm_prompt(is_new=True)
