@@ -105,7 +105,7 @@ You will be interacting with two actors: system and user. The direct interaction
 The system will guide you through the stages necessary to build the prompt.
 Please answer only the word 'understood' if you understand these instructions.
 """)
-        resp = self._get_assistant_response()
+        resp = self._get_assistant_response(max_new_tokens=10)
         self._add_assistant_msg(resp, 'hidden')
         assert resp.lower().startswith('understood')
         logging.info("initializing chat")
@@ -116,7 +116,7 @@ Please answer only the word 'understood' if you understand these instructions.
 The initial prompt you suggest the user for summarization is: {self.approved_prompts[-1]} 
 Please validate your suggestion with the user, and update it if necessary.""")
 
-        resp = self._get_assistant_response()
+        resp = self._get_assistant_response(max_new_tokens=200)
         self._add_assistant_msg(resp, 'both')
 
     def _got_introduction_responses(self):
@@ -148,30 +148,30 @@ Please validate your suggestion with the user, and update it if necessary.""")
     def _confirm_characteristics(self):
         self._add_system_msg(
             "What is your current understanding of the input texts and the expected properties of the summaries?")
-        resp = self._get_assistant_response()
+        resp = self._get_assistant_response(max_new_tokens=200)
         # keep only the first paragraph, the model can go on
         if '\n' in resp:
             resp = resp[: resp.index('\n')]
         self._add_assistant_msg(resp, 'hidden')
         self._add_system_msg('Please validate your suggestion with the user, and update it if necessary.')
-        resp = self._get_assistant_response()
+        resp = self._get_assistant_response(max_new_tokens=200)
         self._add_assistant_msg(resp, 'both')
         self.state = ConversationState.CONFIRM_CHARACTERISTICS
 
     def _confirm_prompt(self, is_new):
         self._add_system_msg(
             'Build the summarization prompt based on your current understanding (only the instruction). Enclose the prompt in triple quotes (```).')
-        resp = self._get_assistant_response()
+        resp = self._get_assistant_response(max_new_tokens=200)
         prompt = extract_delimited_text(resp, '```')
         prompt = prompt.strip("\"")
-        if is_new:
+        if is_new or len(self.approved_prompts) == 1:
             self.approved_prompts.append(prompt)
         else:
             self.approved_prompts[-1] = prompt
 
         self._add_assistant_msg(prompt, 'hidden')
         self._add_system_msg('Please validate your suggestion with the user, and update it if necessary.')
-        resp = self._get_assistant_response()
+        resp = self._get_assistant_response(max_new_tokens=200)
         self._add_assistant_msg(resp, 'both')
 
     def _suggestion_accepted(self):
@@ -189,7 +189,7 @@ Please validate your suggestion with the user, and update it if necessary.""")
         self._add_system_msg("""Ask the user to provide three typical examples of the texts he or she wish to summarize. 
 This will help you get familiar with the domain and the flavor of the user's documents. Mention to the user that they need to share the examples one at a time.
 Do not share your insights until you have collected all examples.""")
-        resp = self._get_assistant_response()
+        resp = self._get_assistant_response(max_new_tokens=200)
         # self.hidden_chat = self.hidden_chat[:-1]
         self._add_assistant_msg(resp, 'both')
         return resp
@@ -249,6 +249,9 @@ Ask the user to answer all the questions at the same turn.""")
             prompt += "\n\n"
             texts_and_summaries = self.summaries[self.approved_prompts[-1]]
             prompt += "\n\n".join(["Text: " + t + "\n\nSummary: " + s for t, s in texts_and_summaries.items()])
+            prompt += "\n\nText: {text}\n\nSummary: "
+
+        self.approved_prompts.append(prompt)
 
         final_msg = "Here is the final prompt: \n\n" + prompt
         saved_name, bam_url = self.bam_client.save_prompt(name, prompt)
