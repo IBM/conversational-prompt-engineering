@@ -187,7 +187,7 @@ Please validate your suggestion with the user, and update it if necessary.""")
 
     def _ask_for_text(self):
         self._add_system_msg("""Ask the user to provide three typical examples of the texts he or she wish to summarize. 
-This will help you get familiar with the domain and the flavor of the user's documents.
+This will help you get familiar with the domain and the flavor of the user's documents. Mention to the user that they need to share the examples one at a time.
 Do not share your insights until you have collected all examples.""")
         resp = self._get_assistant_response()
         # self.hidden_chat = self.hidden_chat[:-1]
