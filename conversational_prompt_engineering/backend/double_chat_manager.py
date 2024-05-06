@@ -144,7 +144,7 @@ Please validate your suggestion with the user, and update it if necessary.""")
 
     def _extract_text_example(self):
         self._add_system_msg(
-            'Did you obtain a text example from the user in the last message? If you did, write "yes" and the text enclosed in triple quotes (```). If no, just write "no"')
+            'Did you obtain a text example from the user in the last message? If you did, write "yes" and the text enclosed in triple quotes (```). If the user indicated that they don\'t have more examples, just write "no"')
         resp = self._get_assistant_response()
         self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
         if resp.lower().startswith('yes'):
