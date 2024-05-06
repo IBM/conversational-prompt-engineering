@@ -26,7 +26,7 @@ if 'BAM_APIKEY' in os.environ:
 if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
     with st.form("my_form", clear_on_submit=True):
         st.write("Welcome to IBM Research LMU CPE")
-        st.write("Do not share any confidential information in this conversation")
+        st.write("This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses.")
         st.write("To proceed, please provide your BAM API key")
         key = st.text_input(label="BAM API key")
         submit = st.form_submit_button()
