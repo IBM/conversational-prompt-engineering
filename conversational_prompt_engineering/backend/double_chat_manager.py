@@ -119,7 +119,7 @@ class DoubleChatManager:
 
     def add_prompt(self, prompt, is_new=True):
         if is_new:
-            self.approved_prompts.append({'prompt': prompt,  'stage': self.state})
+            self.approved_prompts.append({'prompt': prompt, 'stage': self.state})
         else:
             self.approved_prompts[-1]['prompt'] = prompt
 
@@ -192,9 +192,13 @@ class DoubleChatManager:
         return is_accepted
 
     def _ask_for_text(self):
-        self._add_system_msg("""Ask the user to provide up to three typical examples of the texts he or she wish to summarize. 
-This will help you get familiar with the domain and the flavor of the user's documents. Mention to the user that they need to share three examples one at a time, but at each stage they can indicate that they do not have anymore examples to share.
-Do not share your insights until you have collected all examples.""")
+        self._add_system_msg(
+            "Ask the user to provide up to three typical examples of the texts he or she wish to summarize. "
+            "This will help you get familiar with the domain and the flavor of the user's documents. "
+            "Mention to the user that they need to share three examples one at a time, "
+            "but at each stage they can indicate that they do not have anymore examples to share. "
+            "Do not share your insights until you have collected all examples."
+        )
         resp = self._get_assistant_response(max_new_tokens=200)
         # self.hidden_chat = self.hidden_chat[:-1]
         self._add_assistant_msg(resp, 'both')
@@ -234,9 +238,12 @@ Do not share your insights until you have collected all examples.""")
         if self.approved_prompts[-1]['prompt'] not in self.summaries:
             self.summaries[self.approved_prompts[-1]['prompt']] = {}
         self.summaries[self.approved_prompts[-1]['prompt']][example] = summary
+        self._add_system_msg(f'When the latest prompt was used for summarization of the example ```{example}``` '
+                             f'it produced the result ```{summary}```')
         self._add_system_msg(
-            f'When the latest prompt was used for summarization of the example ```{example}``` it produced the result ```{summary}```')
-        self._add_system_msg(f'Present these results to the user, mention they are based on the text of example no. {(self.validated_example_idx + 1)} shared by the user, and ask if they want any changes.')
+            f'Present these results to the user, mention they are based on the text of example no. '
+            f'{(self.validated_example_idx + 1)} shared by the user, and ask if they want any changes.'
+        )
         resp = self._get_assistant_response()
         self.hidden_chat = self.hidden_chat[:-2]  # remove the last messages
 
@@ -304,7 +311,7 @@ Do not share your insights until you have collected all examples.""")
                 initial_prompt = extract_delimited_text(resp, '```')
                 next_state = ConversationState.PROCESS_TEXTS
 
-            self.approved_prompts.append(initial_prompt)
+            self.add_prompt(initial_prompt)
             self._add_system_msg(
                 f"The initial prompt you suggest the user for summarization is: {self.approved_prompts[-1]}\n "
                 f"Do not change or format this prompt, present it to the user as is. "
@@ -334,9 +341,9 @@ Do not share your insights until you have collected all examples.""")
             if example_extracted:
                 logging.info("extracted text from user")
             if self._has_more_texts():
-                    if self._extract_text_example():
-                        logging.info("extracted text from user")
-                    self._do_nothing()
+                if self._extract_text_example():
+                    logging.info("extracted text from user")
+                self._do_nothing()
             else:
                 self._ask_text_questions()
                 self.state = ConversationState.PROCESS_RESPONSES
