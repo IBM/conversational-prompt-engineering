@@ -110,14 +110,19 @@ Please answer only the word 'understood' if you understand these instructions.
         assert resp.lower().startswith('understood')
         logging.info("initializing chat")
 
-        self.approved_prompts.append(
-            'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.')
+        self.add_prompt( 'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.')
         self._add_system_msg(f"""Thanks. Now, introduce yourself to the user. 
-The initial prompt you suggest the user for summarization is: {self.approved_prompts[-1]} 
+The initial prompt you suggest the user for summarization is: {self.approved_prompts[-1]['prompt']} 
 Please validate your suggestion with the user, and update it if necessary.""")
 
         resp = self._get_assistant_response(max_new_tokens=200)
         self._add_assistant_msg(resp, 'both')
+
+    def add_prompt(self, prompt, is_new=True):
+        if is_new:
+            self.approved_prompts.append({'prompt': prompt,  'stage': self.state})
+        else:
+            self.approved_prompts[-1]['prompt'] = prompt
 
     def _got_introduction_responses(self):
         self._add_system_msg(
@@ -164,10 +169,8 @@ Please validate your suggestion with the user, and update it if necessary.""")
         resp = self._get_assistant_response(max_new_tokens=200)
         prompt = extract_delimited_text(resp, '```')
         prompt = prompt.strip("\"")
-        if is_new or len(self.approved_prompts) == 1:
-            self.approved_prompts.append(prompt)
-        else:
-            self.approved_prompts[-1] = prompt
+
+        self.add_prompt(prompt, is_new=is_new or len(self.approved_prompts) == 1)
 
         self._add_assistant_msg(prompt, 'hidden')
         self._add_system_msg('Please validate your suggestion with the user, and update it if necessary.')
@@ -195,7 +198,7 @@ Do not share your insights until you have collected all examples.""")
         return resp
 
     def _do_nothing(self):
-        resp = self._get_assistant_response()
+        resp = self._get_assistant_response(max_new_tokens=100)
         self._add_assistant_msg(resp, 'both')
         return resp
 
@@ -220,13 +223,13 @@ Ask the user to answer all the questions at the same turn.""")
     def _evaluate_prompt(self):
         # TODO: handle the cases when there's no example yet, or multiple examples
         eval_chat = []
-        self._add_msg(eval_chat, ChatRole.SYSTEM, self.approved_prompts[-1])
+        self._add_msg(eval_chat, ChatRole.SYSTEM, self.approved_prompts[-1]['prompt'])
         example = self.text_examples[-1] # summarizing last example
         self._add_msg(eval_chat, ChatRole.USER, example)
         summary = self._get_assistant_response(eval_chat)
-        if self.approved_prompts[-1] not in self.summaries:
-            self.summaries[self.approved_prompts[-1]] = {}
-        self.summaries[self.approved_prompts[-1]][example] = summary
+        if self.approved_prompts[-1]['prompt'] not in self.summaries:
+            self.summaries[self.approved_prompts[-1]['prompt']] = {}
+        self.summaries[self.approved_prompts[-1]['prompt']][example] = summary
         self._add_system_msg(
             f'When the latest prompt was used for summarization of the example ```{example}``` it produced the result ```{summary}```')
         self._add_system_msg(f'Present these results to the user, mention they are based on the latest text shared by the user, and ask if they want any changes.')
@@ -235,23 +238,22 @@ Ask the user to answer all the questions at the same turn.""")
 
         self._add_assistant_msg(resp, 'both')
 
-    def _share_prompt(self):
-        prompt = self.approved_prompts[-1]
+    def _share_prompt_and_save(self):
+        prompt = self.approved_prompts[-1]['prompt']
         temp_chat = []
         self._add_msg(temp_chat, ChatRole.USER,
                       'Suggest a name for the following summarization prompt. '
                       'The name should be short and descriptive, it will be used as a title in the prompt library. '
                       f'Enclose the suggested name in triple quotes (```). The prompt is "{prompt}"')
         resp = self._get_assistant_response(temp_chat)
-        name = extract_delimited_text(resp, "```").strip().replace('"', '')
+        name = extract_delimited_text(resp, "```").strip().replace('"', '').replace(" ", "_")
 
-        if self.approved_prompts[-1] in self.summaries:
+        if self.approved_prompts[-1]['prompt'] in self.summaries:
             prompt += "\n\n"
-            texts_and_summaries = self.summaries[self.approved_prompts[-1]]
+            texts_and_summaries = self.summaries[self.approved_prompts[-1]['prompt']]
             prompt += "\n\n".join(["Text: " + t + "\n\nSummary: " + s for t, s in texts_and_summaries.items()])
-            prompt += "\n\nText: {text}\n\nSummary: "
 
-        self.approved_prompts.append(prompt)
+        self.add_prompt(prompt, is_new=True)
 
         final_msg = "Here is the final prompt: \n\n" + prompt
         saved_name, bam_url = self.bam_client.save_prompt(name, prompt)
@@ -259,6 +261,13 @@ Ask the user to answer all the questions at the same turn.""")
                      f'You can try it in the [BAM Prompt Lab]({bam_url})'
         self._add_assistant_msg(final_msg, 'user')
         self.state = None
+
+        # saving prompts
+        out_dir = f"_out/{name}"
+        os.makedirs(out_dir, exist_ok=True)
+        with open(os.path.join(out_dir, "prompts.json"), "w") as f:
+            json.dump(self.approved_prompts, f)
+        logging.info(f"prompts saved for evaluation to {os.path.join(out_dir, 'prompts.json')}")
 
     def _no_texts(self):
         return len(self.text_examples) == 0
@@ -332,7 +341,7 @@ Ask the user to answer all the questions at the same turn.""")
             elif self.state == ConversationState.CONFIRM_SUMMARY:
                 if self._suggestion_accepted():
                     logging.info("user approved the summary so ending the chat")
-                    self._share_prompt()
+                    self._share_prompt_and_save()
                     self.print_timing_report()
                 else:
                     logging.info("user did not approve so making changes to prompt")
