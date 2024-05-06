@@ -1,6 +1,7 @@
 import logging
 import os
 
+import pandas as pd
 import streamlit as st
 
 from conversational_prompt_engineering.backend.double_chat_manager import DoubleChatManager
@@ -17,55 +18,35 @@ def reset_chat():
     st.session_state.messages = []
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-st.title("IBM Research Conversational Prompt Engineering")
-if 'BAM_APIKEY' in os.environ:
-    st.session_state['key'] = os.environ['BAM_APIKEY']
-
-if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
-    with st.form("my_form", clear_on_submit=True):
-        st.write("Welcome to IBM Research LMU CPE")
-        st.write("This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses.")
-        st.write("To proceed, please provide your BAM API key")
-        key = st.text_input(label="BAM API key")
-        submit = st.form_submit_button()
-        if submit:
-            st.session_state.key = key
-
-if "key" in st.session_state:
-    if st.button("Reset chat"):
-        reset_chat()
-
-
 def new_cycle():
+    # 1. create the manager if necessary
+    if "manager" not in st.session_state:
+        st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
+    manager = st.session_state.manager
 
-    def show_and_call(prompt, show_message=True):
-        st.session_state.messages.append({"role": "user", "content": prompt, "show": show_message})
-        if show_message:
-            with st.chat_message("user"):
-                st.markdown(prompt)
+    # 2. layout reset and upload buttons in 2 columns
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Reset chat"):
+            reset_chat()
+    with col2:
+        if uploaded_file := st.file_uploader("Upload text examples csv"):
+            manager.process_examples(pd.read_csv(uploaded_file))
 
-        with st.chat_message("assistant"):
-            response = st.session_state.manager.process_user_input(prompt)
-            st.write(response)
-        st.session_state.messages.append({"role": "assistant", "content": response, "show": True})
+    # 3. user input
+    if user_msg := st.chat_input("Write your message here"):
+        manager.add_user_message(user_msg)
 
-    if "key" in st.session_state:
-        if "manager" not in st.session_state:
-            st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
+    # 4. render the existing messages
+    for msg in manager.user_chat:
+        with st.chat_message(msg['role']):
+            st.write(msg['content'])
 
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-
-        for message in st.session_state.messages:
-            if message["show"]:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
-        if 'messages' in st.session_state and len(st.session_state.messages) == 0:
-            show_and_call(f"", show_message=False)
-        if prompt := st.chat_input("Write your message here"):
-            show_and_call(prompt)
+    # 5. generate and render the agent response
+    manager.generate_agent_message()
+    msg = manager.user_chat[-1]
+    with st.chat_message(msg['role']):
+        st.write(msg['content'])
 
 
 def old_cycle():
@@ -86,6 +67,9 @@ def old_cycle():
         st.session_state.messages.append({"role": "assistant", "content": response, "show": True})
 
     if "key" in st.session_state:
+        if st.button("Reset chat"):
+            reset_chat()
+
         mode = st.radio(label="Mode", options=["Basic", "Advanced"],
                         captions=["basic zero-shot -> few-shot (default)",
                                   "basic zero-shot -> custom zero-shot -> few-shot"])
@@ -119,6 +103,22 @@ def old_cycle():
             show_and_call(prompt)
 
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-new_cycle()
-# old_cycle()
+st.title("IBM Research Conversational Prompt Engineering")
+if 'BAM_APIKEY' in os.environ:
+    st.session_state['key'] = os.environ['BAM_APIKEY']
+
+if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
+    with st.form("my_form", clear_on_submit=True):
+        st.write("Welcome to IBM Research LMU CPE")
+        st.write("This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses.")
+        st.write("To proceed, please provide your BAM API key")
+        key = st.text_input(label="BAM API key")
+        submit = st.form_submit_button()
+        if submit:
+            st.session_state.key = key
+
+if 'key' in st.session_state:
+    new_cycle()
+    # old_cycle()
