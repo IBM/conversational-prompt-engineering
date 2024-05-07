@@ -155,6 +155,7 @@ class DoubleChatManager:
             example = extract_delimited_text(resp, "```")
             if example not in self.text_examples:
                 self.text_examples.append(example)
+                logging.info(f"Extracted text examples ({len(self.text_examples)}): {self.text_examples}")
             return True
         return False
 
@@ -183,7 +184,7 @@ class DoubleChatManager:
         self._add_prompt(prompt, is_new=is_new or len(self.approved_prompts) == 1)
 
         self._add_assistant_msg(prompt, 'hidden')
-        self._add_system_msg('Please validate your suggestion with the user, and update it if necessary.')
+        self._add_system_msg('Please validate your suggested prompt with the user, and update it if necessary.')
         resp = self._get_assistant_response(max_new_tokens=200)
         self._add_assistant_msg(resp, 'both')
 
@@ -346,8 +347,6 @@ class DoubleChatManager:
             if example_extracted:
                 logging.info("extracted text from user")
             if self._has_more_texts():
-                if self._extract_text_example():
-                    logging.info("extracted text from user")
                 self._do_nothing()
             else:
                 self._ask_text_questions()
