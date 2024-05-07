@@ -314,7 +314,7 @@ class DoubleChatManager:
                 self._add_system_msg(instruction_txt + '\n'.join(self.text_examples))
                 resp = self._get_assistant_response(max_new_tokens=200)
                 initial_prompt = extract_delimited_text(resp, '```')
-                next_state = ConversationState.PROCESS_TEXTS
+                next_state = ConversationState.CONFIRM_PROMPT
 
             self._add_prompt(initial_prompt, is_new=True)
             self._add_system_msg(

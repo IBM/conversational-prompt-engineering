@@ -35,31 +35,7 @@ def compare_prompts_within_conversation(prompts_path, data_path, out_dir):
         test_df = test_df.sample(n=NUM_EXAMPLES_TO_LABEL, random_state=0)
     texts = test_df['text'].tolist()
 
-    with open("backend/bam_params.json", "r") as f:
-        bam_params = json.load(f)
-    bam_params['api_key'] = os.environ['BAM_APIKEY']
-    bam_client = BamGenerate(bam_params)
-
-    generated_data_ordered = []
-    generated_data_mixed = []
-    for t in texts:
-        row_data_ordered = {"prompts_file": prompts_path, "text": t}
-        row_data_mixed = {"prompts_file": prompts_path, "text": t}
-        prompts_responses = []
-        for i, prompt in enumerate(tqdm(prompts)):
-            prompt_str = prompt['prompt_ready_to_use']
-            prompt_str_t = prompt_str.format(text=t)
-            resp = bam_client.send_messages(prompt_str_t)[0]
-            prompts_responses.append(resp)
-        for i in range(len(prompts)):
-            row_data_ordered[str(i)+"_prompt"] = prompts[i]['prompt']
-            row_data_ordered[str(i)] = prompts_responses[i]
-        mixed_indices = np.argsort(prompts_responses)
-        for i in mixed_indices:
-            row_data_mixed[str(i) + "_prompt"] = prompts[i]['prompt']
-            row_data_mixed[str(i)] = prompts_responses[i]
-        generated_data_ordered.append(row_data_ordered)
-        generated_data_mixed.append(row_data_mixed)
+    generated_data_mixed, generated_data_ordered = evaluate(prompts, texts)
 
     os.makedirs(out_dir, exist_ok=True)
 
@@ -72,6 +48,35 @@ def compare_prompts_within_conversation(prompts_path, data_path, out_dir):
     df.to_csv(os.path.join(out_dir, "evaluate_mixed_hidden.csv"), index=False)
 
     logging.info(f"evaluation files saved to {out_dir}")
+
+
+def evaluate(prompts, texts):
+    with open("backend/bam_params.json", "r") as f:
+        bam_params = json.load(f)
+    bam_params['api_key'] = os.environ['BAM_APIKEY']
+    bam_client = BamGenerate(bam_params)
+    generated_data_ordered = []
+    generated_data_mixed = []
+    for t in texts:
+        row_data_ordered = {"text": t}
+        row_data_mixed = {"text": t}
+        prompts_responses = []
+        for i, prompt in enumerate(tqdm(prompts)):
+            prompt_str = prompt['prompt_ready_to_use']
+            prompt_str_t = prompt_str.format(text=t)
+            resp = bam_client.send_messages(prompt_str_t)[0]
+            prompts_responses.append(resp)
+        for i in range(len(prompts)):
+            row_data_ordered[str(i) + "_prompt"] = prompts[i]['prompt']
+            row_data_ordered[str(i)] = prompts_responses[i]
+        mixed_indices = np.argsort(prompts_responses)
+        for i in mixed_indices:
+            row_data_mixed[str(i) + "_prompt"] = prompts[i]['prompt']
+            row_data_mixed[str(i)] = prompts_responses[i]
+        generated_data_ordered.append(row_data_ordered)
+        generated_data_mixed.append(row_data_mixed)
+    return generated_data_mixed, generated_data_ordered
+
 
 if __name__ == "__main__":
     args = parser.parse_args()
