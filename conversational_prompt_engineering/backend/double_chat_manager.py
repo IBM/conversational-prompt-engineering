@@ -268,7 +268,12 @@ class DoubleChatManager:
         if self.approved_prompts[-1]['prompt'] in self.summaries:
             prompt += "\n\n"
             texts_and_summaries = self.summaries[self.approved_prompts[-1]['prompt']]
+            if len(texts_and_summaries) > 1:
+                prompt += "Here are some typical text examples and their corresponding summaries.\n\n"
+            elif len(texts_and_summaries) == 1:
+                prompt += "Here is an example of a typical text and its summary.\n\n"
             prompt += "\n\n".join(["Text: " + t + "\n\nSummary: " + s for t, s in texts_and_summaries.items()])
+            prompt += "\n\nNow, please summarize the following text."
 
         self._add_prompt(prompt, is_new=True)
         prompt = self.approved_prompts[-1]['prompt_ready_to_use']
