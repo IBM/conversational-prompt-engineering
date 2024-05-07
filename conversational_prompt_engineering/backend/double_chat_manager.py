@@ -46,6 +46,7 @@ class DoubleChatManager:
         self.state = None
 
         self.user_has_more_texts = True
+        self.enable_upload_file = True
         self.timing_report = []
 
     def _load_admin_params(self):
@@ -303,6 +304,9 @@ class DoubleChatManager:
         logging.info(f"Lowest processing time: {self.timing_report[0]}")
 
     def generate_agent_message(self):
+        if len(self.user_chat) > 0 and self.user_chat[-1]['role'] == ChatRole.ASSISTANT:
+            return None
+
         logging.info(f"in {self.state}")
         if self.state is None:
             self._init_chats()
@@ -310,6 +314,7 @@ class DoubleChatManager:
 
         elif self.state == ConversationState.INTRODUCTION:
             if len(self.text_examples) == 0:
+                self.enable_upload_file = False
                 initial_prompt = \
                     'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.'
                 next_state = ConversationState.CONFIRM_PROMPT
@@ -381,7 +386,19 @@ class DoubleChatManager:
                 self._confirm_prompt(is_new=True)
                 self.state = ConversationState.CONFIRM_PROMPT
 
+        return self.user_chat[-1]
+
     def process_examples(self, df):
-        text_col = df.columns[0]  # can ask the model which column is most likely the text
-        self.text_examples = df.sample(3)[text_col].tolist()
+        self.enable_upload_file = False
         self.user_has_more_texts = False
+
+        text_col = df.columns[0]  # can ask the model which column is most likely the text
+        texts = df.sample(frac=1, random_state=42)[text_col].tolist()
+        self.text_examples = texts[:3]
+
+        self._add_system_msg('Here are some examples of texts to be summarized')
+        for i, txt in enumerate(texts[3:13]):
+            self._add_system_msg(f'Example {i + 1}:\n{txt}')
+        self._ask_text_questions()
+
+        self.state = ConversationState.PROCESS_RESPONSES
