@@ -153,7 +153,7 @@ class DoubleChatManager:
         self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
         if resp.lower().startswith('yes'):
             example = extract_delimited_text(resp, "```")
-            if example not in self.text_examples:
+            if "".join(example.split()) not in ["".join(ex.split()) for ex in self.text_examples]:
                 self.text_examples.append(example)
                 logging.info(f"Extracted text examples ({len(self.text_examples)}): {self.text_examples}")
             return True
