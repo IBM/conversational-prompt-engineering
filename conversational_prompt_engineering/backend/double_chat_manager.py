@@ -117,11 +117,18 @@ class DoubleChatManager:
         resp = self._get_assistant_response(max_new_tokens=200)
         self._add_assistant_msg(resp, 'both')
 
-    def add_prompt(self, prompt, is_new=True):
+    def _add_prompt(self, prompt, is_new=True):
+
+        def _build_prompt_template():
+            return prompt + "\n\nText: {text}\n\nSummary: "
+
+        prompt_template = _build_prompt_template()
         if is_new:
-            self.approved_prompts.append({'prompt': prompt, 'stage': self.state})
+            self.approved_prompts.append({'prompt': prompt, 'stage': self.state,
+                                          'prompt_ready_to_use': prompt_template})
         else:
             self.approved_prompts[-1]['prompt'] = prompt
+            self.approved_prompts[-1]['prompt_ready_to_use'] = prompt_template
 
     def _got_introduction_responses(self):
         self._add_system_msg(
@@ -173,7 +180,7 @@ class DoubleChatManager:
         prompt = extract_delimited_text(resp, '```')
         prompt = prompt.strip("\"")
 
-        self.add_prompt(prompt, is_new=is_new or len(self.approved_prompts) == 1)
+        self._add_prompt(prompt, is_new=is_new or len(self.approved_prompts) == 1)
 
         self._add_assistant_msg(prompt, 'hidden')
         self._add_system_msg('Please validate your suggestion with the user, and update it if necessary.')
@@ -200,12 +207,11 @@ class DoubleChatManager:
             "Do not share your insights until you have collected all examples."
         )
         resp = self._get_assistant_response(max_new_tokens=200)
-        # self.hidden_chat = self.hidden_chat[:-1]
         self._add_assistant_msg(resp, 'both')
         return resp
 
     def _do_nothing(self):
-        resp = self._get_assistant_response(max_new_tokens=100)
+        resp = self._get_assistant_response(max_new_tokens=200)
         self._add_assistant_msg(resp, 'both')
         return resp
 
@@ -229,7 +235,6 @@ class DoubleChatManager:
         self._add_assistant_msg(resp, 'both')
 
     def _evaluate_prompt(self):
-        # TODO: handle the cases when there's no example yet, or multiple examples
         eval_chat = []
         self._add_msg(eval_chat, ChatRole.SYSTEM, self.approved_prompts[-1]['prompt'])
         example = self.text_examples[self.validated_example_idx]
@@ -264,8 +269,8 @@ class DoubleChatManager:
             texts_and_summaries = self.summaries[self.approved_prompts[-1]['prompt']]
             prompt += "\n\n".join(["Text: " + t + "\n\nSummary: " + s for t, s in texts_and_summaries.items()])
 
-        self.add_prompt(prompt, is_new=True)
-
+        self._add_prompt(prompt, is_new=True)
+        prompt = self.approved_prompts[-1]['prompt_ready_to_use']
         final_msg = "Here is the final prompt: \n\n" + prompt
         saved_name, bam_url = self.bam_client.save_prompt(name, prompt)
         final_msg += f'\n\nThis prompt has been saved to your prompt Library under the name "{saved_name}". ' \
@@ -311,9 +316,9 @@ class DoubleChatManager:
                 initial_prompt = extract_delimited_text(resp, '```')
                 next_state = ConversationState.PROCESS_TEXTS
 
-            self.add_prompt(initial_prompt)
+            self._add_prompt(initial_prompt, is_new=True)
             self._add_system_msg(
-                f"The initial prompt you suggest the user for summarization is: {self.approved_prompts[-1]}\n "
+                f"The initial prompt you suggest the user for summarization is: {self.approved_prompts[-1]['prompt']}\n "
                 f"Do not change or format this prompt, present it to the user as is. "
                 f"Validate the suggestion with the user, and update it if necessary."
             )
