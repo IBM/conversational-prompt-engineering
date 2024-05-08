@@ -146,6 +146,26 @@ class DoubleChatManager:
         self.hidden_chat = self.hidden_chat[:-1]
         self._add_assistant_msg(resp, 'both')
 
+    def _need_clarification_from_the_user(self):
+        self._add_system_msg(
+            "Do you need any clarification on the user\'s respond? "
+            "or maybe you are missing some details in understanding the user preferences? "
+            "or maybe the user is not happy with the prompt you suggested but they do not say why? "
+            "Answer yes or no ONLY."
+        )
+        resp = self._get_assistant_response()
+        self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
+        if resp.lower().startswith('yes'):
+            return True
+        return False
+
+    def _ask_clarification_question(self):
+        self._add_system_msg(
+            'Ok, please ask a clarification question if needed.')
+        resp = self._get_assistant_response()
+        self.hidden_chat = self.hidden_chat[:-1]
+        self._add_assistant_msg(resp, 'both')
+
     def _extract_text_example(self):
         self._add_system_msg(
             'Did you obtain a text example from the user in the last message? If you did, write "yes" and the text enclosed in triple quotes (```). If the user indicated that they don\'t have more examples, just write "no"')
@@ -191,7 +211,7 @@ class DoubleChatManager:
     def _suggestion_accepted(self):
         self._add_system_msg(
             'Has the user accepted your suggestion or corrected it? Answer either "accepted" or "corrected"')
-        resp = self._get_assistant_response(max_new_tokens=10)
+        resp = self._get_assistant_response(max_new_tokens=50)
         self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
 
         is_accepted = 'accepted' in resp.lower()
@@ -219,17 +239,21 @@ class DoubleChatManager:
     def _has_more_texts(self):
         if self.user_has_more_texts:
             self._add_system_msg(
-                'Has the user indicated they finished sharing texts, or not? Answer either "finished" or "not"')
-            resp = self._get_assistant_response(max_new_tokens=10)
+                'Has the user indicated they finished sharing texts (e.g. that they have no more examples to share), or not? Answer either "finished" or "not finished"')
+            resp = self._get_assistant_response(max_new_tokens=20)
             self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
-            self.user_has_more_texts = "not" in resp.lower()
+            self.user_has_more_texts = ("not finished" in resp.lower()) or not (resp.lower() == "finished." or
+                "no more" in resp.lower() or "have finished" in resp.lower() or "they finished sharing" in resp.lower())
+            logging.info(f"user_has_more_texts is set to {self.user_has_more_texts}")
         return self.user_has_more_texts
 
     def _ask_text_questions(self):
         self._add_system_msg(
-            "Now, based on these examples, ask the user up to 3 relevant questions about his summary preferences. "
+            "Now, if the user shared some examples, ask the user up to 3 relevant questions about his summary preferences. "
             "Please do not ask questions that refer to a specific example. "
             "Ask the user to answer all the questions at the same turn."
+            "If the user did not provide any examples, ask only general questions about the prompt "
+            "without mentioning that the user shared examples. "
         )
         resp = self._get_assistant_response()
         # self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
@@ -345,7 +369,11 @@ class DoubleChatManager:
                     self.state = ConversationState.CONFIRM_SUMMARY
             else:
                 logging.info("user did not approve")
-                self._confirm_prompt(is_new=False)
+                if self._need_clarification_from_the_user():
+                    logging.info("clarification question")
+                    self._ask_clarification_question()
+                else:
+                    self._confirm_prompt(is_new=False)
 
         elif self.state == ConversationState.PROCESS_TEXTS:
             example_extracted = self._extract_text_example()
