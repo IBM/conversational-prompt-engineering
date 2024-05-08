@@ -63,7 +63,7 @@ def run():
         st.markdown(f"2) After file is uploaded, {NUM_EXAMPLES} examples are chosen at random for evaluation.")
         st.markdown("3) Below you can see the prompts that were curated during your chat and will be used for evaluation.")
         st.markdown(f"4) Next, click on ***Summarize***. Each prompt will be used to generate a summary for each of the {NUM_EXAMPLES} examples.")
-        st.markdown("5) After the summaries are generated, select the best summary for each text.")
+        st.markdown("5) After the summaries are generated, select the best summary for each text. The order of the summaries is mixed for each example.")
         st.markdown("6) When you are done, click on ***Submit*** to present the evaluation scores.")
 
     col1, col2 = st.columns(2)
