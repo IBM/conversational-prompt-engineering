@@ -421,7 +421,7 @@ class DoubleChatManager:
         self.enable_upload_file = False
         self.user_has_more_texts = False
 
-        text_col = df.columns[0]  # can ask the model which column is most likely the text
+        text_col = 'text' if 'text' in df.columns else df.columns[0]  # can ask the model which column is most likely the text
         texts = df.sample(frac=1, random_state=42)[text_col].tolist()
         self.text_examples = texts[:3]
 
