@@ -119,6 +119,7 @@ class DoubleChatManager:
         self._add_assistant_msg(resp, 'both')
 
     def _add_prompt(self, prompt, is_new=True):
+        prompt = prompt.strip("\n")
 
         def _build_prompt_template():
             return prompt + "\n\nText: {text}\n\nSummary: "
@@ -430,3 +431,7 @@ class DoubleChatManager:
         self._ask_text_questions()
 
         self.state = ConversationState.PROCESS_RESPONSES
+
+    def get_prompts(self):
+        return self.approved_prompts
+

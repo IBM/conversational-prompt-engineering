@@ -21,7 +21,7 @@ parser.add_argument('--out_dir', help='path for saving evaluation files')
 
 
 def get_prompts_to_evaluate(prompts):
-    if len(prompts) > 3:
+    if len(prompts) > 2:
         prompts = [prompts[0]] + [prompts[-1]]  # keeping the first and last prompts
     return prompts
 
@@ -35,7 +35,7 @@ def compare_prompts_within_conversation(prompts_path, data_path, out_dir):
         test_df = test_df.sample(n=NUM_EXAMPLES_TO_LABEL, random_state=0)
     texts = test_df['text'].tolist()
 
-    generated_data_mixed, generated_data_ordered = evaluate(prompts, texts)
+    generated_data_mixed, generated_data_ordered = summarize(prompts, texts)
 
     os.makedirs(out_dir, exist_ok=True)
 
@@ -50,7 +50,7 @@ def compare_prompts_within_conversation(prompts_path, data_path, out_dir):
     logging.info(f"evaluation files saved to {out_dir}")
 
 
-def evaluate(prompts, texts):
+def summarize(prompts, texts):
     with open("backend/bam_params.json", "r") as f:
         bam_params = json.load(f)
     bam_params['api_key'] = os.environ['BAM_APIKEY']
@@ -69,10 +69,11 @@ def evaluate(prompts, texts):
         for i in range(len(prompts)):
             row_data_ordered[str(i) + "_prompt"] = prompts[i]['prompt']
             row_data_ordered[str(i)] = prompts_responses[i]
-        mixed_indices = np.argsort(prompts_responses)
-        for i in mixed_indices:
-            row_data_mixed[str(i) + "_prompt"] = prompts[i]['prompt']
-            row_data_mixed[str(i)] = prompts_responses[i]
+        mixed_indices = list(range(len(prompts)))
+        random.shuffle(mixed_indices)
+        for i in range(len(mixed_indices)):
+            row_data_mixed[str(i) + "_prompt"] = prompts[mixed_indices[i]]['prompt']
+            row_data_mixed[str(i)] = prompts_responses[mixed_indices[i]]
         generated_data_ordered.append(row_data_ordered)
         generated_data_mixed.append(row_data_mixed)
     return generated_data_mixed, generated_data_ordered

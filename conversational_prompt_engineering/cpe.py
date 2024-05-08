@@ -7,6 +7,17 @@ import streamlit as st
 from conversational_prompt_engineering.backend.double_chat_manager import DoubleChatManager
 from conversational_prompt_engineering.backend.manager import Manager, Mode
 
+from st_pages import Page, show_pages, hide_pages
+
+st.set_page_config(layout="wide")
+
+show_pages(
+    [
+        Page("cpe.py", "Chat", ""),
+        Page("pages/evaluation_ui.py", "Evaluate", ""),
+    ]
+)
+
 
 def old_reset_chat():
     st.session_state.manager = Manager(st.session_state.mode, st.session_state.key)
@@ -24,7 +35,12 @@ def new_cycle():
         st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
     manager = st.session_state.manager
 
-    # 2. layout reset and upload buttons in 2 columns
+    # 2. hide evaluation option in sidebar
+    prompts = manager.get_prompts()
+    if len(prompts) < 2:
+        hide_pages(["Evaluate"])
+
+    # 3. layout reset and upload buttons in 2 columns
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Reset chat"):
@@ -34,16 +50,16 @@ def new_cycle():
             if uploaded_file := st.file_uploader("Upload text examples csv"):
                 manager.process_examples(pd.read_csv(uploaded_file))
 
-    # 3. user input
+    # 4. user input
     if user_msg := st.chat_input("Write your message here"):
         manager.add_user_message(user_msg)
 
-    # 4. render the existing messages
+    # 5. render the existing messages
     for msg in manager.user_chat:
         with st.chat_message(msg['role']):
             st.write(msg['content'])
 
-    # 5. generate and render the agent response
+    # 6. generate and render the agent response
     msg = manager.generate_agent_message()
     if msg is not None:
         with st.chat_message(msg['role']):

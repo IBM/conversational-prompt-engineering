@@ -1,3 +1,4 @@
 streamlit
+st-pages
 ibm-generative-ai==2.3.0
 tqdm
