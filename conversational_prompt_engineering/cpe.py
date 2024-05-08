@@ -29,9 +29,10 @@ def new_cycle():
     with col1:
         if st.button("Reset chat"):
             reset_chat()
-    with col2:
-        if uploaded_file := st.file_uploader("Upload text examples csv"):
-            manager.process_examples(pd.read_csv(uploaded_file))
+    if manager.enable_upload_file:
+        with col2:
+            if uploaded_file := st.file_uploader("Upload text examples csv"):
+                manager.process_examples(pd.read_csv(uploaded_file))
 
     # 3. user input
     if user_msg := st.chat_input("Write your message here"):
@@ -43,10 +44,10 @@ def new_cycle():
             st.write(msg['content'])
 
     # 5. generate and render the agent response
-    manager.generate_agent_message()
-    msg = manager.user_chat[-1]
-    with st.chat_message(msg['role']):
-        st.write(msg['content'])
+    msg = manager.generate_agent_message()
+    if msg is not None:
+        with st.chat_message(msg['role']):
+            st.write(msg['content'])
 
 
 def old_cycle():
