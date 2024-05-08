@@ -227,6 +227,7 @@ class DoubleChatManager:
             "This will help you get familiar with the domain and the flavor of the user's documents. "
             "Mention to the user that they need to share three examples one at a time, "
             "but at each stage they can indicate that they do not have anymore examples to share. "
+            "Please ask them to share only the clean text of the examples without any prefixes or suffixes. "
             "Do not share your insights until you have collected all examples."
         )
         resp = self._get_assistant_response(max_new_tokens=200)
