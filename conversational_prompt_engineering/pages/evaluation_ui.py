@@ -4,7 +4,7 @@ import streamlit as st
 import os
 import pandas as pd
 
-from conversational_prompt_engineering.backend.evaluation import get_prompts_to_evaluate, summarize
+from conversational_prompt_engineering.backend.evaluation import Evaluation
 
 NUM_EXAMPLES = 5
 
@@ -71,9 +71,6 @@ def run():
         if st.button("Reset evaluation"):
             reset_evaluation()
 
-    if 'BAM_APIKEY' in os.environ:
-        st.session_state['key'] = os.environ['BAM_APIKEY']
-
     # upload test data
     with col2:
         uploaded_file = st.file_uploader("Upload test file", type={"csv"})
@@ -84,8 +81,10 @@ def run():
             texts = df.text.tolist()
 
     # get prompts to evaluate
+    if 'evaluation' not in st.session_state:
+        st.session_state.evaluation = Evaluation(st.session_state.key)
     st.session_state.prompts = st.session_state.manager.get_prompts()
-    st.session_state.prompts = get_prompts_to_evaluate(st.session_state.prompts)
+    st.session_state.prompts = st.session_state.evaluation.get_prompts_to_evaluate(st.session_state.prompts)
 
     if 'count' not in st.session_state:
         st.session_state.count = 0
@@ -105,7 +104,7 @@ def run():
 
     # summarize texts using prompts
     if st.session_state.evaluate_clicked:
-        generated_data_mixed, generated_data_ordered = summarize(st.session_state.prompts, texts)
+        generated_data_mixed, generated_data_ordered = st.session_state.evaluation.summarize(st.session_state.prompts, texts)
         st.session_state.generated_data = generated_data_mixed
         for row in st.session_state.generated_data:
             row['selected_side'] = None
