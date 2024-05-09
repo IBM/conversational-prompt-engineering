@@ -1,6 +1,7 @@
 import json
 import os
 import logging
+import random
 import time
 
 import pandas as pd
@@ -426,11 +427,15 @@ class DoubleChatManager:
         self.user_has_more_texts = False
 
         text_col = df.columns[0]  # can ask the model which column is most likely the text
-        texts = df.sample(frac=1, random_state=42)[text_col].tolist()
+        texts = df[text_col].tolist()
         self.text_examples = texts[:3]
+        if len(texts) > 10:
+            texts = texts[3:]
+            random.shuffle(texts)
+            texts = texts[:10]
 
         self._add_system_msg('Here are some examples of texts to be summarized')
-        for i, txt in enumerate(texts[3:13]):
+        for i, txt in enumerate(texts):
             self._add_system_msg(f'Example {i + 1}:\n{txt}')
         self._ask_text_questions()
 
