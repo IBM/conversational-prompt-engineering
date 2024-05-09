@@ -206,6 +206,7 @@ class DoubleChatManager:
 
         old_prompt_size = len(self.approved_prompts)
         self._add_prompt(prompt, is_new=is_new or len(self.approved_prompts) == 1)
+        logging.info(f"added prompt: {prompt} {'new' if (is_new or len(self.approved_prompts) == 1) else 'corrected'}")
         new_prompt_size = len(self.approved_prompts)
         self._add_assistant_msg(prompt, 'hidden')
         self._add_system_msg('Please validate your suggested prompt with the user, and update it if necessary.')
