@@ -18,7 +18,6 @@ show_pages(
     ]
 )
 
-
 def old_reset_chat():
     st.session_state.manager = Manager(st.session_state.mode, st.session_state.key)
     st.session_state.messages = []
@@ -36,9 +35,10 @@ def new_cycle():
     manager = st.session_state.manager
 
     # 2. hide evaluation option in sidebar
-    prompts = manager.get_prompts()
-    if len(prompts) < 2:
-        hide_pages(["Evaluate"])
+    # prompts = manager.get_prompts()
+
+    # if len(prompts) < 2:
+    #     hide_pages(["Evaluate"])
 
     # 3. layout reset and upload buttons in 2 columns
     col1, col2 = st.columns(2)

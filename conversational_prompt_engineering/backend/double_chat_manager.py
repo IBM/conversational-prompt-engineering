@@ -203,11 +203,14 @@ class DoubleChatManager:
         prompt = extract_delimited_text(resp, '```')
         prompt = prompt.strip("\"")
 
+        old_prompt_size = len(self.approved_prompts)
         self._add_prompt(prompt, is_new=is_new or len(self.approved_prompts) == 1)
-
+        new_prompt_size = len(self.approved_prompts)
         self._add_assistant_msg(prompt, 'hidden')
         self._add_system_msg('Please validate your suggested prompt with the user, and update it if necessary.')
         resp = self._get_assistant_response(max_new_tokens=200)
+        if new_prompt_size == 2 and old_prompt_size == 1:
+            resp += "\nNote the evaluation page is now open. At any time, you can evaluate the prompt we are working on by clicking *evaluation* on the left side-bar. You can always come back and continue the chat."
         self._add_assistant_msg(resp, 'both')
 
     def _suggestion_accepted(self):
