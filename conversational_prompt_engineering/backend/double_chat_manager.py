@@ -114,7 +114,11 @@ class DoubleChatManager:
 
         self._add_system_msg(
             "Thanks. "
-            "Now, introduce yourself to the user, and suggest to upload a csv file with text examples if they have it."
+            "Now, introduce yourself to the user, and present the following flow (do not act on this flow, just present it to the user): "
+            "1. You'll agree with user on initial prompt."
+            "2. You'll then refine prompt based on unlabeled examples."
+            "3. You'll improve prompt using user’s feedback on model outputs."
+            "Then, suggest to upload a csv file with text examples if they have it."
         )
         resp = self._get_assistant_response(max_new_tokens=200)
         self._add_assistant_msg(resp, 'both')
@@ -257,7 +261,7 @@ class DoubleChatManager:
 
     def _ask_text_questions(self):
         self._add_system_msg(
-            "Now, if the user shared some examples, ask the user up to 3 relevant questions about his summary preferences. "
+            "Now, if the user shared some examples, ask the user up to 5 relevant questions about his summary preferences. "
             "Please do not ask questions that refer to a specific example. "
             "Ask the user to answer all the questions at the same turn."
             "If the user did not provide any examples, ask only general questions about the prompt "
