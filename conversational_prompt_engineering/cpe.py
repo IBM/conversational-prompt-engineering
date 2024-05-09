@@ -14,7 +14,7 @@ st.set_page_config(layout="wide")
 show_pages(
     [
         Page("cpe.py", "Chat", ""),
-        Page("pages/evaluation_ui.py", "Evaluate", ""),
+        Page("pages/evaluation.py", "Evaluate", ""),
     ]
 )
 
