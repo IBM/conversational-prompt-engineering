@@ -56,8 +56,11 @@ def reset_evaluation():
 
 
 def run():
-    st.session_state.prompts = st.session_state.manager.get_prompts()
-    if len(st.session_state.prompts) < 2:
+    num_prompts = 0
+    if 'manager' in st.session_state:
+        st.session_state.prompts = st.session_state.manager.get_prompts()
+        num_prompts = len(st.session_state.prompts)
+    if num_prompts < 2:
         st.write("Evaluation will be open after at least two prompts are curated in the chat.")
     else:
         # present instructions
