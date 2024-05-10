@@ -118,7 +118,7 @@ class DoubleChatManager:
             "1. You'll agree with user on initial prompt."
             "2. You'll then refine prompt based on unlabeled examples."
             "3. You'll improve prompt using user’s feedback on model outputs."
-            "Then, suggest to upload a csv file with text examples if they have it."
+            "Then, suggest to upload a csv file if they have it, where the first column contains the text inputs."
         )
         resp = self._get_assistant_response(max_new_tokens=200)
         self._add_assistant_msg(resp, 'both')
