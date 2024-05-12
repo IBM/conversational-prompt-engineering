@@ -437,11 +437,25 @@ class DoubleChatManager:
         if len(texts) > 10:
             texts = texts[3:]
             random.shuffle(texts)
-            texts = texts[:10]
 
-        self._add_system_msg('Here are some examples of texts to be summarized')
-        for i, txt in enumerate(texts):
-            self._add_system_msg(f'Example {i + 1}:\n{txt}')
+        temp_chat = []
+        self._add_msg(temp_chat, ChatRole.SYSTEM,
+                      'We are working on a tailored prompt for text summarization. '
+                      'Following are few examples of texts to be summarized. '
+                      'Describe common characteristics of those examples which may be relevant for the summarization.')
+        total_len = 0
+        max_len_char = 30_000
+        num_examples = 0
+        for txt in texts:
+            self._add_msg(temp_chat, ChatRole.SYSTEM, txt)
+            total_len += len(txt)
+            num_examples += 1
+            if total_len > max_len_char:
+                break
+
+        characteristics = self._get_assistant_response(temp_chat)
+        self._add_system_msg(f'The user has provided {num_examples} examples')
+        self._add_msg(self.hidden_chat, ChatRole.ASSISTANT, characteristics)
         self._ask_text_questions()
 
         self.state = ConversationState.PROCESS_RESPONSES
