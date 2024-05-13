@@ -258,6 +258,15 @@ class DoubleChatManager:
         self._add_assistant_msg(resp, 'both')
         return resp
 
+    def _ask_for_next_text(self):
+        self._add_system_msg(
+            "Ask the user for the next text example. "
+            "Please remind them to share only the clean text of the examples without any prefixes or suffixes. "
+        )
+        resp = self._get_assistant_response(max_new_tokens=200)
+        self._add_assistant_msg(resp, 'both')
+        return resp
+
     def _has_more_texts(self):
         if self.user_has_more_texts:
             self._add_system_msg(
@@ -398,8 +407,10 @@ class DoubleChatManager:
             if example_extracted:
                 logging.info("extracted text from user")
             if self._has_more_texts():
-                self._do_nothing()
+                logging.info("ask the user for another example")
+                self._ask_for_next_text()
             else:
+                logging.info("ask questions on the examples provided")
                 self._ask_text_questions()
                 self.state = ConversationState.PROCESS_RESPONSES
 
