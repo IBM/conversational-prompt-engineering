@@ -91,12 +91,13 @@ def run():
         if 'evaluation' not in st.session_state:
             st.session_state.evaluation = Evaluation(st.session_state.key)
 
-        prompts = st.session_state.evaluation.get_prompts_to_evaluate(st.session_state.manager.approved_prompts)
-        few_shot_prompts = []
+        # prompts = st.session_state.evaluation.get_prompts_to_evaluate(st.session_state.manager.approved_prompts)
+        baseline_prompt = 'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.'
+        baseline_prompt = build_few_shot_prompt(baseline_prompt, [])
         few_shot_examples = st.session_state.manager.approved_summaries[:st.session_state.manager.validated_example_idx]
-        for prompt in prompts:
-            few_shot_prompts.append(build_few_shot_prompt(prompt['prompt'], few_shot_examples))
-        st.session_state.prompts = few_shot_prompts
+        current_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
+                                               few_shot_examples)
+        st.session_state.prompts = [baseline_prompt, current_prompt]
 
         if 'count' not in st.session_state:
             st.session_state.count = 0
