@@ -9,6 +9,8 @@ from genai.schema import ChatRole
 
 from conversational_prompt_engineering.util.bam import BamGenerate
 
+BASELINE_PROMPT = 'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.'
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 
 
@@ -282,7 +284,7 @@ class DoubleChatManager:
         self._add_system_msg(
             "Now, if the user shared some examples, ask the user up to 3 relevant questions about his summary preferences. "
             "Please do not ask questions that refer to a specific example. "
-            "Ask the user to answer all the questions at the same turn."
+            "Ask the user to answer all the questions at the same turn. "
             "If the user did not provide any examples, ask only general questions about the prompt "
             "without mentioning that the user shared examples. "
         )
@@ -361,8 +363,7 @@ class DoubleChatManager:
         elif self.state == ConversationState.INTRODUCTION:
             if len(self.text_examples) == 0:
                 self.enable_upload_file = False
-                initial_prompt = \
-                    'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.'
+                initial_prompt = BASELINE_PROMPT
                 next_state = ConversationState.CONFIRM_PROMPT
             else:
                 instruction_txt = 'Look at the following text examples, and suggest a summarization prompt for them. ' \

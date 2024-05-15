@@ -4,7 +4,7 @@ import streamlit as st
 import os
 import pandas as pd
 
-from conversational_prompt_engineering.backend.double_chat_manager import build_few_shot_prompt
+from conversational_prompt_engineering.backend.double_chat_manager import build_few_shot_prompt, BASELINE_PROMPT
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
 
 NUM_EXAMPLES = 5
@@ -92,7 +92,7 @@ def run():
             st.session_state.evaluation = Evaluation(st.session_state.key)
 
         # prompts = st.session_state.evaluation.get_prompts_to_evaluate(st.session_state.manager.approved_prompts)
-        baseline_prompt = 'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.'
+        baseline_prompt = BASELINE_PROMPT
         baseline_prompt = build_few_shot_prompt(baseline_prompt, [])
         few_shot_examples = st.session_state.manager.approved_summaries[:st.session_state.manager.validated_example_idx]
         current_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
