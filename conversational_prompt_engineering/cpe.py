@@ -3,6 +3,7 @@ import os
 
 import pandas as pd
 import streamlit as st
+from streamlit_js_eval import streamlit_js_eval
 
 from conversational_prompt_engineering.backend.double_chat_manager import DoubleChatManager
 from conversational_prompt_engineering.backend.manager import Manager, Mode
@@ -18,14 +19,14 @@ show_pages(
     ]
 )
 
+
 def old_reset_chat():
     st.session_state.manager = Manager(st.session_state.mode, st.session_state.key)
     st.session_state.messages = []
 
 
 def reset_chat():
-    st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
-    st.session_state.messages = []
+    streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
 
 def new_cycle():
@@ -129,10 +130,13 @@ if 'BAM_APIKEY' in os.environ:
 if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
     with st.form("my_form", clear_on_submit=True):
         st.write("Welcome to IBM Research Conversational Prompt Engineering service.")
-        st.write("This service is intended to help users build an effective prompt, tailored to their specific summarization use case, through a simple chat with an LLM.")
-        st.write("To make the most out of this service, it would be best to prepare in advance 3 *input* examples, that represent your use case.")
+        st.write(
+            "This service is intended to help users build an effective prompt, tailored to their specific summarization use case, through a simple chat with an LLM.")
+        st.write(
+            "To make the most out of this service, it would be best to prepare in advance 3 *input* examples, that represent your use case.")
         st.write("For more information feel free to contact us in slack via #foundation-models-lm-utilization.")
-        st.write("This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses.")
+        st.write(
+            "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses.")
         st.write("To proceed, please provide your BAM API key.")
         key = st.text_input(label="BAM API key")
         submit = st.form_submit_button()

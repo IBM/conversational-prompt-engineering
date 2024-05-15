@@ -1,4 +1,5 @@
 streamlit
 st-pages
+streamlit-js-eval
 ibm-generative-ai==2.3.0
 tqdm
