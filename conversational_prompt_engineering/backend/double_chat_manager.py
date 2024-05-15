@@ -38,6 +38,7 @@ class ConversationState:
     PROCESS_RESPONSES = 'process_responses'
     EVALUATE_PROMPT = 'evaluate_prompt'
     CONFIRM_SUMMARY = 'confirm_summary'
+    DONE = 'done'
 
 
 def extract_delimited_text(txt, delim):
@@ -331,7 +332,7 @@ class DoubleChatManager:
         final_msg += f'\n\nThis prompt has been saved to your prompt Library under the name "{saved_name}". ' \
                      f'You can try it in the [BAM Prompt Lab]({bam_url})'
         self._add_assistant_msg(final_msg, 'user')
-        self.state = None
+        self.state = ConversationState.DONE
 
         # saving prompts
         out_dir = f"_out/{name}"
@@ -438,6 +439,9 @@ class DoubleChatManager:
                 logging.info("user did not approve so making changes to prompt")
                 self._confirm_prompt(is_new=True)
                 self.state = ConversationState.CONFIRM_PROMPT
+
+        elif self.state == ConversationState.DONE:
+            self._add_msg(self.user_chat, ChatRole.ASSISTANT, 'Please press the "Reset" button to restart the session')
 
         return self.user_chat[-1]
 

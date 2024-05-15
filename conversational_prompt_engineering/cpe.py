@@ -25,10 +25,6 @@ def old_reset_chat():
     st.session_state.messages = []
 
 
-def reset_chat():
-    streamlit_js_eval(js_expressions="parent.window.location.reload()")
-
-
 def new_cycle():
     # 1. create the manager if necessary
     if "manager" not in st.session_state:
@@ -45,7 +41,7 @@ def new_cycle():
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Reset chat"):
-            reset_chat()
+            streamlit_js_eval(js_expressions="parent.window.location.reload()")
     if manager.enable_upload_file:
         with col2:
             if uploaded_file := st.file_uploader("Upload text examples csv"):
