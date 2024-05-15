@@ -41,12 +41,15 @@ class ConversationState:
     DONE = 'done'
 
 
-def extract_delimited_text(txt, delim):
-    if delim not in txt:
-        return txt  # None
-    begin = txt.index(delim) + len(delim)
-    end = begin + txt[begin:].index(delim)
-    return txt[begin:end]
+def extract_delimited_text(txt, delims):
+    if type(delims) is str:
+        delims = [delims]
+    for delim in delims:
+        if delim in txt:
+            begin = txt.index(delim) + len(delim)
+            end = begin + txt[begin:].index(delim)
+            return txt[begin:end]
+    return txt  # delims not found in text
 
 
 class DoubleChatManager:
@@ -218,7 +221,7 @@ class DoubleChatManager:
             'Enclose the prompt in triple quotes (```).'
         )
         resp = self._get_assistant_response(max_new_tokens=200)
-        prompt = extract_delimited_text(resp, '```')
+        prompt = extract_delimited_text(resp, ['```', '"""'])
         prompt = prompt.strip("\"")
 
         old_prompt_size = len(self.approved_prompts)
