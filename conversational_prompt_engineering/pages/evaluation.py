@@ -4,6 +4,7 @@ import streamlit as st
 import os
 import pandas as pd
 
+from conversational_prompt_engineering.backend.double_chat_manager import build_few_shot_prompt, BASELINE_PROMPT
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
 
 NUM_EXAMPLES = 5
@@ -40,7 +41,7 @@ def display_selected(selection):
 
 
 def select(prompt, side):
-    selected_prompt = "0" if prompt == st.session_state.prompts[0]['prompt'] else "1"
+    selected_prompt = "0" if prompt == st.session_state.prompts[0] else "1"
     st.session_state.generated_data[st.session_state.count]['selected_prompt'] = selected_prompt
     st.session_state.generated_data[st.session_state.count]['selected_side'] = side
 
@@ -58,8 +59,7 @@ def reset_evaluation():
 def run():
     num_prompts = 0
     if 'manager' in st.session_state:
-        st.session_state.prompts = st.session_state.manager.get_prompts()
-        num_prompts = len(st.session_state.prompts)
+        num_prompts = len(st.session_state.manager.approved_prompts)
     if num_prompts < 2:
         st.write("Evaluation will be open after at least two prompts are curated in the chat.")
     else:
@@ -85,13 +85,19 @@ def run():
                 df = pd.read_csv(uploaded_file)
                 df = df.sample(NUM_EXAMPLES) ###
                 st.empty()
-                texts = df.text.tolist()
+                test_texts = df.text.tolist()
 
         # get prompts to evaluate
         if 'evaluation' not in st.session_state:
             st.session_state.evaluation = Evaluation(st.session_state.key)
 
-        st.session_state.prompts = st.session_state.evaluation.get_prompts_to_evaluate(st.session_state.prompts)
+        # prompts = st.session_state.evaluation.get_prompts_to_evaluate(st.session_state.manager.approved_prompts)
+        baseline_prompt = BASELINE_PROMPT
+        baseline_prompt = build_few_shot_prompt(baseline_prompt, [])
+        few_shot_examples = st.session_state.manager.approved_summaries[:st.session_state.manager.validated_example_idx]
+        current_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
+                                               few_shot_examples)
+        st.session_state.prompts = [baseline_prompt, current_prompt]
 
         if 'count' not in st.session_state:
             st.session_state.count = 0
@@ -99,10 +105,10 @@ def run():
         # show prompts
         col1, col2 = st.columns(2)
         with col1:
-            st.text_area("Prompt 1", st.session_state.prompts[0]['prompt'])
+            st.text_area("Prompt 1", st.session_state.prompts[0])
 
         with col2:
-            st.text_area("Prompt 2", st.session_state.prompts[1]['prompt'])
+            st.text_area("Prompt 2", st.session_state.prompts[1])
 
         # show summarize button
         st.session_state.evaluate_clicked = False
@@ -111,7 +117,9 @@ def run():
 
         # summarize texts using prompts
         if st.session_state.evaluate_clicked:
-            generated_data_mixed, generated_data_ordered = st.session_state.evaluation.summarize(st.session_state.prompts, texts)
+            generated_data_mixed, generated_data_ordered = \
+                st.session_state.evaluation.summarize(st.session_state.prompts,
+                                                      test_texts)
             st.session_state.generated_data = generated_data_mixed
             for row in st.session_state.generated_data:
                 row['selected_side'] = None

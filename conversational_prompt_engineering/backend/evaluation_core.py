@@ -63,17 +63,16 @@ class Evaluation:
             row_data_mixed = {"text": t}
             prompts_responses = []
             for i, prompt in enumerate(tqdm(prompts)):
-                prompt_str = prompt['prompt_ready_to_use']
-                prompt_str_t = prompt_str.format(text=t)
-                resp = self.bam_client.send_messages(prompt_str_t)[0]
+                prompt_str = prompt.format(text=t)
+                resp = self.bam_client.send_messages(prompt_str)[0]
                 prompts_responses.append(resp)
             for i in range(len(prompts)):
-                row_data_ordered[str(i) + "_prompt"] = prompts[i]['prompt']
+                row_data_ordered[str(i) + "_prompt"] = prompts[i]
                 row_data_ordered[str(i)] = prompts_responses[i]
             mixed_indices = list(range(len(prompts)))
             random.shuffle(mixed_indices)
             for i in range(len(mixed_indices)):
-                row_data_mixed[str(i) + "_prompt"] = prompts[mixed_indices[i]]['prompt']
+                row_data_mixed[str(i) + "_prompt"] = prompts[mixed_indices[i]]
                 row_data_mixed[str(i)] = prompts_responses[mixed_indices[i]]
             generated_data_ordered.append(row_data_ordered)
             generated_data_mixed.append(row_data_mixed)
