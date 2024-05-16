@@ -235,16 +235,32 @@ class DoubleChatManager:
             resp += "\nNote the evaluation page is now open. At any time, you can evaluate the prompt we are working on by clicking *evaluation* on the left side-bar. You can always come back and continue the chat."
         self._add_assistant_msg(resp, 'both')
 
-    def _suggestion_accepted(self):
+    def _user_asked_for_correction(self):
         self._add_system_msg(
-            'Has the user accepted your suggestion or corrected it? Answer either "accepted" or "corrected"')
+            'Has the user asked for a correction or a modification of the suggested prompt? answer "yes" or "no"')
         resp = self._get_assistant_response(max_new_tokens=50)
         self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
+        if resp.lower().startswith('yes'):
+            return True
+        return False
 
-        is_accepted = 'accepted' in resp.lower()
-        is_corrected = 'corrected' in resp.lower()
-        assert is_accepted != is_corrected
-        return is_accepted
+    def _prompt_suggestion_accepted(self):
+        self._add_system_msg(
+            'Has the user accepted the prompt you suggested? Answer "yes" or "no"')
+        resp = self._get_assistant_response(max_new_tokens=50)
+        self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
+        if resp.lower().startswith('yes'):
+            return True
+        return False
+
+    def _summary_suggestion_accepted(self):
+        self._add_system_msg(
+            'Has the user accepted the summary you suggested? Answer "yes" or "no"')
+        resp = self._get_assistant_response(max_new_tokens=50)
+        self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
+        if resp.lower().startswith('yes'):
+            return True
+        return False
 
     def _ask_for_text(self):
         self._add_system_msg(
@@ -389,22 +405,26 @@ class DoubleChatManager:
             self.state = next_state
 
         elif self.state == ConversationState.CONFIRM_PROMPT:
-            if self._suggestion_accepted():
-                logging.info("user approved it")
-                if self.user_has_more_texts:
-                    logging.info(f"asking for text to summarize")
-                    self._ask_for_text()
-                    self.state = ConversationState.PROCESS_TEXTS
-                else:
-                    logging.info(f"user gave {len(self.text_examples)} text examples. ({self.validated_example_idx})")
-                    self._evaluate_prompt()
-                    self.state = ConversationState.CONFIRM_SUMMARY
-            else:
-                logging.info("user did not approve")
+            if self._user_asked_for_correction():
+                logging.info("user asked for correction")
                 if self._need_clarification_from_the_user():
                     logging.info("clarification question")
                     self._ask_clarification_question()
                 else:
+                    self._confirm_prompt(is_new=False)
+            else:
+                if self._prompt_suggestion_accepted():
+                    logging.info("user accepted the suggested prompt")
+                    if self.user_has_more_texts:
+                        logging.info(f"asking for text to summarize")
+                        self._ask_for_text()
+                        self.state = ConversationState.PROCESS_TEXTS
+                    else:
+                        logging.info(f"user gave {len(self.text_examples)} text examples. ({self.validated_example_idx})")
+                        self._evaluate_prompt()
+                        self.state = ConversationState.CONFIRM_SUMMARY
+                else:
+                    logging.info("user did not accept the prompt")
                     self._confirm_prompt(is_new=False)
 
         elif self.state == ConversationState.PROCESS_TEXTS:
@@ -429,7 +449,7 @@ class DoubleChatManager:
             self.state = ConversationState.CONFIRM_SUMMARY
 
         elif self.state == ConversationState.CONFIRM_SUMMARY:
-            if self._suggestion_accepted():
+            if self._summary_suggestion_accepted():
                 logging.info(f"user approved the summary of one example. ({self.validated_example_idx})")
                 self.validated_example_idx += 1
                 if self.validated_example_idx == len(self.text_examples):
