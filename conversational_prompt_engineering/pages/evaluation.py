@@ -60,8 +60,8 @@ def run():
     num_prompts = 0
     if 'manager' in st.session_state:
         num_prompts = len(st.session_state.manager.approved_prompts)
-    if num_prompts < 2:
-        st.write("Evaluation will be open after at least two prompts are curated in the chat.")
+    if num_prompts < 1:
+        st.write("Evaluation will be open after at least one prompt has been curated in the chat.")
     else:
         # present instructions
         st.title("IBM Research Conversational Prompt Engineering - Evaluation")
