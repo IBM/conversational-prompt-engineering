@@ -1,0 +1,5 @@
+Multi-Domain Wizard-of-Oz dataset (MultiWOZ), a fully-labeled collection of task-oriented human-human written conversations spanning over multiple domains and topics (https://huggingface.co/datasets/multi_woz_v22).
+
+Optional summary criteria:
+1. Summarize the details of what was booked.
+2. Summarize the details of inquiries made in a structured format (e.g., bullet points).
