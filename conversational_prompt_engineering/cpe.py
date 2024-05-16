@@ -7,6 +7,7 @@ from streamlit_js_eval import streamlit_js_eval
 
 from conversational_prompt_engineering.backend.double_chat_manager import DoubleChatManager
 from conversational_prompt_engineering.backend.manager import Manager, Mode
+from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 
 from st_pages import Page, show_pages, hide_pages
 
@@ -23,6 +24,8 @@ show_pages(
 def old_reset_chat():
     st.session_state.manager = Manager(st.session_state.mode, st.session_state.key)
     st.session_state.messages = []
+
+
 
 
 def new_cycle():
@@ -45,7 +48,7 @@ def new_cycle():
     if manager.enable_upload_file:
         with col2:
             if uploaded_file := st.file_uploader("Upload text examples csv"):
-                manager.process_examples(pd.read_csv(uploaded_file))
+                manager.process_examples(read_user_csv_file(uploaded_file))
 
     # 4. user input
     if user_msg := st.chat_input("Write your message here"):
