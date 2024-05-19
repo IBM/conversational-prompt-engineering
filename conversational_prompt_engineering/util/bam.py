@@ -63,6 +63,18 @@ class BamGenerate:
         self.client = Client(credentials=Credentials(api_key=params['api_key'], api_endpoint=params['api_endpoint']))
         self.parameters = params
 
+    def count_tokens(self, txt):
+        if type(txt) is str:
+            txt = [txt]
+        token_counts = []
+        for response in tqdm(self.client.text.tokenization.create(
+            model_id=self.parameters['model_id'],
+            input=txt),
+        ):
+            for result in response.results:
+                token_counts.append(result.token_count)
+        return token_counts
+
     def send_messages(self, conversation, max_new_tokens=None):
         parameters = TextGenerationParameters(
             decoding_method=DecodingMethod.GREEDY,

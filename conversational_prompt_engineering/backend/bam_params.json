@@ -1,5 +1,6 @@
 {
-  "model_id": "mistralai/mixtral-8x7b-instruct-v01",
+  "model_id": "meta-llama/llama-3-70b-instruct",
   "api_endpoint": "https://bam-api.res.ibm.com",
-  "max_new_tokens": 4096
+  "max_new_tokens": 2048,
+  "max_total_tokens": 8196
 }
