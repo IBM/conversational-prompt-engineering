@@ -25,8 +25,13 @@ class ConversationState:
     DONE = 'done'
 
 
+LLAMA_END_OF_MESSAGE = "<|eot_id|>"
+
+LLAMA_START_OF_INPUT = '<|begin_of_text|>'
+
+
 def build_few_shot_prompt(prompt, texts_and_summaries):
-    prompt = _get_llama_start_format() + _get_llama_header(ChatRole.USER) + "\n\n" + prompt + "\n\n"
+    prompt = LLAMA_START_OF_INPUT + _get_llama_header(ChatRole.USER) + "\n\n" + prompt + "\n\n"
     if len(texts_and_summaries) > 0:
         if len(texts_and_summaries) > 1:  # we already have at least two approved summary examples
             prompt += "Here are some typical text examples and their corresponding summaries."
@@ -37,23 +42,15 @@ def build_few_shot_prompt(prompt, texts_and_summaries):
                 prompt += _get_llama_header(ChatRole.USER)
             text = item['text']
             summary = item['summary']
-            prompt += f"\n\nText: {text}\n\nSummary:{_get_llama_end_of_message()}" \
-                      f"{_get_llama_header(ChatRole.ASSISTANT)}{summary}{_get_llama_end_of_message()}"
+            prompt += f"\n\nText: {text}\n\nSummary:{LLAMA_END_OF_MESSAGE}" \
+                      f"{_get_llama_header(ChatRole.ASSISTANT)}{summary}{LLAMA_END_OF_MESSAGE}"
         prompt += _get_llama_header(ChatRole.USER) + "\n\nNow, please summarize the following text.\n\n"
-    prompt += "Text: {text}\n\nSummary: " + _get_llama_end_of_message() + _get_llama_header(ChatRole.ASSISTANT)
+    prompt += "Text: {text}\n\nSummary: " + LLAMA_END_OF_MESSAGE + _get_llama_header(ChatRole.ASSISTANT)
     return prompt
 
 
 def _get_llama_header(role):
     return "<|start_header_id|>" + role + "<|end_header_id|>"
-
-
-def _get_llama_end_of_message():
-    return "<|eot_id|>"
-
-
-def _get_llama_start_format():
-    return '<|begin_of_text|>'
 
 
 def extract_delimited_text(txt, delims):
@@ -121,9 +118,9 @@ class DoubleChatManager:
         if 'mixtral' in self.bam_client.parameters['model_id']:
             return ''.join([f'\n<|{m["role"]}|>\n{m["content"]}\n' for m in chat]) + f'<|{ChatRole.ASSISTANT}|>'
         elif 'llama' in self.bam_client.parameters['model_id']:
-            msg_str = _get_llama_start_format()
+            msg_str = LLAMA_START_OF_INPUT
             for m in chat:
-                msg_str += _get_llama_header(m['role']) + "\n\n" + m['content'] + _get_llama_end_of_message()
+                msg_str += _get_llama_header(m['role']) + "\n\n" + m['content'] + LLAMA_END_OF_MESSAGE
             msg_str += _get_llama_header(ChatRole.ASSISTANT)
             return msg_str
         else:
