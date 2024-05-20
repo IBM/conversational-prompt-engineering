@@ -1,12 +1,12 @@
 from collections import Counter
 
 import streamlit as st
-import os
 import pandas as pd
 
 from conversational_prompt_engineering.backend.double_chat_manager import build_few_shot_prompt, BASELINE_PROMPT
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
+from conversational_prompt_engineering.data.dataset_name_to_dir import dataset_name_to_dir
 
 NUM_EXAMPLES = 5
 
@@ -67,26 +67,42 @@ def run():
         # present instructions
         st.title("IBM Research Conversational Prompt Engineering - Evaluation")
         with st.expander("Instructions (click to expand)"):
-            st.markdown("1) First, upload test data in csv format, containing a single column named text.")
+            st.markdown("1) First, upload test data in csv format, containing a single column named text. Alternatively, if you used one of our pre curated datasets, you can proceed with its evaluation set")
             st.markdown(f"2) After file is uploaded, {NUM_EXAMPLES} examples are chosen at random for evaluation.")
             st.markdown("3) Below you can see the prompts that were curated during your chat and will be used for evaluation.")
             st.markdown(f"4) Next, click on ***Summarize***. Each prompt will be used to generate a summary for each of the {NUM_EXAMPLES} examples.")
             st.markdown("5) After the summaries are generated, select the best summary for each text. The order of the summaries is mixed for each example.")
             st.markdown("6) When you are done, click on ***Submit*** to present the evaluation scores.")
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("Reset evaluation"):
                 reset_evaluation()
+
+        def load_data(file_name):
+            df = read_user_csv_file(file_name)
+            df = df.sample(NUM_EXAMPLES)  ###
+            st.empty()
+            return df.text.tolist()
 
         # upload test data
         with col2:
             uploaded_file = st.file_uploader("Upload test csv file")
             if uploaded_file is not None:
-                df = read_user_csv_file(uploaded_file)
-                df = df.sample(NUM_EXAMPLES) ###
-                st.empty()
-                test_texts = df.text.tolist()
+                test_texts = load_data(uploaded_file)
+        with col3:
+            datasets = list(dataset_name_to_dir.keys())
+            selected_index = None
+            if "selected_dataset" in st.session_state:
+                selected_index = datasets.index(st.session_state["selected_dataset"])
+            if selected_dataset := st.selectbox('Choose one of the pre uploaded text examples',
+                                                (datasets),
+                                                index=selected_index):
+                selected_file_dir = dataset_name_to_dir.get(selected_dataset)["eval"]
+                test_texts = load_data(selected_file_dir)
+                with open(selected_file_dir, 'rb') as f:
+                    st.download_button('Download eval data', f, file_name=f"{selected_dataset}_eval.csv")
+
 
         # get prompts to evaluate
         if 'evaluation' not in st.session_state:

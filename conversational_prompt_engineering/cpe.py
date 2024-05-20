@@ -8,6 +8,7 @@ from streamlit_js_eval import streamlit_js_eval
 from conversational_prompt_engineering.backend.double_chat_manager import DoubleChatManager
 from conversational_prompt_engineering.backend.manager import Manager, Mode
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
+from conversational_prompt_engineering.data.dataset_name_to_dir import dataset_name_to_dir
 
 from st_pages import Page, show_pages, hide_pages
 
@@ -40,8 +41,8 @@ def new_cycle():
     # if len(prompts) < 2:
     #     hide_pages(["Evaluate"])
 
-    # 3. layout reset and upload buttons in 2 columns
-    col1, col2 = st.columns(2)
+    # 3. layout reset and upload buttons in 3 columns
+    col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("Reset chat"):
             streamlit_js_eval(js_expressions="parent.window.location.reload()")
@@ -49,6 +50,14 @@ def new_cycle():
         with col2:
             if uploaded_file := st.file_uploader("Upload text examples csv"):
                 manager.process_examples(read_user_csv_file(uploaded_file))
+        with col3:
+            if selected_dataset := st.selectbox('Choose one of the pre uploaded text examples',
+                                                (dataset_name_to_dir.keys()), index=None): # no item is selected by default
+                selected_file_dir = dataset_name_to_dir.get(selected_dataset)["train"]
+                manager.process_examples(read_user_csv_file(selected_file_dir))
+                st.session_state["selected_dataset"] = selected_dataset
+                with open(selected_file_dir, 'rb') as f:
+                    st.download_button('Download tune data', f, file_name=f"{selected_dataset}_tune.csv")
 
     # 4. user input
     if user_msg := st.chat_input("Write your message here"):
