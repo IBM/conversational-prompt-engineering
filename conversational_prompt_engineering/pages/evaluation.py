@@ -6,6 +6,7 @@ import pandas as pd
 
 from conversational_prompt_engineering.backend.double_chat_manager import build_few_shot_prompt, BASELINE_PROMPT
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
+from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 
 NUM_EXAMPLES = 5
 
@@ -80,9 +81,9 @@ def run():
 
         # upload test data
         with col2:
-            uploaded_file = st.file_uploader("Upload test file", type={"csv"})
+            uploaded_file = st.file_uploader("Upload test csv file")
             if uploaded_file is not None:
-                df = pd.read_csv(uploaded_file)
+                df = read_user_csv_file(uploaded_file)
                 df = df.sample(NUM_EXAMPLES) ###
                 st.empty()
                 test_texts = df.text.tolist()
