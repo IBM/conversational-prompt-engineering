@@ -26,8 +26,8 @@ def old_reset_chat():
     st.session_state.manager = Manager(st.session_state.mode, st.session_state.key)
     st.session_state.messages = []
 
-
-
+def reset_chat():
+    streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
 def new_cycle():
     # 1. create the manager if necessary
