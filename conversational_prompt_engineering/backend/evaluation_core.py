@@ -21,11 +21,8 @@ parser.add_argument('--out_dir', help='path for saving evaluation files')
 
 class Evaluation:
 
-    def __init__(self, bam_api_key):
-        with open("backend/bam_params.json", "r") as f:
-            bam_params = json.load(f)
-        bam_params['api_key'] = bam_api_key
-        self.bam_client = BamGenerate(bam_params)
+    def __init__(self, bam_client):
+        self.bam_client = bam_client
 
     def get_prompts_to_evaluate(self, prompts):
         if len(prompts) > 2:
@@ -77,11 +74,3 @@ class Evaluation:
             generated_data_ordered.append(row_data_ordered)
             generated_data_mixed.append(row_data_mixed)
         return generated_data_mixed, generated_data_ordered
-
-
-if __name__ == "__main__":
-    args = parser.parse_args()
-    evaluation = Evaluation(os.getenv('BAM_APIKEY'))
-    evaluation.compare_prompts_within_conversation(prompts_path=args.prompts_path,
-                                                   data_path=args.data_path,
-                                                   out_dir=args.out_dir)

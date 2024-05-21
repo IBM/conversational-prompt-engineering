@@ -90,14 +90,16 @@ def run():
 
         # get prompts to evaluate
         if 'evaluation' not in st.session_state:
-            st.session_state.evaluation = Evaluation(st.session_state.key)
+            st.session_state.evaluation = Evaluation(st.session_state.manager.bam_client)
 
         # prompts = st.session_state.evaluation.get_prompts_to_evaluate(st.session_state.manager.approved_prompts)
         baseline_prompt = BASELINE_PROMPT
-        baseline_prompt = build_few_shot_prompt(baseline_prompt, [])
+        baseline_prompt = build_few_shot_prompt(baseline_prompt, [],
+                                                st.session_state.manager.bam_client.parameters['model_id'])
         few_shot_examples = st.session_state.manager.approved_summaries[:st.session_state.manager.validated_example_idx]
         current_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
-                                               few_shot_examples)
+                                               few_shot_examples,
+                                               st.session_state.manager.bam_client.parameters['model_id'])
         st.session_state.prompts = [baseline_prompt, current_prompt]
 
         if 'count' not in st.session_state:
