@@ -84,7 +84,7 @@ def run():
             uploaded_file = st.file_uploader("Upload test csv file")
             if uploaded_file is not None:
                 df = read_user_csv_file(uploaded_file)
-                df = df.sample(NUM_EXAMPLES) ###
+                df = df.sample(NUM_EXAMPLES)
                 st.empty()
                 test_texts = df.text.tolist()
 
@@ -108,10 +108,10 @@ def run():
         # show prompts
         col1, col2 = st.columns(2)
         with col1:
-            st.text_area("Prompt 1", st.session_state.prompts[0])
+            st.text_area("Prompt 1 (baseline)", st.session_state.prompts[0])
 
         with col2:
-            st.text_area("Prompt 2", st.session_state.prompts[1])
+            st.text_area("Prompt 2 (current working prompt)", st.session_state.prompts[1])
 
         # show summarize button
         st.session_state.evaluate_clicked = False
