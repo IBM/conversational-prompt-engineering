@@ -13,7 +13,7 @@ NUM_EXAMPLES = 5
 
 def display_text():
     text = st.session_state.generated_data[st.session_state.count]['text']
-    st.write(text)
+    st.text_area(label="text", value=text, label_visibility="collapsed", height=400)
 
 
 def next_text():
@@ -140,6 +140,7 @@ def run():
                     pass
             display_text()
             st.divider()
+            st.subheader("Generated summaries (random order)")
             col1, col2 = st.columns(2)
             with col1:
                 display_summary("0")
