@@ -130,10 +130,10 @@ if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
         st.write(
             "This service is intended to help users build an effective prompt, tailored to their specific summarization use case, through a simple chat with an LLM.")
         st.write(
-            "To make the most out of this service, it would be best to prepare in advance 3 *input* examples, that represent your use case.")
+            "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file.")
         st.write("For more information feel free to contact us in slack via #foundation-models-lm-utilization.")
         st.write(
-            "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses.")
+            "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
         st.write("To proceed, please provide your BAM API key and select a model.")
         key = st.text_input(label="BAM API key")
         model = st.radio(label="Select model", options=["llama3", "mixtral"],

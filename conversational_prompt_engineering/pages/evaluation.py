@@ -130,34 +130,39 @@ def run():
 
         # showing texts and summaries to evaluate
         if 'generated_data' in st.session_state and len(st.session_state.generated_data) > 0:
-            display_text()
-
-            col1, col2 = st.columns(2)
-            st.write(f"{st.session_state.count+1}/{len(st.session_state.generated_data)}")
+            st.header(f"Text {st.session_state.count+1}/{len(st.session_state.generated_data)}", divider="gray")
+            col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
             with col1:
                 if st.button("⏮️ Previous", on_click=previous_text):
                     pass
+            with col2:
+                if st.button("Next ⏭️", on_click=next_text):
+                    pass
+            display_text()
+            st.divider()
+            col1, col2 = st.columns(2)
+            with col1:
                 display_summary("0")
                 if st.button("Select", key="left", on_click=select, args=(st.session_state.generated_data[st.session_state.count]["0_prompt"], "0", )):
                     pass
                 display_selected("0")
 
             with col2:
-                if st.button("Next ⏭️", on_click=next_text):
-                    pass
                 display_summary("1")
                 if st.button("Select", key="right", on_click=select, args=(st.session_state.generated_data[st.session_state.count]["1_prompt"], "1", )):
                     pass
                 display_selected("1")
 
             # if all([row['selected_prompt'] for row in st.session_state.generated_data]):
+            st.divider()
             finish_clicked = st.button("Submit")
             if finish_clicked:
                 # showing aggregated results
                 results = calculate_results()
                 total_votes = sum(results.values())
                 for item in results.most_common():
-                    st.write(f"Prompt {int(item[0])+1} was chosen {item[1]} {'times' if item[1] > 1 else 'time'} ({100*item[1]/total_votes}%)")
+                    pct_val = '{0:.2f}'.format(100*item[1]/total_votes)
+                    st.write(f"Prompt {int(item[0])+1} was chosen {item[1]} {'times' if item[1] > 1 else 'time'} ({pct_val}%)")
 
 
 if __name__ == "__main__":
