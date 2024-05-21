@@ -26,12 +26,10 @@ def old_reset_chat():
     st.session_state.messages = []
 
 
-
-
 def new_cycle():
     # 1. create the manager if necessary
     if "manager" not in st.session_state:
-        st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
+        st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key, model=st.session_state.model)
     manager = st.session_state.manager
 
     # 2. hide evaluation option in sidebar
@@ -136,11 +134,15 @@ if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
         st.write("For more information feel free to contact us in slack via #foundation-models-lm-utilization.")
         st.write(
             "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses.")
-        st.write("To proceed, please provide your BAM API key.")
+        st.write("To proceed, please provide your BAM API key and select a model.")
         key = st.text_input(label="BAM API key")
+        model = st.radio(label="Select model", options=["llama3", "mixtral"],
+                         captions=["Recommended for most use-cases",
+                                   "Recommended for very long documents"])
         submit = st.form_submit_button()
         if submit:
             st.session_state.key = key
+            st.session_state.model = model
 
 if 'key' in st.session_state:
     new_cycle()
