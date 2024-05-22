@@ -190,8 +190,10 @@ class DoubleChatManager:
             "Now, introduce yourself to the user, and present the following flow (do not act on this flow, just present it to the user): "
             "1. You'll agree with user on initial prompt."
             "2. You'll then refine prompt based on unlabeled examples."
-            "3. You'll improve prompt using user’s feedback on model outputs."
-            "Then, suggest to upload a csv file if they have it, where the first column contains the text inputs."
+            "3. You'll improve prompt using user’s feedback on model outputs. "
+            "\nMention to the user that after a prompt has been built, the user can evaluate it by clicking on Evaluate on the side-bar. "
+            "\nThen, suggest the user to upload a csv file, where the first column contains the text inputs. "
+            "\nIf the user doesn't have a csv they can mention that in their response, and you'll proceed without it."
         )
         resp = self._get_assistant_response(max_new_tokens=200)
         self._add_assistant_msg(resp, 'both')
@@ -283,20 +285,16 @@ class DoubleChatManager:
             prompt = extract_delimited_text(resp, ['```', '"""'])
             prompt = prompt.strip("\"")
 
-        old_prompt_size = len(self.approved_prompts)
         self._add_prompt(prompt, is_new=is_new)
-        logging.info(f"added prompt: {prompt} {'new' if (is_new or len(self.approved_prompts) == 1) else 'corrected'}")
-        new_prompt_size = len(self.approved_prompts)
+        logging.info(f"added prompt: {prompt} | prompt is {'new' if is_new else 'corrected'}")
         self._add_assistant_msg(prompt, 'hidden')
         self._add_system_msg('Please validate your suggested prompt with the user, and update it if necessary.')
         resp = self._get_assistant_response(max_new_tokens=200)
-        if new_prompt_size == 1 and old_prompt_size == 0:
-            resp += "\nNote the evaluation page is now open. At any time, you can evaluate the prompt we are working on by clicking *evaluation* on the left side-bar. You can always come back and continue the chat."
         self._add_assistant_msg(resp, 'both')
 
     def _user_asked_for_correction(self):
         self._add_system_msg(
-            'Has the user asked for a correction or a modification of the suggested prompt? answer "yes" or "no"')
+            'Has the user asked for a correction or a modification of the suggested prompt in the last message? answer "yes" or "no"')
         resp = self._get_assistant_response(max_new_tokens=50)
         self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
         if resp.lower().startswith('yes'):
@@ -371,15 +369,27 @@ class DoubleChatManager:
         # self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
         self._add_assistant_msg(resp, 'both')
 
+    def _get_user_feedback(self):
+        self._add_system_msg("Consider the reason the user rejected the previous summary, and write a single sentence that will instruct how to fix it.")
+        resp = self._get_assistant_response()
+        self.hidden_chat = self.hidden_chat[:-1]
+        return resp
+
     def _evaluate_prompt(self):
-        prompt_str = build_few_shot_prompt(self.approved_prompts[-1]['prompt'],
+        summary_correction = len(self.approved_summaries) > self.validated_example_idx
+        prompt = self.approved_prompts[-1]['prompt']
+        if summary_correction:
+            user_feedback = self._get_user_feedback()
+            prompt += f"\n\n{user_feedback}"
+
+        prompt_str = build_few_shot_prompt(prompt,
                                            self.approved_summaries[:self.validated_example_idx],
                                            self.bam_client.parameters['model_id'])
         example = self.text_examples[self.validated_example_idx]
         prompt_str = prompt_str.format(text=example)
         summary = self.bam_client.send_messages(prompt_str)[0]
 
-        if len(self.approved_summaries) > self.validated_example_idx:
+        if summary_correction:
             self.approved_summaries[self.validated_example_idx]['summary'] = summary
         else:
             self.approved_summaries.append({'text': example, 'summary': summary})
