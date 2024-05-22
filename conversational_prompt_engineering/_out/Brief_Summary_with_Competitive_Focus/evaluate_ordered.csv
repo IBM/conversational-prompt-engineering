@@ -1,0 +1,331 @@
+prompts_file,text,0_prompt,0,1_prompt,1
+_out/Brief_Summary_with_Competitive_Focus/prompts.json,"Apple on Thursday reported a 10% drop in iPhone sales for the second fiscal quarter, dropping from $51.33 billion to $45.96 billion, year-over-year. The slowdown was fueled, in part, by an 8% drop in China.
+
+Apple’s slow adoption of AI versus competitors like Google and Microsoft likely played a role in consumers’ decision to hold off on purchasing a new iPhone. Apple has promised some big announcements on that front (likely at WWDC in June), but the iPhone 16 itself likely won’t arrive until fall.
+
+“Keep in mind as we described on the last call in the March quarter a year ago, we were able to replenish iPhone channel inventory and fulfill significant pent-up demand from the December quarter COVID-related supply disruptions on the iPhone 14 pro and 14 Pro Max,” CEO Tim Cook explained on an earnings call. “We estimate this one-time impact is $5 billion to the March quarter revenue last year. If we remove this from last year’s results, our March quarter total company revenue this year would have grown.”
+
+In spite of those dire hardware figures, however, the company still managed to beat Wall Street expectations and the stock rose more than 6% after hours, fueled by both an increase on services revenue and a massive $110 billion stock buyback — a jump over last year’s $90 billion purchase.
+
+Services, which includes offerings like iCloud, Apple TV+ and Apple Music, jumped 14% for the year. Apple has long anticipated a slowdown in hardware sales, and its increasing focus on subscription services have helped to make up for some of that loss.
+
+“We expect our services business to grow double digits at a rate similar to the growth we reported for the first half of the fiscal year,” CFO Luca Maestri noted on the call. He added that, “iPad should grow double digits.”
+
+The company is expected to release two new iPads at a standalone event next week. That the company has not refreshed the tablet line since 2022 no doubt contributed to its own drop in sales from $6.67 billion to $5.56 billion, year over year. At Tuesday’s event, Apple is also expected to announce the M4 chip — the latest addition to the Apple Silicon line. The company’s chip progress, however, will soon be challenged by Microsoft’s efforts in the space, which are expected to be revealed at its Build conference in late May. More hardware is likely also on the docket for its annual World Wide Developers Conference in June.
+
+
+Apple does not break out Vision Pro numbers. Instead, those numbers are included in Wearables, Home and Accessories — a list that also includes devices like Apple Watch, AirPods and HomePods. Most reports, however, point to worse than anticipated sales. The company still attempted to give the headset’s arrival a positive spin.
+
+“During the quarter, we were thrilled to launch Apple Vision Pro and to show the world the potential that spatial computing unlocks,” Cook noted in a release. “We’re also looking forward to an exciting product announcement next week and an incredible Worldwide Developers Conference next month.”
+
+In February, Cook attempted to address concern that the company was falling behind Google and Microsoft, noting that it would have more information on its generative AI efforts “later this year.” While the subject will no doubt be top of mind at the iPad event, it seems likely the company is saving the big news for WWDC in June. In the meantime, reports have surfaced that Apple is in to integrate both OpenAI’s ChatGPT and Google’s Gemini into future iPhones.
+
+“I don’t want to get in front of our announcements, obviously,” Cook said in response to a question on the subject during tonight’s call. “I would just say that we see generative AI is a very key opportunity across our products. And we believe that we have advantages that set us apart there. And so we’ll be talking more about it as we go through the weeks ahead.”","Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.","Apple reported a 10% drop in iPhone sales for the second fiscal quarter, with an 8% drop in China. The company's slow adoption of AI and the promise of big announcements in June likely played a role in consumers' decision to hold off on purchasing a new iPhone. Despite the drop in hardware sales, Apple beat Wall Street expectations due to an increase in services revenue and a massive $110 billion stock buyback. The company is expected to release two new iPads at a standalone event next week and announce the M4 chip at its annual World Wide Developers Conference in June. Apple did not break out Vision Pro numbers, but reports suggest worse than anticipated sales. The company is expected to integrate both OpenAI’s ChatGPT and Google’s Gemini into future iPhones.","Summarize the following text in 2-3 sentences, highlighting the main ideas, key points, and any mention of competition, while maintaining the overall tone of the original text. Include any information about the funding or valuation of companies if available.
+
+Text: 
+X, formerly Twitter, is now using Elon Musk’s AI chatbot Grok to power a feature that summarizes the personalized trending stories in the app’s Explore section. According to an announcement and screenshots posted by the X Engineering team on Friday, X’s Premium subscribers will be able to read a summary of posts on X associated with each trending story featured on the For You tab in Explore.
+
+The For You page showcases the news and stories being shared across X’s platform that are popular within your network, along with other suggested items. It’s among the first stops for X users who want to catch up with what’s being said on the platform, without having to spend long amounts of time scrolling their timeline.
+
+For instance, a TechCrunch reader’s For You page today may feature stories about Apple’s coming iPad event, Microsoft’s security overhaul, and burnout among AI engineers. As you tap into each story to view the associated X posts, a summary of the story will now appear at the top of the page, offering an overview of the subject matter.
+
+In the case of the AI burnout story, for example, the Grok-powered summary begins: “AI engineers are facing burnout and rushed rollouts due to the competitive race in the tech industry, as companies prioritize investor satisfaction over solving actual problems.” After briefly touching on the problem of the AI “rat race,” the story concludes by saying that “critics argue that proper safeguards and thoughtful innovation should not be afterthoughts in the pursuit of AI investments …”
+
+Humorously, a message appears below that summary, warning: “Grok can make mistakes, verify its outputs.”
+
+The idea of summarizing trends is not a new one, but it is new in terms of how the summaries are being handled. Under its prior leadership, Twitter began adding headlines and descriptions to its trends in 2020, though not with the help of an AI bot. Instead, Twitter itself would annotate some of its daily trends with extra information and pin a representative tweet to provide further context. However, Twitter’s rollout was haphazard, with some trends getting written up and others not.
+
+With Grok’s Stories, as the summaries are called, all the top news on the For You page is summarized.
+
+Access to xAI’s chatbot Grok is meant to be a selling point to push users to buy premium subscriptions. With the Premium and top-tier Premium+ plans, users can access Grok by tapping on the bottom middle button of the app. A snarky and “rebellious” AI, Grok’s differentiator from other AI chatbots like ChatGPT is its exclusive and real-time access to X data.
+
+A post published to X on Friday by tech journalist Alex Kantrowitz lays out Elon Musk’s further plan for AI-powered news on X, based on an email conversation with the X owner.
+
+Kantrowitz says that conversations on X will make up the core of Grok’s summaries. Grok won’t look at the article text, in other words, even if that’s what people are discussing on the platform. That could be a problem in terms of painting a true picture of the news being shared, as what people are chattering about on X may be their reactions or opinions, not the news itself. Kantrowitz calls the move “controversial” but admits there’s opportunity there.
+
+Journalists are already having to contend with AI news summaries in other areas as well, including from startups. For example, Arc’s new web browser includes an AI summary feature and former Twitter engineers are building an AI news summary service called Particle. How this will play out in terms of traffic to the news sites themselves remains to be seen. Kantrowitz believes that users may be interested in going “deeper into the source material once their curiosity is piqued,” he writes. But it’s also likely that at least some news sites will go out of business as page views drop due to AI summaries, leaving fewer sources for AI bots like Grok to summarize in the long run.
+
+For that reason, some news publishers are doing deals with AI providers like OpenAI’s recently announced partnership with the FT. Others, such as Axel Springer, the AP, and Le Monde, have also announced similar moves. In X’s case, it’s able to get at the news by way of the conversation around it — and without having to partner to access the news content itself. That’s both clever and worrisome, the latter from a misinformation standpoint.
+
+Grok’s Stories are rolling out to Premium X subscribers now. Access to Premium starts at $8 per month, if paying on the web and not through the app stores.
+
+
+Summary: X, formerly Twitter, is introducing a feature that summarizes personalized trending stories in the Explore section using Elon Musk's AI chatbot, Grok. This feature, called Grok's Stories, will provide summaries of posts related to each trending story for X's Premium subscribers. The aim is to offer an overview of the subject matter, helping users stay updated without spending much time scrolling. This move is part of X's broader plan to leverage AI for news summaries, which could impact traffic to news sites and potentially lead to fewer sources for AI bots to summarize. Grok's Stories are currently rolling out to Premium X subscribers, with access to Premium starting at $8 per month.","Apple reported a 10% drop in iPhone sales for the second fiscal quarter, with an 8% drop in China. The company's slow adoption of AI compared to competitors like Google and Microsoft may have contributed to the decline. Despite the hardware figures, Apple beat Wall Street expectations and the stock rose more than 6% after hours due to increased services revenue and a massive $110 billion stock buyback. Services, which include iCloud, Apple TV+, and Apple Music, jumped 14% for the year. Apple is expected to release two new iPads at a standalone event next week and announce the M4 chip at its annual World Wide Developers Conference in June. The company did not break out Vision Pro numbers, but reports suggest worse than anticipated sales. Apple is expected to reveal more about its generative AI efforts later this year, with potential integration of OpenAI's ChatGPT and Google's Gemini into future iPhones."
+_out/Brief_Summary_with_Competitive_Focus/prompts.json,"Lamini, a Palo Alto-based startup building a platform to help enterprises deploy generative AI tech, has raised $25 million from investors, including Stanford computer science professor Andrew Ng.
+
+Lamini, co-founded several years ago by Sharon Zhou and Greg Diamos, has an interesting sales pitch.
+
+Many generative AI platforms are far too general purpose, Zhou and Diamos argue, and don’t have solutions and infrastructure geared to meet the needs of corporations. In contrast, Lamini was built from the ground up with enterprises in mind and is focused on delivering high generative AI accuracy and scalability.
+
+“The top priority of nearly every CEO, CIO and CTO is to take advantage of generative AI within their organization with maximal ROI,” Zhou, Lamini’s CEO, told TechCrunch. “But while it’s easy to get a working demo on a laptop for an individual developer, the path to production is strewn with failures left and right.”
+
+To Zhou’s point, many companies have expressed frustration with the hurdles to meaningfully embracing generative AI across their business functions.
+
+According to a March poll from MIT Insights, only 9% of organizations have widely adopted generative AI despite 75% having experimented with it. Top hurdles run the gamut from a lack of IT infrastructure and capabilities to poor governance structures, insufficient skills and high implementation costs. Security is a major factor, too — in a recent survey by Insight Enterprises, 38% of companies said security was impacting their ability to leverage generative AI tech.
+
+So what’s Lamini’s answer?
+
+
+Zhou says that “every piece” of Lamini’s tech stack has been optimized for enterprise-scale generative AI workloads, from the hardware to the software, including the engines used to support model orchestration, fine-tuning, running and training. “Optimized” is a vague word, granted, but Lamini is pioneering one step that Zhou calls “memory tuning,” which is a technique to train a model on data such that it recalls parts of that data exactly.
+
+Memory tuning can potentially reduce hallucinations, Zhou claims, or instances when a model makes up facts in response to a request.
+
+“Memory tuning is a training paradigm — as efficient as fine-tuning, but goes beyond it — to train a model on proprietary data that includes key facts, numbers and figures so that the model has high precision,” Nina Wei, an AI designer at Lamini, told me via email, “and can memorize and recall the exact match of any key information instead of generalizing or hallucinating.”
+
+I’m not sure I buy that. “Memory tuning” appears to be more a marketing term than an academic one; there aren’t any research papers about it — none that I managed to turn up, at least. I’ll leave Lamini to show evidence that its “memory tuning” is better than the other hallucination-reducing techniques that are being/have been attempted.
+
+Fortunately for Lamini, memory tuning isn’t its only differentiator.
+
+Zhou says the platform can operate in highly secured environments, including air-gapped ones. Lamini lets companies run, fine-tune, and train models on a range of configurations, from on-premises data centers to public and private clouds. And it scales workloads “elastically,” reaching over 1,000 GPUs if the application or use case demands it, Zhou says.
+
+“Incentives are currently misaligned in the market with closed source models,” Zhou said. “We aim to put control back into the hands of more people, not just a few, starting with enterprises who care most about control and have the most to lose from their proprietary data owned by someone else.”
+
+For what it’s worth, Lamini’s co-founders are quite accomplished in the AI space. They’ve also separately brushed shoulders with Ng, which no doubt explains his investment.
+
+Zhou was previously faculty at Stanford, where she headed a group that was researching generative AI. Prior to receiving her doctorate in computer science under Ng, she was a machine learning product manager at Google Cloud.
+
+Diamos, for his part, co-founded MLCommons, the engineering consortium dedicated to creating standard benchmarks for AI models and hardware, as well as the MLCommons benchmarking suite, MLPerf. He also led AI research at Baidu, where he worked with Ng while the latter was chief scientist there. Diamos was also a software architect on Nvidia’s CUDA team.
+
+The co-founders’ industry connections appear to have given Lamini a leg up on the fundraising front. In addition to Ng, Figma CEO Dylan Field, Dropbox CEO Drew Houston, OpenAI co-founder Andrej Karpathy, and — strangely enough — Bernard Arnault, the CEO of luxury goods giant LVMH, have all invested in Lamini.
+
+AMD Ventures is also an investor (a bit ironic considering Diamos’ Nvidia roots), as are First Round Capital and Amplify Partners. AMD got involved early, supplying Lamini with data center hardware, and today, Lamini runs many of its models on AMD Instinct GPUs, bucking the industry trend.
+
+Lamini makes the lofty claim that its model training and running performance is on par with Nvidia equivalent GPUs, depending on the workload. Since we’re not equipped to test that claim, we’ll leave it to third parties.
+
+To date, Lamini has raised $25 million across seed and Series A rounds (Amplify led the Series A). Zhou says the money is being put toward tripling the company’s 10-person team, expanding its compute infrastructure, and kicking off development into “deeper technical optimizations.”
+
+There are a number of enterprise-oriented, generative AI vendors that could compete with aspects of Lamini’s platform, including tech giants like Google, AWS and Microsoft (via its OpenAI partnership). Google, AWS and OpenAI, in particular, have been aggressively courting the enterprise in recent months, introducing features like streamlined fine-tuning, private fine-tuning on private data, and more.
+
+I asked Zhou about Lamini’s customers, revenue and overall go-to-market momentum. She wasn’t willing to reveal much at this somewhat early juncture but said that AMD (via the AMD Ventures tie-in), AngelList and NordicTrack are among Lamini’s early (paying) users, along with several undisclosed government agencies.
+
+“We’re growing quickly,” she added. “The number one challenge is serving customers. We’ve only handled inbound demand because we’ve been inundated. Given the interest in generative AI, we’re not representative in the overall tech slowdown — unlike our peers in the hyped AI world, we have gross margins and burn that look more like a regular tech company.”
+
+Amplify general partner Mike Dauber said, “We believe there’s a massive opportunity for generative AI in enterprises. While there are a number of AI infrastructure companies, Lamini is the first one I’ve seen that is taking the problems of the enterprise seriously and creating a solution that helps enterprises unlock the tremendous value of their private data while satisfying even the most stringent compliance and security requirements.”","Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.","Lamini, a startup building a platform for enterprises to deploy generative AI technology, has raised $25 million in funding from investors including Stanford computer science professor Andrew Ng. Co-founded by Sharon Zhou and Greg Diamos, Lamini aims to deliver high accuracy and scalability for generative AI workloads in corporations. The platform includes memory tuning, a technique to train a model on data so that it recalls parts of that data exactly, reducing hallucinations. Lamini operates in highly secured environments and can run, fine-tune, and train models on a range of configurations. The company's co-founders are accomplished in the AI space and have attracted investors such as AMD Ventures, First Round Capital, and Amplify Partners. Lamini has raised $25 million to date and has paying customers including AMD, AngelList, and NordicTrack, along with several undisclosed government agencies.","Summarize the following text in 2-3 sentences, highlighting the main ideas, key points, and any mention of competition, while maintaining the overall tone of the original text. Include any information about the funding or valuation of companies if available.
+
+Text: 
+X, formerly Twitter, is now using Elon Musk’s AI chatbot Grok to power a feature that summarizes the personalized trending stories in the app’s Explore section. According to an announcement and screenshots posted by the X Engineering team on Friday, X’s Premium subscribers will be able to read a summary of posts on X associated with each trending story featured on the For You tab in Explore.
+
+The For You page showcases the news and stories being shared across X’s platform that are popular within your network, along with other suggested items. It’s among the first stops for X users who want to catch up with what’s being said on the platform, without having to spend long amounts of time scrolling their timeline.
+
+For instance, a TechCrunch reader’s For You page today may feature stories about Apple’s coming iPad event, Microsoft’s security overhaul, and burnout among AI engineers. As you tap into each story to view the associated X posts, a summary of the story will now appear at the top of the page, offering an overview of the subject matter.
+
+In the case of the AI burnout story, for example, the Grok-powered summary begins: “AI engineers are facing burnout and rushed rollouts due to the competitive race in the tech industry, as companies prioritize investor satisfaction over solving actual problems.” After briefly touching on the problem of the AI “rat race,” the story concludes by saying that “critics argue that proper safeguards and thoughtful innovation should not be afterthoughts in the pursuit of AI investments …”
+
+Humorously, a message appears below that summary, warning: “Grok can make mistakes, verify its outputs.”
+
+The idea of summarizing trends is not a new one, but it is new in terms of how the summaries are being handled. Under its prior leadership, Twitter began adding headlines and descriptions to its trends in 2020, though not with the help of an AI bot. Instead, Twitter itself would annotate some of its daily trends with extra information and pin a representative tweet to provide further context. However, Twitter’s rollout was haphazard, with some trends getting written up and others not.
+
+With Grok’s Stories, as the summaries are called, all the top news on the For You page is summarized.
+
+Access to xAI’s chatbot Grok is meant to be a selling point to push users to buy premium subscriptions. With the Premium and top-tier Premium+ plans, users can access Grok by tapping on the bottom middle button of the app. A snarky and “rebellious” AI, Grok’s differentiator from other AI chatbots like ChatGPT is its exclusive and real-time access to X data.
+
+A post published to X on Friday by tech journalist Alex Kantrowitz lays out Elon Musk’s further plan for AI-powered news on X, based on an email conversation with the X owner.
+
+Kantrowitz says that conversations on X will make up the core of Grok’s summaries. Grok won’t look at the article text, in other words, even if that’s what people are discussing on the platform. That could be a problem in terms of painting a true picture of the news being shared, as what people are chattering about on X may be their reactions or opinions, not the news itself. Kantrowitz calls the move “controversial” but admits there’s opportunity there.
+
+Journalists are already having to contend with AI news summaries in other areas as well, including from startups. For example, Arc’s new web browser includes an AI summary feature and former Twitter engineers are building an AI news summary service called Particle. How this will play out in terms of traffic to the news sites themselves remains to be seen. Kantrowitz believes that users may be interested in going “deeper into the source material once their curiosity is piqued,” he writes. But it’s also likely that at least some news sites will go out of business as page views drop due to AI summaries, leaving fewer sources for AI bots like Grok to summarize in the long run.
+
+For that reason, some news publishers are doing deals with AI providers like OpenAI’s recently announced partnership with the FT. Others, such as Axel Springer, the AP, and Le Monde, have also announced similar moves. In X’s case, it’s able to get at the news by way of the conversation around it — and without having to partner to access the news content itself. That’s both clever and worrisome, the latter from a misinformation standpoint.
+
+Grok’s Stories are rolling out to Premium X subscribers now. Access to Premium starts at $8 per month, if paying on the web and not through the app stores.
+
+
+Summary: X, formerly Twitter, is introducing a feature that summarizes personalized trending stories in the Explore section using Elon Musk's AI chatbot, Grok. This feature, called Grok's Stories, will provide summaries of posts related to each trending story for X's Premium subscribers. The aim is to offer an overview of the subject matter, helping users stay updated without spending much time scrolling. This move is part of X's broader plan to leverage AI for news summaries, which could impact traffic to news sites and potentially lead to fewer sources for AI bots to summarize. Grok's Stories are currently rolling out to Premium X subscribers, with access to Premium starting at $8 per month.","Lamini, a Palo Alto-based startup, has raised $25 million from investors, including Stanford computer science professor Andrew Ng, to build a platform for enterprises to deploy generative AI technology. Lamini, co-founded by Sharon Zhou and Greg Diamos, aims to deliver high generative AI accuracy and scalability, addressing the challenges faced by corporations in adopting generative AI. The platform includes memory tuning, a technique to train a model on data to recall parts of that data exactly, reducing hallucinations. Lamini's co-founders are accomplished in the AI space, and the company has attracted investments from notable figures in the tech industry. The funding will be used to expand Lamini's team, compute infrastructure, and develop deeper technical optimizations."
+_out/Brief_Summary_with_Competitive_Focus/prompts.json,"Danti, an artificial intelligence company building a superpower search engine for Earth data, has brought on prominent defensive tech investor Shield Capital as it looks to scale its technology for government customers.
+
+Founded by Jesse Kallman in early 2023, Danti has developed a natural language search engine for data that has historically been highly siloed, like satellite imagery, collating it with other commercial and government sources to report back across multiple sources and domains.
+
+For example, an analyst can pose a complex question in simple language, like “What are the latest tank movements in Eastern Ukraine?” and receive in turn straightforward answers collated across data sources.
+
+The idea is to empower a single analyst to do more, Kallman said in a recent interview. While American adversaries are throwing manpower at the problem of analyzing huge amounts of data, Danti aims to help “one analyst do the work of 10 or 15,” he said. It means that a relatively straightforward question — where is a particular ship off the coast of Lagos, Nigeria, for example — can potentially be answered in seconds, rather than hours.
+
+“We’re not replacing the analysts,” Kallman clarified. “We’re helping them do their work way faster, so that they can get to the part that humans are way better at, which is synthesizing and deciding, ‘What do I now do about this information? How do I want to report on it?'”
+
+Among the startup’s early customers is the U.S. Space Force, which is using Danti’s product to help officers easily search and share data. The use of natural language models in the search engine means an intuitive, straightforward user experience; no doubt this is paramount in high-pressure situations where analysts must make complex decisions but have little time to trawl through reams of satellite or drone data.
+
+Right now, Danti is squarely focused on government, though in the longer term it plans to roll out a version of its product for commercial industry. This version would focus on property records, parcel information, and risk data, to serve markets like electric utilities and insurance, Kallman said. Customers will also be able to connect their own information into Danti’s engine to use its natural language processing to query their own data.
+
+
+The $5 million round was led by Shield Capital and includes participation from the startup’s existing investors Tech Square Ventures, Humba Ventures and Leo Polovets, Space.VC, and Radius Capital. Kallman said the startup looked deliberately for a defense-focused fund to lead their next round, particularly as the company looks to execute its government go-to-market plan and scale its engineering team.
+
+Since last summer, when the company announced its $2.75 million pre-seed, the team has grown to over 20 people, and Kallman said the engineering team will grow even more with the new injection of funds.","Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.","Danti, an artificial intelligence company, has secured a $5 million investment from Shield Capital to develop a superpower search engine for Earth data, aiming to help government analysts make complex decisions faster by collating data from multiple sources. The search engine uses natural language processing, enabling analysts to pose complex questions in simple language and receive straightforward answers. Danti's initial focus is on government customers, with the U.S. Space Force already using its product, but the company plans to expand into commercial industries like electric utilities and insurance in the future. The funding will support the growth of Danti's engineering team and its government go-to-market plan.","Summarize the following text in 2-3 sentences, highlighting the main ideas, key points, and any mention of competition, while maintaining the overall tone of the original text. Include any information about the funding or valuation of companies if available.
+
+Text: 
+X, formerly Twitter, is now using Elon Musk’s AI chatbot Grok to power a feature that summarizes the personalized trending stories in the app’s Explore section. According to an announcement and screenshots posted by the X Engineering team on Friday, X’s Premium subscribers will be able to read a summary of posts on X associated with each trending story featured on the For You tab in Explore.
+
+The For You page showcases the news and stories being shared across X’s platform that are popular within your network, along with other suggested items. It’s among the first stops for X users who want to catch up with what’s being said on the platform, without having to spend long amounts of time scrolling their timeline.
+
+For instance, a TechCrunch reader’s For You page today may feature stories about Apple’s coming iPad event, Microsoft’s security overhaul, and burnout among AI engineers. As you tap into each story to view the associated X posts, a summary of the story will now appear at the top of the page, offering an overview of the subject matter.
+
+In the case of the AI burnout story, for example, the Grok-powered summary begins: “AI engineers are facing burnout and rushed rollouts due to the competitive race in the tech industry, as companies prioritize investor satisfaction over solving actual problems.” After briefly touching on the problem of the AI “rat race,” the story concludes by saying that “critics argue that proper safeguards and thoughtful innovation should not be afterthoughts in the pursuit of AI investments …”
+
+Humorously, a message appears below that summary, warning: “Grok can make mistakes, verify its outputs.”
+
+The idea of summarizing trends is not a new one, but it is new in terms of how the summaries are being handled. Under its prior leadership, Twitter began adding headlines and descriptions to its trends in 2020, though not with the help of an AI bot. Instead, Twitter itself would annotate some of its daily trends with extra information and pin a representative tweet to provide further context. However, Twitter’s rollout was haphazard, with some trends getting written up and others not.
+
+With Grok’s Stories, as the summaries are called, all the top news on the For You page is summarized.
+
+Access to xAI’s chatbot Grok is meant to be a selling point to push users to buy premium subscriptions. With the Premium and top-tier Premium+ plans, users can access Grok by tapping on the bottom middle button of the app. A snarky and “rebellious” AI, Grok’s differentiator from other AI chatbots like ChatGPT is its exclusive and real-time access to X data.
+
+A post published to X on Friday by tech journalist Alex Kantrowitz lays out Elon Musk’s further plan for AI-powered news on X, based on an email conversation with the X owner.
+
+Kantrowitz says that conversations on X will make up the core of Grok’s summaries. Grok won’t look at the article text, in other words, even if that’s what people are discussing on the platform. That could be a problem in terms of painting a true picture of the news being shared, as what people are chattering about on X may be their reactions or opinions, not the news itself. Kantrowitz calls the move “controversial” but admits there’s opportunity there.
+
+Journalists are already having to contend with AI news summaries in other areas as well, including from startups. For example, Arc’s new web browser includes an AI summary feature and former Twitter engineers are building an AI news summary service called Particle. How this will play out in terms of traffic to the news sites themselves remains to be seen. Kantrowitz believes that users may be interested in going “deeper into the source material once their curiosity is piqued,” he writes. But it’s also likely that at least some news sites will go out of business as page views drop due to AI summaries, leaving fewer sources for AI bots like Grok to summarize in the long run.
+
+For that reason, some news publishers are doing deals with AI providers like OpenAI’s recently announced partnership with the FT. Others, such as Axel Springer, the AP, and Le Monde, have also announced similar moves. In X’s case, it’s able to get at the news by way of the conversation around it — and without having to partner to access the news content itself. That’s both clever and worrisome, the latter from a misinformation standpoint.
+
+Grok’s Stories are rolling out to Premium X subscribers now. Access to Premium starts at $8 per month, if paying on the web and not through the app stores.
+
+
+Summary: X, formerly Twitter, is introducing a feature that summarizes personalized trending stories in the Explore section using Elon Musk's AI chatbot, Grok. This feature, called Grok's Stories, will provide summaries of posts related to each trending story for X's Premium subscribers. The aim is to offer an overview of the subject matter, helping users stay updated without spending much time scrolling. This move is part of X's broader plan to leverage AI for news summaries, which could impact traffic to news sites and potentially lead to fewer sources for AI bots to summarize. Grok's Stories are currently rolling out to Premium X subscribers, with access to Premium starting at $8 per month.","Danti, an artificial intelligence company, has secured a $5 million investment from Shield Capital to develop a superpower search engine for Earth data, primarily targeting government customers. Danti's search engine employs natural language processing to collate and analyze data from various sources, enabling a single analyst to accomplish tasks that previously required multiple analysts. The technology has already attracted the U.S. Space Force as a client, and Danti plans to expand into commercial industries such as electric utilities and insurance in the future. The company aims to utilize the new funding to scale its engineering team and execute its government go-to-market strategy."
+_out/Brief_Summary_with_Competitive_Focus/prompts.json,"Anthropic, one of the world’s best-funded generative AI startups with $7.6 billion in the bank, is launching a new paid plan aimed at enterprises, including those in highly regulated industries like healthcare, finance and legal, as well as a new iOS app.
+
+Team, the enterprise plan, gives customers higher-priority access to Anthropic’s Claude 3 family of generative AI models plus additional admin and user management controls.
+
+“Anthropic introduced the Team plan now in response to growing demand from enterprise customers who want to deploy Claude’s advanced AI capabilities across their organizations,” Scott White, product lead at Anthropic, told TechCrunch. “The Team plan is designed for businesses of all sizes and industries that want to give their employees access to Claude’s language understanding and generation capabilities in a controlled and trusted environment.”
+
+The Team plan — which joins Anthropic’s individual premium plan, Pro — delivers “greater usage per user” compared to Pro, enabling users to “significantly increase” the number of chats that they can have with Claude. (We’ve asked Anthropic for figures.) Team customers get a 200,000-token (~150,000-word) context window as well as all the advantages of Pro, like early access to new features.
+
+Anthropic Team
+Image Credits: Anthropic
+
+
+Context window, or context, refers to input data (e.g. text) that a model considers before generating output (e.g. more text). Models with small context windows tend to forget the content of even very recent conversations, while models with larger contexts avoid this pitfall — and, as an added benefit, better grasp the flow of data they take in.
+
+Team also brings with it new toggles to control billing and user management. And in the coming weeks, it’ll gain collaboration features including citations to verify AI-generated claims (models including Anthropic’s tend to hallucinate), integrations with data repos like codebases and customer relationship management platforms (e.g. Salesforce) and — perhaps most intriguing to this writer — a canvas to work with team members on AI-generated docs and projects, Anthropic says.
+
+
+In the nearer term, Team customers will be able to leverage tool use capabilities for Claude 3, which recently entered open beta. This allows users to equip Claude 3 with custom tools to perform a wider range of tasks, like getting a firm’s current stock price or the local weather report, similar to OpenAI’s GPTs.
+
+“By enabling businesses to deeply integrate Claude into their collaborative workflows, the Team plan positions Anthropic to capture significant enterprise market share as more companies move from AI experimentation to full-scale deployment in pursuit of transformative business outcomes,” White said. “In 2023, customers rapidly experimented with AI, and now in 2024, the focus has shifted to identifying and scaling applications that deliver concrete business value.”
+
+Anthropic talks a big game, but it still might take a substantial effort on its part to get businesses on board.
+
+According to a recent Gartner survey, 49% of companies said that it’s difficult to estimate and demonstrate the value of AI projects, making them a tough sell internally. A separate poll from McKinsey found that 66% of executives believe that generative AI is years away from generating substantive business results.
+
+Anthropic Team
+Image Credits: Anthropic
+
+
+Yet corporate spending on generative AI is forecasted to be enormous. IDC expects that it’ll reach $15.1 billion in 2027, growing nearly eightfold from its total in 2023.
+
+That’s probably generative AI vendors, most notably OpenAI, are ramping up their enterprise-focused efforts.
+
+OpenAI recently said that it had more than 600,000 users signed up for the enterprise tier of its generative AI platform ChatGPT, ChatGPT Enterprise. And it’s introduced a slew of tools aimed at satisfying corporate compliance and governance requirements, like a new user interface to compare model performance and quality.
+
+Anthropic is competitively pricing its Team plan: $30 per user per month billed monthly, with a minimum of five seats. OpenAI doesn’t publish the price of ChatGPT Enterprise, but users on Reddit report being quoted anywhere from $30 per user per month for 120 users to $60 per user per month for 250 users. 
+
+“Anthropic’s Team plan is competitive and affordable considering the value it offers organizations,” White said. “The per-user model is straightforward, allowing businesses to start small and expand gradually. This structure supports Anthropic’s growth and stability while enabling enterprises to strategically leverage AI.”
+
+It undoubtedly helps that Anthropic’s launching Team from a position of strength.
+
+Amazon in March completed its $4 billion investment in Anthropic (following a $2 billion Google investment), and the company is reportedly on track to generate more than $850 million in annualized revenue by the end of 2024 — a 70% increase from an earlier projection. Anthropic may see Team as its logical next path to expansion. But at least right now it seems Anthropic can afford to let Team grow organically as it attempts to convince holdout businesses its generative AI is better than the rest.
+
+An Anthropic iOS app
+
+Anthropic’s other piece of news Wednesday is that it’s launching an iOS app. Given that the company’s conspicuously been hiring iOS engineers over the past few months, this comes as no great surprise.
+
+The iOS app provides access to Claude 3, including free access as well as upgraded Pro and Team access. It syncs with Anthropic’s client on the web, and it taps Claude 3’s vision capabilities to offer real-time analysis for uploaded and saved images. For example, users can upload a screenshot of charts from a presentation and ask Claude to summarize them.
+
+Anthropic iOS app
+Image Credits: Anthropic
+
+
+“By offering the same functionality as the web version, including chat history syncing and photo upload capabilities, the iOS app aims to make Claude a convenient and integrated part of users’ daily lives, both for personal and professional use,” White said. “It complements the web interface and API offerings, providing another avenue for users to engage with the AI assistant. As we continue to develop and refine our technologies, we’ll continue to explore new ways to deliver value to users across various platforms and use cases, including mobile app development and functionality.”","Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.","Anthropic, a well-funded generative AI startup, has launched a new paid plan called Team aimed at enterprises, including those in highly regulated industries like healthcare, finance, and legal. The plan offers higher-priority access to Anthropic’s Claude 3 family of generative AI models, additional admin and user management controls, and greater usage per user compared to the individual premium plan, Pro. The plan also includes a 200,000-token context window, collaboration features, and tool use capabilities for Claude 3. Anthropic is competitively pricing its Team plan at $30 per user per month billed monthly, with a minimum of five seats. The company is also launching an iOS app that provides access to Claude 3, including free access as well as upgraded Pro and Team access. The app syncs with Anthropic’s client on the web and taps Claude 3’s vision capabilities to offer real-time analysis for uploaded and saved images.","Summarize the following text in 2-3 sentences, highlighting the main ideas, key points, and any mention of competition, while maintaining the overall tone of the original text. Include any information about the funding or valuation of companies if available.
+
+Text: 
+X, formerly Twitter, is now using Elon Musk’s AI chatbot Grok to power a feature that summarizes the personalized trending stories in the app’s Explore section. According to an announcement and screenshots posted by the X Engineering team on Friday, X’s Premium subscribers will be able to read a summary of posts on X associated with each trending story featured on the For You tab in Explore.
+
+The For You page showcases the news and stories being shared across X’s platform that are popular within your network, along with other suggested items. It’s among the first stops for X users who want to catch up with what’s being said on the platform, without having to spend long amounts of time scrolling their timeline.
+
+For instance, a TechCrunch reader’s For You page today may feature stories about Apple’s coming iPad event, Microsoft’s security overhaul, and burnout among AI engineers. As you tap into each story to view the associated X posts, a summary of the story will now appear at the top of the page, offering an overview of the subject matter.
+
+In the case of the AI burnout story, for example, the Grok-powered summary begins: “AI engineers are facing burnout and rushed rollouts due to the competitive race in the tech industry, as companies prioritize investor satisfaction over solving actual problems.” After briefly touching on the problem of the AI “rat race,” the story concludes by saying that “critics argue that proper safeguards and thoughtful innovation should not be afterthoughts in the pursuit of AI investments …”
+
+Humorously, a message appears below that summary, warning: “Grok can make mistakes, verify its outputs.”
+
+The idea of summarizing trends is not a new one, but it is new in terms of how the summaries are being handled. Under its prior leadership, Twitter began adding headlines and descriptions to its trends in 2020, though not with the help of an AI bot. Instead, Twitter itself would annotate some of its daily trends with extra information and pin a representative tweet to provide further context. However, Twitter’s rollout was haphazard, with some trends getting written up and others not.
+
+With Grok’s Stories, as the summaries are called, all the top news on the For You page is summarized.
+
+Access to xAI’s chatbot Grok is meant to be a selling point to push users to buy premium subscriptions. With the Premium and top-tier Premium+ plans, users can access Grok by tapping on the bottom middle button of the app. A snarky and “rebellious” AI, Grok’s differentiator from other AI chatbots like ChatGPT is its exclusive and real-time access to X data.
+
+A post published to X on Friday by tech journalist Alex Kantrowitz lays out Elon Musk’s further plan for AI-powered news on X, based on an email conversation with the X owner.
+
+Kantrowitz says that conversations on X will make up the core of Grok’s summaries. Grok won’t look at the article text, in other words, even if that’s what people are discussing on the platform. That could be a problem in terms of painting a true picture of the news being shared, as what people are chattering about on X may be their reactions or opinions, not the news itself. Kantrowitz calls the move “controversial” but admits there’s opportunity there.
+
+Journalists are already having to contend with AI news summaries in other areas as well, including from startups. For example, Arc’s new web browser includes an AI summary feature and former Twitter engineers are building an AI news summary service called Particle. How this will play out in terms of traffic to the news sites themselves remains to be seen. Kantrowitz believes that users may be interested in going “deeper into the source material once their curiosity is piqued,” he writes. But it’s also likely that at least some news sites will go out of business as page views drop due to AI summaries, leaving fewer sources for AI bots like Grok to summarize in the long run.
+
+For that reason, some news publishers are doing deals with AI providers like OpenAI’s recently announced partnership with the FT. Others, such as Axel Springer, the AP, and Le Monde, have also announced similar moves. In X’s case, it’s able to get at the news by way of the conversation around it — and without having to partner to access the news content itself. That’s both clever and worrisome, the latter from a misinformation standpoint.
+
+Grok’s Stories are rolling out to Premium X subscribers now. Access to Premium starts at $8 per month, if paying on the web and not through the app stores.
+
+
+Summary: X, formerly Twitter, is introducing a feature that summarizes personalized trending stories in the Explore section using Elon Musk's AI chatbot, Grok. This feature, called Grok's Stories, will provide summaries of posts related to each trending story for X's Premium subscribers. The aim is to offer an overview of the subject matter, helping users stay updated without spending much time scrolling. This move is part of X's broader plan to leverage AI for news summaries, which could impact traffic to news sites and potentially lead to fewer sources for AI bots to summarize. Grok's Stories are currently rolling out to Premium X subscribers, with access to Premium starting at $8 per month.","Anthropic, a well-funded generative AI startup, has launched a new paid plan called Team, targeting enterprises, including those in highly regulated industries like healthcare, finance, and legal. The Team plan offers higher-priority access to Anthropic’s Claude 3 family of generative AI models, additional admin and user management controls, and a larger context window. The plan is designed for businesses of all sizes and industries that want to provide their employees with access to Claude’s language understanding and generation capabilities in a controlled and trusted environment. Anthropic also launched an iOS app, providing access to Claude 3, including free, Pro, and Team access. The app syncs with Anthropic’s client on the web and offers real-time analysis for uploaded and saved images."
+_out/Brief_Summary_with_Competitive_Focus/prompts.json,"Airbnb’s summer release is usually a grand affair with tons of updates for guests and a few for hosts. This time, however, the company is introducing just a few updates for group booking along with a new category called “Icons,” which are experiences hosted by celebrated names in music, film, TV and sports.
+
+Group booking features, which are probably the only update that will reach all users, allow people to create shared wishlists, and there are trip invitations for the group with details of the property.
+
+Users can now invite friends or family to a wishlist through contacts on their phone or a link. Group members can add properties to a list, leave notes about a property, or vote on them to decide on the booking.
+
+
+Image Credits: Airbnb
+
+
+After the primary member books the property, they have to invite people to travel with them again on the trip with a postcard. The invitation card also has details like address, check-in instructions, and Wi-Fi passwords.
+
+Airbnb is also introducing a new message tab where all travelers can chat with the host and react to messages. Hosts can use AI-powered suggestions to reply to questions, such as sending the guests the property’s checkout guide.
+
+AI-suggested Quick Reply 
+Image Credits: Airbnb
+
+
+
+Nathan Blecharczyk, Airbnb’s co-founder and chief strategy officer, said that the company built group features as more than 80% of trips on the platform involve more than one person. Plus, there is a lot of back-and-forth between the group members in terms of making decisions.
+
+Apart from group features, Airbnb is releasing a new earnings dashboard for hosts with better insights and an experience category called “Icons,” which features properties like the X-Men mansion, the Ferrari museum, Prince’s Purple Rain House, and living room sessions with Doja Cat. These experiences will be available for a short time, and users will need to apply for them to get in. Airbnb is planning to accept 4,000 people across 11 experiences.
+
+Using AI on Airbnb
+
+Last November, in a conversation with TechCrunch, Airbnb CEO Brian Chesky mentioned that the company is testing generative AI-powered review summaries. While Airbnb hasn’t made public announcements in this area, Blecharczyk told TechCrunch that the platform plans to use AI in multiple areas, including customer support.
+
+“We are increasingly using AI to streamline our customer support to make sure that customers are routed to the right agents or to have tickets automatically resolved with AI-generated responses,” he said.
+
+The Airbnb co-founder noted that AI-powered responses are applicable only to certain scenarios, and the company has been testing them in limited production.
+
+“I think there is a lot of potential for applying AI to the business. We think a lot about how AI is going to change the experience at the consumer layer over time,” Blecharczyk said without sharing specifics of the company’s roadmap.
+
+“We have a lot of reviews, and we sit on top of a lot of customer service data. So we are thinking about how we can use AI to succinctly give a better picture of a listing and its information.”
+
+In November 2023, Airbnb acquired a stealth startup called GamePlanner, which was launched by Siri co-founder Adam Cheyer. Earlier this year, Chesky mentioned that the GamePlanner acquisition was part of the travel platform’s plan to create an “ultimate concierge.” Using AI-powered replies to solve customer queries is probably the first step toward that.","Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.","Airbnb has introduced new group booking features, allowing people to create shared wishlists, invite friends or family to a wishlist, and vote on properties to decide on the booking. After the primary member books the property, they can invite people to travel with them again on the trip with a postcard that includes details like address, check-in instructions, and Wi-Fi passwords. The company has also introduced a new message tab where all travelers can chat with the host and react to messages. Additionally, Airbnb has launched a new earnings dashboard for hosts with better insights and a new experience category called “Icons,” featuring properties hosted by celebrated names in music, film, TV, and sports. Airbnb plans to use AI in multiple areas, including customer support, to streamline the customer support process and give a better picture of a listing and its information.","Summarize the following text in 2-3 sentences, highlighting the main ideas, key points, and any mention of competition, while maintaining the overall tone of the original text. Include any information about the funding or valuation of companies if available.
+
+Text: 
+X, formerly Twitter, is now using Elon Musk’s AI chatbot Grok to power a feature that summarizes the personalized trending stories in the app’s Explore section. According to an announcement and screenshots posted by the X Engineering team on Friday, X’s Premium subscribers will be able to read a summary of posts on X associated with each trending story featured on the For You tab in Explore.
+
+The For You page showcases the news and stories being shared across X’s platform that are popular within your network, along with other suggested items. It’s among the first stops for X users who want to catch up with what’s being said on the platform, without having to spend long amounts of time scrolling their timeline.
+
+For instance, a TechCrunch reader’s For You page today may feature stories about Apple’s coming iPad event, Microsoft’s security overhaul, and burnout among AI engineers. As you tap into each story to view the associated X posts, a summary of the story will now appear at the top of the page, offering an overview of the subject matter.
+
+In the case of the AI burnout story, for example, the Grok-powered summary begins: “AI engineers are facing burnout and rushed rollouts due to the competitive race in the tech industry, as companies prioritize investor satisfaction over solving actual problems.” After briefly touching on the problem of the AI “rat race,” the story concludes by saying that “critics argue that proper safeguards and thoughtful innovation should not be afterthoughts in the pursuit of AI investments …”
+
+Humorously, a message appears below that summary, warning: “Grok can make mistakes, verify its outputs.”
+
+The idea of summarizing trends is not a new one, but it is new in terms of how the summaries are being handled. Under its prior leadership, Twitter began adding headlines and descriptions to its trends in 2020, though not with the help of an AI bot. Instead, Twitter itself would annotate some of its daily trends with extra information and pin a representative tweet to provide further context. However, Twitter’s rollout was haphazard, with some trends getting written up and others not.
+
+With Grok’s Stories, as the summaries are called, all the top news on the For You page is summarized.
+
+Access to xAI’s chatbot Grok is meant to be a selling point to push users to buy premium subscriptions. With the Premium and top-tier Premium+ plans, users can access Grok by tapping on the bottom middle button of the app. A snarky and “rebellious” AI, Grok’s differentiator from other AI chatbots like ChatGPT is its exclusive and real-time access to X data.
+
+A post published to X on Friday by tech journalist Alex Kantrowitz lays out Elon Musk’s further plan for AI-powered news on X, based on an email conversation with the X owner.
+
+Kantrowitz says that conversations on X will make up the core of Grok’s summaries. Grok won’t look at the article text, in other words, even if that’s what people are discussing on the platform. That could be a problem in terms of painting a true picture of the news being shared, as what people are chattering about on X may be their reactions or opinions, not the news itself. Kantrowitz calls the move “controversial” but admits there’s opportunity there.
+
+Journalists are already having to contend with AI news summaries in other areas as well, including from startups. For example, Arc’s new web browser includes an AI summary feature and former Twitter engineers are building an AI news summary service called Particle. How this will play out in terms of traffic to the news sites themselves remains to be seen. Kantrowitz believes that users may be interested in going “deeper into the source material once their curiosity is piqued,” he writes. But it’s also likely that at least some news sites will go out of business as page views drop due to AI summaries, leaving fewer sources for AI bots like Grok to summarize in the long run.
+
+For that reason, some news publishers are doing deals with AI providers like OpenAI’s recently announced partnership with the FT. Others, such as Axel Springer, the AP, and Le Monde, have also announced similar moves. In X’s case, it’s able to get at the news by way of the conversation around it — and without having to partner to access the news content itself. That’s both clever and worrisome, the latter from a misinformation standpoint.
+
+Grok’s Stories are rolling out to Premium X subscribers now. Access to Premium starts at $8 per month, if paying on the web and not through the app stores.
+
+
+Summary: X, formerly Twitter, is introducing a feature that summarizes personalized trending stories in the Explore section using Elon Musk's AI chatbot, Grok. This feature, called Grok's Stories, will provide summaries of posts related to each trending story for X's Premium subscribers. The aim is to offer an overview of the subject matter, helping users stay updated without spending much time scrolling. This move is part of X's broader plan to leverage AI for news summaries, which could impact traffic to news sites and potentially lead to fewer sources for AI bots to summarize. Grok's Stories are currently rolling out to Premium X subscribers, with access to Premium starting at $8 per month.","Airbnb has introduced a few updates for group booking, including shared wishlists, trip invitations, and a new message tab for group chats. The company has also launched a new category called ""Icons,"" featuring experiences hosted by celebrities in music, film, TV, and sports. Airbnb plans to use AI in various areas, including customer support, to streamline processes and provide better insights for hosts. The company acquired a stealth startup called GamePlanner, which could contribute to creating an ""ultimate concierge"" experience using AI-powered replies."

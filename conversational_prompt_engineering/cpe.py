@@ -125,7 +125,8 @@ if 'BAM_APIKEY' in os.environ:
     st.session_state['key'] = os.environ['BAM_APIKEY']
 
 if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
-    with st.form("my_form", clear_on_submit=True):
+    entry_page = st.empty()
+    with entry_page.form("my_form"):
         st.write("Welcome to IBM Research Conversational Prompt Engineering service.")
         st.write(
             "This service is intended to help users build an effective prompt, tailored to their specific summarization use case, through a simple chat with an LLM.")
@@ -143,6 +144,7 @@ if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
         if submit:
             st.session_state.key = key
             st.session_state.model = model
+            entry_page.empty()
 
 if 'key' in st.session_state:
     new_cycle()
