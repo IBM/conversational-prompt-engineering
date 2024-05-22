@@ -378,9 +378,9 @@ class DoubleChatManager:
     def _evaluate_prompt(self):
         summary_correction = len(self.approved_summaries) > self.validated_example_idx
         prompt = self.approved_prompts[-1]['prompt']
-        if summary_correction:
-            user_feedback = self._get_user_feedback()
-            prompt += f"\n\n{user_feedback}"
+        # if summary_correction:
+        #     user_feedback = self._get_user_feedback()
+        #     prompt += f"\n\n{user_feedback}"
 
         prompt_str = build_few_shot_prompt(prompt,
                                            self.approved_summaries[:self.validated_example_idx],
