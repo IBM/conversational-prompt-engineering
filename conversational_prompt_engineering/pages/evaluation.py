@@ -32,7 +32,7 @@ def previous_text():
 
 def display_summary(side):
     summary = st.session_state.generated_data[st.session_state.count][side]
-    st.write(summary)
+    st.text_area(label=f"summary_{side}", value=summary, label_visibility="collapsed", height=200)
 
 
 def display_selected(selection):
@@ -79,6 +79,8 @@ def run():
             if st.button("Reset evaluation"):
                 reset_evaluation()
 
+        st.write(f"Using model [{st.session_state.manager.bam_client.parameters['model_id']}](https://bam.res.ibm.com/docs/models#{st.session_state.manager.bam_client.parameters['model_id'].replace('/', '-')})")
+
         # upload test data
         with col2:
             uploaded_file = st.file_uploader("Upload test csv file")
@@ -108,10 +110,12 @@ def run():
         # show prompts
         col1, col2 = st.columns(2)
         with col1:
-            st.text_area("Prompt 1 (baseline)", st.session_state.prompts[0])
+            st.write("Prompt 1 (baseline)")
+            st.code(st.session_state.prompts[0], language=None)
 
         with col2:
-            st.text_area("Prompt 2 (current working prompt)", st.session_state.prompts[1])
+            st.write("Prompt 2 (latest cpe prompt)")
+            st.code(st.session_state.prompts[1], language=None)
 
         # show summarize button
         st.session_state.evaluate_clicked = False
