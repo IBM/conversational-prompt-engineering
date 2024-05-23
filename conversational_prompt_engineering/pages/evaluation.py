@@ -111,11 +111,11 @@ def run():
         col1, col2 = st.columns(2)
         with col1:
             st.write("Prompt 1 (baseline)")
-            st.code(st.session_state.prompts[0], language=None)
+            st.text_area(label="text", value=st.session_state.prompts[0], label_visibility="collapsed", height=200)
 
         with col2:
             st.write("Prompt 2 (latest cpe prompt)")
-            st.code(st.session_state.prompts[1], language=None)
+            st.text_area(label="text", value=st.session_state.prompts[1], label_visibility="collapsed", height=200)
 
         # show summarize button
         st.session_state.evaluate_clicked = False
