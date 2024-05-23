@@ -369,18 +369,9 @@ class DoubleChatManager:
         # self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
         self._add_assistant_msg(resp, 'both')
 
-    def _get_user_feedback(self):
-        self._add_system_msg("Consider the reason the user rejected the previous summary, and write a single sentence that will instruct how to fix it.")
-        resp = self._get_assistant_response()
-        self.hidden_chat = self.hidden_chat[:-1]
-        return resp
-
     def _evaluate_prompt(self):
         summary_correction = len(self.approved_summaries) > self.validated_example_idx
         prompt = self.approved_prompts[-1]['prompt']
-        # if summary_correction:
-        #     user_feedback = self._get_user_feedback()
-        #     prompt += f"\n\n{user_feedback}"
 
         prompt_str = build_few_shot_prompt(prompt,
                                            self.approved_summaries[:self.validated_example_idx],
