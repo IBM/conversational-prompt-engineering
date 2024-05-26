@@ -11,6 +11,8 @@ from conversational_prompt_engineering.util.bam import BamGenerate
 
 BASELINE_PROMPT = 'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.'
 
+NUM_USER_EXAMPLES = 3
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 
 
@@ -353,7 +355,7 @@ class DoubleChatManager:
                 'Has the user indicated they finished sharing texts (e.g. that they have no more examples to share), or not? Answer either "finished" or "not finished"')
             resp = self._get_assistant_response(max_new_tokens=20)
             self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
-            self.user_has_more_texts = ("not finished" in resp.lower()) or not (resp.lower() == "finished." or
+            self.user_has_more_texts = ("not finished" in resp.lower()) or not (resp.lower().startswith("finished") or
                 "no more" in resp.lower() or "have finished" in resp.lower() or "they finished sharing" in resp.lower())
             logging.info(f"user_has_more_texts is set to {self.user_has_more_texts}")
         return self.user_has_more_texts
@@ -446,8 +448,9 @@ class DoubleChatManager:
         elif self.state == ConversationState.INTRODUCTION:
             if len(self.text_examples) == 0:
                 self.enable_upload_file = False
-                initial_prompt = BASELINE_PROMPT
-                next_state = ConversationState.CONFIRM_PROMPT
+                logging.info(f"asking for text to summarize")
+                self._ask_for_text()
+                next_state = ConversationState.PROCESS_TEXTS
             else:
                 instruction_txt = 'Look at the following text examples, and suggest a summarization prompt for them. ' \
                                   'Do not include the examples into the prompt. ' \
@@ -457,14 +460,6 @@ class DoubleChatManager:
                 initial_prompt = extract_delimited_text(resp, '```')
                 next_state = ConversationState.CONFIRM_PROMPT
 
-            self._add_prompt(initial_prompt, is_new=True)
-            self._add_system_msg(
-                f"The initial prompt you suggest the user for summarization is: {self.approved_prompts[-1]['prompt']}\n "
-                f"Do not change or format this prompt, present it to the user as is. "
-                f"Validate the suggestion with the user, and update it if necessary."
-            )
-            resp = self._get_assistant_response(max_new_tokens=200)
-            self._add_assistant_msg(resp, 'both')
             self.state = next_state
 
         elif self.state == ConversationState.CONFIRM_PROMPT:
@@ -494,10 +489,11 @@ class DoubleChatManager:
             example_extracted = self._extract_text_example()
             if example_extracted:
                 logging.info("extracted text from user")
-            if self._has_more_texts():
+            if self._has_more_texts() and len(self.text_examples) < NUM_USER_EXAMPLES:
                 logging.info("ask the user for another example")
                 self._ask_for_next_text()
             else:
+                self.user_has_more_texts = False
                 logging.info("ask questions on the examples provided")
                 self._ask_text_questions()
                 self.state = ConversationState.PROCESS_RESPONSES
