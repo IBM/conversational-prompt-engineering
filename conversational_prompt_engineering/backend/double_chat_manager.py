@@ -407,7 +407,7 @@ class DoubleChatManager:
                       'The name should be short and descriptive, it will be used as a title in the prompt library. '
                       f'Enclose the suggested name in triple quotes (```). The prompt is "{prompt}"')
         resp = self._get_assistant_response(temp_chat)
-        name = extract_delimited_text(resp, "```").strip().replace('"', '').replace(" ", "_")
+        name = extract_delimited_text(resp, "```").strip().replace('"', '').replace(" ", "_")[:50]
 
         prompt_str = build_few_shot_prompt(prompt, self.approved_summaries[:self.validated_example_idx],
                                            self.bam_client.parameters['model_id'])
