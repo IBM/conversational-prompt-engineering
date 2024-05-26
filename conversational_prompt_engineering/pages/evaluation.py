@@ -101,6 +101,7 @@ def run():
                                                 (datasets),
                                                 index=selected_index):
                 selected_file_dir = dataset_name_to_dir.get(selected_dataset)["eval"]
+                uploaded_file = selected_file_dir
                 test_texts = load_data(selected_file_dir)
                 with open(selected_file_dir, 'rb') as f:
                     st.download_button('Download eval data', f, file_name=f"{selected_dataset}_eval.csv")

@@ -54,10 +54,16 @@ def new_cycle():
             if selected_dataset := st.selectbox('Choose one of the pre uploaded text examples',
                                                 (dataset_name_to_dir.keys()), index=None): # no item is selected by default
                 selected_file_dir = dataset_name_to_dir.get(selected_dataset)["train"]
+                uploaded_file = selected_file_dir # for possible code that is conditioned on the existance of the uploaded file
                 manager.process_examples(read_user_csv_file(selected_file_dir))
                 st.session_state["selected_dataset"] = selected_dataset
                 with open(selected_file_dir, 'rb') as f:
                     st.download_button('Download tune data', f, file_name=f"{selected_dataset}_tune.csv")
+    else:
+        if "selected_dataset" in st.session_state:
+            selected_file_dir = dataset_name_to_dir.get(st.session_state["selected_dataset"])["train"]
+            with open(selected_file_dir, 'rb') as f:
+                st.download_button('Download tune data', f, file_name=f"{selected_file_dir}_tune.csv")
 
     # 4. user input
     if user_msg := st.chat_input("Write your message here"):
@@ -134,6 +140,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 st.title("IBM Research Conversational Prompt Engineering")
 if 'BAM_APIKEY' in os.environ:
     st.session_state['key'] = os.environ['BAM_APIKEY']
+    st.session_state.model = 'llama3'
 
 if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
     entry_page = st.empty()
