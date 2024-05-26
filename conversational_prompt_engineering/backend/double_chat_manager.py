@@ -56,6 +56,7 @@ def build_few_shot_prompt_mixtral(prompt, texts_and_summaries):
 
 
 def build_few_shot_prompt_llama(prompt, texts_and_summaries):
+    summary_prefix = "Here is a summary of the text:"
     prompt = LLAMA_START_OF_INPUT + _get_llama_header(ChatRole.USER) + "\n\n" + prompt + "\n\n"
     if len(texts_and_summaries) > 0:
         if len(texts_and_summaries) > 1:  # we already have at least two approved summary examples
@@ -67,10 +68,10 @@ def build_few_shot_prompt_llama(prompt, texts_and_summaries):
                 prompt += _get_llama_header(ChatRole.USER)
             text = item['text']
             summary = item['summary']
-            prompt += f"\n\nText: {text}\n\nSummary:{LLAMA_END_OF_MESSAGE}" \
-                      f"{_get_llama_header(ChatRole.ASSISTANT)}{summary}{LLAMA_END_OF_MESSAGE}"
+            prompt += f"\n\nText: {text}\n\n{LLAMA_END_OF_MESSAGE}" \
+                      f"{_get_llama_header(ChatRole.ASSISTANT)}{summary_prefix}{summary}{LLAMA_END_OF_MESSAGE}"
         prompt += _get_llama_header(ChatRole.USER) + "\n\nNow, please summarize the following text.\n\n"
-    prompt += "Text: {text}\n\nSummary: " + LLAMA_END_OF_MESSAGE + _get_llama_header(ChatRole.ASSISTANT)
+    prompt += "Text: {text}\n\n" + LLAMA_END_OF_MESSAGE + _get_llama_header(ChatRole.ASSISTANT) + summary_prefix
     return prompt
 
 
