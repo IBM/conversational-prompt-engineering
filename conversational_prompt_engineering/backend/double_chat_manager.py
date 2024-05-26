@@ -11,10 +11,37 @@ from conversational_prompt_engineering.util.bam import BamGenerate
 
 BASELINE_PROMPT = 'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.'
 
+NUM_USER_EXAMPLES = 3
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 
 
-def build_few_shot_prompt(prompt, texts_and_summaries):
+class ConversationState:
+    INTRODUCTION = 'introduction'
+    CONFIRM_CHARACTERISTICS = 'confirm_characteristics'
+    CONFIRM_PROMPT = 'confirm_prompt'
+    PROCESS_TEXTS = 'process_texts'
+    PROCESS_RESPONSES = 'process_responses'
+    EVALUATE_PROMPT = 'evaluate_prompt'
+    CONFIRM_SUMMARY = 'confirm_summary'
+    DONE = 'done'
+
+
+LLAMA_END_OF_MESSAGE = "<|eot_id|>"
+
+LLAMA_START_OF_INPUT = '<|begin_of_text|>'
+
+
+def build_few_shot_prompt(prompt, texts_and_summaries, model_id):
+    if 'llama' in model_id:
+        return build_few_shot_prompt_llama(prompt, texts_and_summaries)
+    elif 'mixtral' in model_id:
+        return build_few_shot_prompt_mixtral(prompt, texts_and_summaries)
+    else:
+        raise Exception(f"model {model_id} not supported")
+
+
+def build_few_shot_prompt_mixtral(prompt, texts_and_summaries):
     prompt += "\n\n"
     if len(texts_and_summaries) > 0:
         if len(texts_and_summaries) > 1:  # we already have at least two approved summary examples
@@ -30,15 +57,28 @@ def build_few_shot_prompt(prompt, texts_and_summaries):
     return prompt
 
 
-class ConversationState:
-    INTRODUCTION = 'introduction'
-    CONFIRM_CHARACTERISTICS = 'confirm_characteristics'
-    CONFIRM_PROMPT = 'confirm_prompt'
-    PROCESS_TEXTS = 'process_texts'
-    PROCESS_RESPONSES = 'process_responses'
-    EVALUATE_PROMPT = 'evaluate_prompt'
-    CONFIRM_SUMMARY = 'confirm_summary'
-    DONE = 'done'
+def build_few_shot_prompt_llama(prompt, texts_and_summaries):
+    summary_prefix = "Here is a summary of the text:"
+    prompt = LLAMA_START_OF_INPUT + _get_llama_header(ChatRole.USER) + "\n\n" + prompt + "\n\n"
+    if len(texts_and_summaries) > 0:
+        if len(texts_and_summaries) > 1:  # we already have at least two approved summary examples
+            prompt += "Here are some typical text examples and their corresponding summaries."
+        else:
+            prompt += "Here is an example of a typical text and its summary."
+        for i, item in enumerate(texts_and_summaries):
+            if i > 0:
+                prompt += _get_llama_header(ChatRole.USER)
+            text = item['text']
+            summary = item['summary']
+            prompt += f"\n\nText: {text}\n\n{LLAMA_END_OF_MESSAGE}" \
+                      f"{_get_llama_header(ChatRole.ASSISTANT)}{summary_prefix}{summary}{LLAMA_END_OF_MESSAGE}"
+        prompt += _get_llama_header(ChatRole.USER) + "\n\nNow, please summarize the following text.\n\n"
+    prompt += "Text: {text}\n\n" + LLAMA_END_OF_MESSAGE + _get_llama_header(ChatRole.ASSISTANT) + summary_prefix
+    return prompt
+
+
+def _get_llama_header(role):
+    return "<|start_header_id|>" + role + "<|end_header_id|>"
 
 
 def extract_delimited_text(txt, delims):
@@ -53,11 +93,14 @@ def extract_delimited_text(txt, delims):
 
 
 class DoubleChatManager:
-    def __init__(self, bam_api_key) -> None:
+    def __init__(self, bam_api_key, model) -> None:
         with open("backend/bam_params.json", "r") as f:
             params = json.load(f)
-        params['api_key'] = bam_api_key
-        self.bam_client = BamGenerate(params)
+        logging.info(f"selected {model}")
+        bam_params = params['models'][model]
+        bam_params['api_key'] = bam_api_key
+        bam_params['api_endpoint'] = params['api_endpoint']
+        self.bam_client = BamGenerate(bam_params)
 
         self.user_chat = []
         self.hidden_chat = []
@@ -102,10 +145,21 @@ class DoubleChatManager:
             for chat in chats:
                 self._add_msg(chat, ChatRole.ASSISTANT, msg)
 
+    def _format_chat(self, chat):
+        if 'mixtral' in self.bam_client.parameters['model_id']:
+            return ''.join([f'\n<|{m["role"]}|>\n{m["content"]}\n' for m in chat]) + f'<|{ChatRole.ASSISTANT}|>'
+        elif 'llama' in self.bam_client.parameters['model_id']:
+            msg_str = LLAMA_START_OF_INPUT
+            for m in chat:
+                msg_str += _get_llama_header(m['role']) + "\n\n" + m['content'] + LLAMA_END_OF_MESSAGE
+            msg_str += _get_llama_header(ChatRole.ASSISTANT)
+            return msg_str
+        else:
+            raise Exception(f"model {self.bam_client.parameters['model_id']} not supported")
+
     def _get_assistant_response(self, chat=None, max_new_tokens=None):
         chat = chat or self.hidden_chat
-        conversation = ''.join([f'\n<|{m["role"]}|>\n{m["content"]}\n' for m in chat])
-        conversation += f'<|{ChatRole.ASSISTANT}|>'
+        conversation = self._format_chat(chat)
         start_time = time.time()
         generated_texts = self.bam_client.send_messages(conversation, max_new_tokens=max_new_tokens)
         elapsed_time = time.time() - start_time
@@ -139,8 +193,10 @@ class DoubleChatManager:
             "Now, introduce yourself to the user, and present the following flow (do not act on this flow, just present it to the user): "
             "1. You'll agree with user on initial prompt."
             "2. You'll then refine prompt based on unlabeled examples."
-            "3. You'll improve prompt using user’s feedback on model outputs."
-            "Then, suggest to upload a csv file if they have it, where the first column contains the text inputs."
+            "3. You'll improve prompt using user’s feedback on model outputs. "
+            "\nMention to the user that after a prompt has been built, the user can evaluate it by clicking on Evaluate on the side-bar. "
+            "\nThen, suggest the user to upload a csv file, where the first column contains the text inputs. "
+            "\nIf the user doesn't have a csv they can mention that in their response, and you'll proceed without it."
         )
         resp = self._get_assistant_response(max_new_tokens=200)
         self._add_assistant_msg(resp, 'both')
@@ -216,28 +272,32 @@ class DoubleChatManager:
         self.state = ConversationState.CONFIRM_CHARACTERISTICS
 
     def _confirm_prompt(self, is_new):
-        self._add_system_msg(
-            'Build the summarization prompt based on your current understanding (only the instruction). '
-            'Enclose the prompt in triple quotes (```).'
-        )
-        resp = self._get_assistant_response(max_new_tokens=200)
-        prompt = extract_delimited_text(resp, ['```', '"""'])
-        prompt = prompt.strip("\"")
+        if 'llama' in self.bam_client.parameters['model_id']:
+            self._add_system_msg(
+                'Build the summarization prompt based on your current understanding (only the instruction). '
+                'Do not add any additional information besides the prompt.'
+            )
+            resp = self._get_assistant_response(max_new_tokens=200)
+            prompt = resp
+        else:  # mixtral
+            self._add_system_msg(
+                'Build the summarization prompt based on your current understanding (only the instruction). '
+                'Enclose the prompt in triple quotes (```).'
+            )
+            resp = self._get_assistant_response(max_new_tokens=200)
+            prompt = extract_delimited_text(resp, ['```', '"""'])
+            prompt = prompt.strip("\"")
 
-        old_prompt_size = len(self.approved_prompts)
-        self._add_prompt(prompt, is_new=is_new or len(self.approved_prompts) == 1)
-        logging.info(f"added prompt: {prompt} {'new' if (is_new or len(self.approved_prompts) == 1) else 'corrected'}")
-        new_prompt_size = len(self.approved_prompts)
+        self._add_prompt(prompt, is_new=is_new)
+        logging.info(f"added prompt: {prompt} | prompt is {'new' if is_new else 'corrected'}")
         self._add_assistant_msg(prompt, 'hidden')
         self._add_system_msg('Please validate your suggested prompt with the user, and update it if necessary.')
         resp = self._get_assistant_response(max_new_tokens=200)
-        if new_prompt_size == 2 and old_prompt_size == 1:
-            resp += "\nNote the evaluation page is now open. At any time, you can evaluate the prompt we are working on by clicking *evaluation* on the left side-bar. You can always come back and continue the chat."
         self._add_assistant_msg(resp, 'both')
 
     def _user_asked_for_correction(self):
         self._add_system_msg(
-            'Has the user asked for a correction or a modification of the suggested prompt? answer "yes" or "no"')
+            'Has the user asked for a correction or a modification of the suggested prompt in the last message? answer "yes" or "no"')
         resp = self._get_assistant_response(max_new_tokens=50)
         self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
         if resp.lower().startswith('yes'):
@@ -253,9 +313,9 @@ class DoubleChatManager:
             return True
         return False
 
-    def _summary_suggestion_accepted(self):
+    def _summary_suggestion_corrected(self):
         self._add_system_msg(
-            'Has the user accepted the summary you suggested? Answer "yes" or "no"')
+            'Has the user asked for a correction or a modification of the suggested summary? Answer "yes" or "no"')
         resp = self._get_assistant_response(max_new_tokens=50)
         self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
         if resp.lower().startswith('yes'):
@@ -295,7 +355,7 @@ class DoubleChatManager:
                 'Has the user indicated they finished sharing texts (e.g. that they have no more examples to share), or not? Answer either "finished" or "not finished"')
             resp = self._get_assistant_response(max_new_tokens=20)
             self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
-            self.user_has_more_texts = ("not finished" in resp.lower()) or not (resp.lower() == "finished." or
+            self.user_has_more_texts = ("not finished" in resp.lower()) or not (resp.lower().startswith("finished") or
                 "no more" in resp.lower() or "have finished" in resp.lower() or "they finished sharing" in resp.lower())
             logging.info(f"user_has_more_texts is set to {self.user_has_more_texts}")
         return self.user_has_more_texts
@@ -304,22 +364,26 @@ class DoubleChatManager:
         self._add_system_msg(
             "Now, if the user shared some examples, ask the user up to 3 relevant questions about his summary preferences. "
             "Please do not ask questions that refer to a specific example. "
-            "Ask the user to answer all the questions at the same turn. "
+            "Please ask the user to answer all the questions at the same message. "
             "If the user did not provide any examples, ask only general questions about the prompt "
-            "without mentioning that the user shared examples. "
+            "without mentioning that the user shared examples."
         )
         resp = self._get_assistant_response()
         # self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
         self._add_assistant_msg(resp, 'both')
 
     def _evaluate_prompt(self):
-        prompt_str = build_few_shot_prompt(self.approved_prompts[-1]['prompt'],
-                                           self.approved_summaries[:self.validated_example_idx])
+        summary_correction = len(self.approved_summaries) > self.validated_example_idx
+        prompt = self.approved_prompts[-1]['prompt']
+
+        prompt_str = build_few_shot_prompt(prompt,
+                                           self.approved_summaries[:self.validated_example_idx],
+                                           self.bam_client.parameters['model_id'])
         example = self.text_examples[self.validated_example_idx]
         prompt_str = prompt_str.format(text=example)
         summary = self.bam_client.send_messages(prompt_str)[0]
 
-        if len(self.approved_summaries) > self.validated_example_idx:
+        if summary_correction:
             self.approved_summaries[self.validated_example_idx]['summary'] = summary
         else:
             self.approved_summaries.append({'text': example, 'summary': summary})
@@ -343,13 +407,14 @@ class DoubleChatManager:
                       'The name should be short and descriptive, it will be used as a title in the prompt library. '
                       f'Enclose the suggested name in triple quotes (```). The prompt is "{prompt}"')
         resp = self._get_assistant_response(temp_chat)
-        name = extract_delimited_text(resp, "```").strip().replace('"', '').replace(" ", "_")
+        name = extract_delimited_text(resp, "```").strip().replace('"', '').replace(" ", "_")[:50]
 
-        prompt_str = build_few_shot_prompt(prompt, self.approved_summaries[:self.validated_example_idx])
+        prompt_str = build_few_shot_prompt(prompt, self.approved_summaries[:self.validated_example_idx],
+                                           self.bam_client.parameters['model_id'])
         final_msg = "Here is the final prompt: \n\n" + prompt_str
         saved_name, bam_url = self.bam_client.save_prompt(name, prompt_str)
         final_msg += f'\n\nThis prompt has been saved to your prompt Library under the name "{saved_name}". ' \
-                     f'You can try it in the [BAM Prompt Lab]({bam_url})'
+                     f'You can try it in the [BAM Prompt Lab]({bam_url}) or in the Evaluate tab. This prompt works best for model {self.bam_client.parameters["model_id"]}.'
         self._add_assistant_msg(final_msg, 'user')
         self.state = ConversationState.DONE
 
@@ -383,8 +448,9 @@ class DoubleChatManager:
         elif self.state == ConversationState.INTRODUCTION:
             if len(self.text_examples) == 0:
                 self.enable_upload_file = False
-                initial_prompt = BASELINE_PROMPT
-                next_state = ConversationState.CONFIRM_PROMPT
+                logging.info(f"asking for text to summarize")
+                self._ask_for_text()
+                next_state = ConversationState.PROCESS_TEXTS
             else:
                 instruction_txt = 'Look at the following text examples, and suggest a summarization prompt for them. ' \
                                   'Do not include the examples into the prompt. ' \
@@ -394,14 +460,6 @@ class DoubleChatManager:
                 initial_prompt = extract_delimited_text(resp, '```')
                 next_state = ConversationState.CONFIRM_PROMPT
 
-            self._add_prompt(initial_prompt, is_new=True)
-            self._add_system_msg(
-                f"The initial prompt you suggest the user for summarization is: {self.approved_prompts[-1]['prompt']}\n "
-                f"Do not change or format this prompt, present it to the user as is. "
-                f"Validate the suggestion with the user, and update it if necessary."
-            )
-            resp = self._get_assistant_response(max_new_tokens=200)
-            self._add_assistant_msg(resp, 'both')
             self.state = next_state
 
         elif self.state == ConversationState.CONFIRM_PROMPT:
@@ -431,10 +489,11 @@ class DoubleChatManager:
             example_extracted = self._extract_text_example()
             if example_extracted:
                 logging.info("extracted text from user")
-            if self._has_more_texts():
+            if self._has_more_texts() and len(self.text_examples) < NUM_USER_EXAMPLES:
                 logging.info("ask the user for another example")
                 self._ask_for_next_text()
             else:
+                self.user_has_more_texts = False
                 logging.info("ask questions on the examples provided")
                 self._ask_text_questions()
                 self.state = ConversationState.PROCESS_RESPONSES
@@ -449,7 +508,7 @@ class DoubleChatManager:
             self.state = ConversationState.CONFIRM_SUMMARY
 
         elif self.state == ConversationState.CONFIRM_SUMMARY:
-            if self._summary_suggestion_accepted():
+            if not self._summary_suggestion_corrected():
                 logging.info(f"user approved the summary of one example. ({self.validated_example_idx})")
                 self.validated_example_idx += 1
                 if self.validated_example_idx == len(self.text_examples):
@@ -480,19 +539,21 @@ class DoubleChatManager:
             random.shuffle(texts)
 
         temp_chat = []
-        self._add_msg(temp_chat, ChatRole.SYSTEM,
-                      'We are working on a tailored prompt for text summarization. '
-                      'Following are few examples of texts to be summarized. '
-                      'Describe common characteristics of those examples which may be relevant for the summarization.')
+        system_message = 'We are working on a tailored prompt for text summarization. '\
+                         'Following are few examples of texts to be summarized. '\
+                         'Describe common characteristics of those examples which may be relevant for the summarization.'
+        self._add_msg(temp_chat, ChatRole.SYSTEM, system_message)
+
+        max_len_tokens = self.bam_client.parameters['max_total_tokens'] - 1000  # random value to account for the role headers
+        token_counts = self.bam_client.count_tokens(texts)
         total_len = 0
-        max_len_char = 30_000
         num_examples = 0
-        for txt in texts:
-            self._add_msg(temp_chat, ChatRole.SYSTEM, txt)
-            total_len += len(txt)
-            num_examples += 1
-            if total_len > max_len_char:
+        for txt, token_count in zip(texts, token_counts):
+            if total_len + token_count > max_len_tokens:
                 break
+            num_examples += 1
+            total_len += token_count
+            self._add_msg(temp_chat, ChatRole.SYSTEM, txt)
 
         characteristics = self._get_assistant_response(temp_chat)
         self._add_system_msg(f'The user has provided {num_examples} examples')

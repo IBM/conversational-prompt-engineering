@@ -32,7 +32,7 @@ def reset_chat():
 def new_cycle():
     # 1. create the manager if necessary
     if "manager" not in st.session_state:
-        st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key)
+        st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key, model=st.session_state.model)
     manager = st.session_state.manager
 
     # 2. hide evaluation option in sidebar
@@ -136,20 +136,26 @@ if 'BAM_APIKEY' in os.environ:
     st.session_state['key'] = os.environ['BAM_APIKEY']
 
 if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
-    with st.form("my_form", clear_on_submit=True):
-        st.write("Welcome to IBM Research Conversational Prompt Engineering service.")
+    entry_page = st.empty()
+    with entry_page.form("my_form"):
+        st.write("Welcome to IBM Research Conversational Prompt Engineering (CPE) service.")
         st.write(
             "This service is intended to help users build an effective prompt, tailored to their specific summarization use case, through a simple chat with an LLM.")
         st.write(
-            "To make the most out of this service, it would be best to prepare in advance 3 *input* examples, that represent your use case.")
-        st.write("For more information feel free to contact us in slack via #foundation-models-lm-utilization.")
+            "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file.")
+        st.write("For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
         st.write(
-            "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses.")
-        st.write("To proceed, please provide your BAM API key.")
+            "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
+        st.write("To proceed, please provide your BAM API key and select a model.")
         key = st.text_input(label="BAM API key")
+        model = st.radio(label="Select model", options=["llama3", "mixtral"],
+                         captions=["Recommended for most use-cases",
+                                   "Recommended for very long documents"])
         submit = st.form_submit_button()
         if submit:
             st.session_state.key = key
+            st.session_state.model = model
+            entry_page.empty()
 
 if 'key' in st.session_state:
     new_cycle()
