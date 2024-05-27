@@ -362,9 +362,10 @@ class DoubleChatManager:
 
     def _ask_text_questions(self):
         self._add_system_msg(
-            "Now, if the user shared some examples, ask the user up to 3 relevant questions about his summary preferences. "
+            "Now, if the user shared some examples, ask the user up to 5 relevant questions about his summary preferences. "
             "Please do not ask questions that refer to a specific example. "
-            "Please ask the user to answer all the questions at the same message. "
+            "Please clarify to the user that he doesn׳t need to answer all the questions, only those that he feels are relevant for his summary preferences. "
+            "Ask the user to provide  all the answers at the same message. "
             "If the user did not provide any examples, ask only general questions about the prompt "
             "without mentioning that the user shared examples."
         )
