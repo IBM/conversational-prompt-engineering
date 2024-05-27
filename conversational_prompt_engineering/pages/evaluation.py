@@ -5,8 +5,7 @@ import pandas as pd
 
 from conversational_prompt_engineering.backend.double_chat_manager import build_few_shot_prompt, BASELINE_PROMPT
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
-from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
-from conversational_prompt_engineering.data.dataset_name_to_dir import dataset_name_to_dir
+from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_eval
 
 NUM_EXAMPLES = 5
 
@@ -81,31 +80,7 @@ def run():
 
         st.write(f"Using model [{st.session_state.manager.bam_client.parameters['model_id']}](https://bam.res.ibm.com/docs/models#{st.session_state.manager.bam_client.parameters['model_id'].replace('/', '-')})")
 
-        def load_data(file_name):
-            df = read_user_csv_file(file_name)
-            df = df.sample(NUM_EXAMPLES)  ###
-            st.empty()
-            return df.text.tolist()
-
-        # upload test data
-        with col2:
-            uploaded_file = st.file_uploader("Upload test csv file")
-            if uploaded_file is not None:
-                test_texts = load_data(uploaded_file)
-        with col3:
-            datasets = list(dataset_name_to_dir.keys())
-            selected_index = None
-            if "selected_dataset" in st.session_state:
-                selected_index = datasets.index(st.session_state["selected_dataset"])
-            if selected_dataset := st.selectbox('Choose one of the pre uploaded text examples',
-                                                (datasets),
-                                                index=selected_index):
-                selected_file_dir = dataset_name_to_dir.get(selected_dataset)["eval"]
-                uploaded_file = selected_file_dir
-                test_texts = load_data(selected_file_dir)
-                with open(selected_file_dir, 'rb') as f:
-                    st.download_button('Download eval data', f, file_name=f"{selected_dataset}_eval.csv")
-
+        test_texts = create_choose_dataset_component_eval(st)
 
         # get prompts to evaluate
         if 'evaluation' not in st.session_state:
@@ -136,7 +111,7 @@ def run():
 
         # show summarize button
         st.session_state.evaluate_clicked = False
-        if uploaded_file is not None:
+        if test_texts is not None:
             st.session_state.evaluate_clicked = st.button("Summarize")
 
         # summarize texts using prompts

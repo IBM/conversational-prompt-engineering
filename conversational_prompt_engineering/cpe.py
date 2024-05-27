@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 import pandas as pd
 import streamlit as st
@@ -7,9 +8,7 @@ from streamlit_js_eval import streamlit_js_eval
 
 from conversational_prompt_engineering.backend.double_chat_manager import DoubleChatManager
 from conversational_prompt_engineering.backend.manager import Manager, Mode
-from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
-from conversational_prompt_engineering.data.dataset_name_to_dir import dataset_name_to_dir
-
+from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_train
 from st_pages import Page, show_pages, hide_pages
 
 st.set_page_config(layout="wide")
@@ -42,28 +41,11 @@ def new_cycle():
     #     hide_pages(["Evaluate"])
 
     # 3. layout reset and upload buttons in 3 columns
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("Reset chat"):
-            streamlit_js_eval(js_expressions="parent.window.location.reload()")
-    if manager.enable_upload_file:
-        with col2:
-            if uploaded_file := st.file_uploader("Upload text examples csv"):
-                manager.process_examples(read_user_csv_file(uploaded_file))
-        with col3:
-            if selected_dataset := st.selectbox('Choose one of the pre uploaded text examples',
-                                                (dataset_name_to_dir.keys()), index=None): # no item is selected by default
-                selected_file_dir = dataset_name_to_dir.get(selected_dataset)["train"]
-                uploaded_file = selected_file_dir # for possible code that is conditioned on the existance of the uploaded file
-                manager.process_examples(read_user_csv_file(selected_file_dir))
-                st.session_state["selected_dataset"] = selected_dataset
-                with open(selected_file_dir, 'rb') as f:
-                    st.download_button('Download tune data', f, file_name=f"{selected_dataset}_tune.csv")
-    else:
-        if "selected_dataset" in st.session_state:
-            selected_file_dir = dataset_name_to_dir.get(st.session_state["selected_dataset"])["train"]
-            with open(selected_file_dir, 'rb') as f:
-                st.download_button('Download tune data', f, file_name=f"{selected_file_dir}_tune.csv")
+    if st.button("Reset chat"):
+        streamlit_js_eval(js_expressions="parent.window.location.reload()")
+
+
+    create_choose_dataset_component_train(st=st, manager=manager)
 
     # 4. user input
     if user_msg := st.chat_input("Write your message here"):
@@ -79,6 +61,7 @@ def new_cycle():
     if msg is not None:
         with st.chat_message(msg['role']):
             st.write(msg['content'])
+
 
 
 def old_cycle():

@@ -17,6 +17,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 
 
 class ConversationState:
+    INITIALIZING = 'initializing'
     INTRODUCTION = 'introduction'
     CONFIRM_CHARACTERISTICS = 'confirm_characteristics'
     CONFIRM_PROMPT = 'confirm_prompt'
@@ -195,7 +196,7 @@ class DoubleChatManager:
             "2. You'll then refine prompt based on unlabeled examples."
             "3. You'll improve prompt using user’s feedback on model outputs. "
             "\nMention to the user that after a prompt has been built, the user can evaluate it by clicking on Evaluate on the side-bar. "
-            "\nThen, suggest the user to upload a csv file, where the first column contains the text inputs. Alternatively, the user can choose one of our pre-uploaded datasets "
+            "\nThen, suggest the user a dataset from our catalog, or to upload a csv file, where the first column contains the text inputs. "
             "\nIf the user doesn't provide any evaluation data they can mention that in their response, and you'll proceed without it."
         )
         resp = self._get_assistant_response(max_new_tokens=200)
@@ -437,11 +438,13 @@ class DoubleChatManager:
         logging.info(f"Lowest processing time: {self.timing_report[0]}")
 
     def generate_agent_message(self):
-        if len(self.user_chat) > 0 and self.user_chat[-1]['role'] == ChatRole.ASSISTANT:
+        if (len(self.user_chat) > 0 and self.user_chat[-1]['role'] == ChatRole.ASSISTANT) or \
+                (self.state == ConversationState.INITIALIZING) :
             return None
 
         logging.info(f"in {self.state}")
         if self.state is None:
+            self.state = ConversationState.INITIALIZING
             self._init_chats()
             self.state = ConversationState.INTRODUCTION
 
