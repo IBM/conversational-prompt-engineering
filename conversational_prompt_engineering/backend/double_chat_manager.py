@@ -191,9 +191,9 @@ class DoubleChatManager:
         self._add_system_msg(
             "Thanks. "
             "Now, introduce yourself to the user, and present the following flow (do not act on this flow, just present it to the user): "
-            "1. You'll agree with user on initial prompt."
-            "2. You'll then refine prompt based on unlabeled examples."
-            "3. You'll improve prompt using user’s feedback on model outputs. "
+            "1. You'll agree on an initial prompt based on some unlabeled data."
+            "2. You'll then refine the prompt based on the user's feedback on model outputs."
+            "3. You'll share the final few-shot prompt."
             "\nMention to the user that after a prompt has been built, the user can evaluate it by clicking on Evaluate on the side-bar. "
             "\nThen, suggest the user to upload a csv file, where the first column contains the text inputs. "
             "\nIf the user doesn't have a csv they can mention that in their response, and you'll proceed without it."
