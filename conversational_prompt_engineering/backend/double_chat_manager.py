@@ -192,9 +192,9 @@ class DoubleChatManager:
         self._add_system_msg(
             "Thanks. "
             "Now, introduce yourself to the user, and present the following flow (do not act on this flow, just present it to the user): "
-            "1. You'll agree with user on initial prompt."
-            "2. You'll then refine prompt based on unlabeled examples."
-            "3. You'll improve prompt using user’s feedback on model outputs. "
+            "1. You'll agree on an initial prompt based on some unlabeled data."
+            "2. You'll then refine the prompt based on the user's feedback on model outputs."
+            "3. You'll share the final few-shot prompt."
             "\nMention to the user that after a prompt has been built, the user can evaluate it by clicking on Evaluate on the side-bar. "
             "\nThen, suggest the user a dataset from our catalog, or to upload a csv file, where the first column contains the text inputs. "
             "\nIf the user doesn't provide any evaluation data they can mention that in their response, and you'll proceed without it."
@@ -363,9 +363,10 @@ class DoubleChatManager:
 
     def _ask_text_questions(self):
         self._add_system_msg(
-            "Now, if the user shared some examples, ask the user up to 3 relevant questions about his summary preferences. "
+            "Now, if the user shared some examples, ask the user up to 5 relevant questions about his summary preferences. "
             "Please do not ask questions that refer to a specific example. "
-            "Please ask the user to answer all the questions at the same message. "
+            "Please clarify to the user that he doesn׳t need to answer all the questions, only those that he feels are relevant for his summary preferences. "
+            "Ask the user to provide  all the answers at the same message. "
             "If the user did not provide any examples, ask only general questions about the prompt "
             "without mentioning that the user shared examples."
         )
