@@ -9,7 +9,7 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
                         "Privacy Policies and Software Licenses": {"train":
                                              "./data/legal_plain_english/train.csv",
                                          "eval": "./data/legal_plain_english/eval.csv",
-                                        "desc": "This dataset consists of passages from legal documents \ndiscussing privay policies or software licenses."},
+                                        "desc": "This dataset consists of passages from legal documents \ndiscussing privacy policies or software licenses."},
                        "IBM blog": {"train": "./data/ibm blog/train.csv",
                                                 "eval": "./data/ibm blog/test.csv",
                                                  "desc": "This dataset consists blog entries from IBM blog."},
