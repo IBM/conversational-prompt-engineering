@@ -19,20 +19,20 @@ def rander_component(st, default_value_for_droplist, split_name):
                 selected_file_dir = dataset_name_to_dir.get(selected_dataset)[split_name]
                 uploaded_file = selected_file_dir  # for possible code that is conditioned on the existance of the uploaded file
                 st.session_state["selected_dataset"] = selected_dataset
-                st.session_state[f"uploaded_file_{split_name}"] = uploaded_file
+                st.session_state[f"csv_file_{split_name}"] = uploaded_file
                 st.code(dataset_name_to_dir.get(selected_dataset)['desc'], language="markdown")
 
     with col2:
         if selected_dataset == upload_your_csv:
             if uploaded_file := st.file_uploader("Upload text examples csv"):
-                st.session_state[f"uploaded_file_{split_name}"] = uploaded_file
+                st.session_state[f"csv_file_{split_name}"] = uploaded_file
 
 
 def create_choose_dataset_component_train(st, manager):
     if manager.enable_upload_file:
         rander_component(st, default_value_for_droplist=None, split_name='train')
-        if "uploaded_file_train" in st.session_state:
-            manager.process_examples(read_user_csv_file(st.session_state["uploaded_file_train"]))
+        if "csv_file_train" in st.session_state:
+            manager.process_examples(read_user_csv_file(st.session_state["csv_file_train"]))
 
 
     if "selected_dataset" in st.session_state:
@@ -47,5 +47,5 @@ def create_choose_dataset_component_eval(st):
     rander_component(st, default_value_for_droplist=selected_index, split_name='eval')
     if "selected_dataset" in st.session_state:
         add_download_button(st, 'eval')
-    if "uploaded_file_eval" in st.session_state:
-        return read_user_csv_file(st.session_state["uploaded_file_eval"]).text.tolist()
+    if "csv_file_eval" in st.session_state:
+        return read_user_csv_file(st.session_state["csv_file_eval"]).text.tolist()

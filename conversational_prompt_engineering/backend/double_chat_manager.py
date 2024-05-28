@@ -196,7 +196,7 @@ class DoubleChatManager:
             "2. You'll then refine the prompt based on the user's feedback on model outputs."
             "3. You'll share the final few-shot prompt."
             "\nMention to the user that after a prompt has been built, the user can evaluate it by clicking on Evaluate on the side-bar. "
-            "\nThen, suggest the user a dataset from our catalog, or to upload a csv file, where the first column contains the text inputs. "
+            "\nThen, suggest the user to select a dataset from our catalog, or to upload a csv file, where the first column contains the text inputs. "
             "\nIf the user doesn't provide any evaluation data they can mention that in their response, and you'll proceed without it."
         )
         resp = self._get_assistant_response(max_new_tokens=200)
