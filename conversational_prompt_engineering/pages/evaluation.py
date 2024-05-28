@@ -63,13 +63,24 @@ def run():
     if num_prompts < 1:
         st.write("Evaluation will be open after at least one prompt has been curated in the chat.")
     else:
+
+        baseline_prompt = build_few_shot_prompt(BASELINE_PROMPT, [],
+                                                st.session_state.manager.bam_client.parameters['model_id'])
+        zero_shot_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
+                                                 [],
+                                                 st.session_state.manager.bam_client.parameters['model_id'])
+        few_shot_examples = st.session_state.manager.approved_summaries[:st.session_state.manager.validated_example_idx]
+        current_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
+                                               few_shot_examples,
+                                               st.session_state.manager.bam_client.parameters['model_id'])
+
         # present instructions
         st.title("IBM Research Conversational Prompt Engineering - Evaluation")
         with st.expander("Instructions (click to expand)"):
-            st.markdown("1) First, upload test data in csv format, containing a single column named text. Alternatively, if you used one of our pre curated datasets, you can proceed with its evaluation set")
-            st.markdown(f"2) After file is uploaded, {NUM_EXAMPLES} examples are chosen at random for evaluation.")
+            st.markdown("1) First, upload test data in csv format, containing a single column named text. Alternatively, if you used one of our pre curated datasets, you can proceed with its evaluation set.")
+            st.markdown(f"2) In case you uploaded your own file, {NUM_EXAMPLES} examples are chosen at random for evaluation.")
             st.markdown("3) Below you can see the prompts that were curated during your chat and will be used for evaluation.")
-            st.markdown(f"4) Next, click on ***Summarize***. Each prompt will be used to generate a summary for each of the {NUM_EXAMPLES} examples.")
+            st.markdown(f"4) Next, click on ***Summarize***. Each prompt will be used to generate a summary for each of the examples.")
             st.markdown("5) After the summaries are generated, select the best summary for each text. The order of the summaries is mixed for each example.")
             st.markdown("6) When you are done, click on ***Submit*** to present the evaluation scores.")
 
@@ -78,23 +89,28 @@ def run():
             if st.button("Reset evaluation"):
                 reset_evaluation()
 
-        st.write(f"Using model [{st.session_state.manager.bam_client.parameters['model_id']}](https://bam.res.ibm.com/docs/models#{st.session_state.manager.bam_client.parameters['model_id'].replace('/', '-')})")
+            st.write(f"Using model [{st.session_state.manager.bam_client.parameters['model_id']}](https://bam.res.ibm.com/docs/models#{st.session_state.manager.bam_client.parameters['model_id'].replace('/', '-')})")
 
         test_texts = create_choose_dataset_component_eval(st)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            # option = st.selectbox(
+            #     "Select prompt to compare",
+            #     options=["Baseline prompt", "Zero-shot prompt"])
+            option = "Baseline prompt"
+            if option == "Baseline prompt":
+                prompt_to_compare = baseline_prompt
+            else: # option == "Zero-shot prompt":
+                prompt_to_compare = zero_shot_prompt
+            if prompt_to_compare == current_prompt:
+                st.write("Note: prompt 1 is identical to prompt 2")
 
         # get prompts to evaluate
         if 'evaluation' not in st.session_state:
             st.session_state.evaluation = Evaluation(st.session_state.manager.bam_client)
 
-        # prompts = st.session_state.evaluation.get_prompts_to_evaluate(st.session_state.manager.approved_prompts)
-        baseline_prompt = BASELINE_PROMPT
-        baseline_prompt = build_few_shot_prompt(baseline_prompt, [],
-                                                st.session_state.manager.bam_client.parameters['model_id'])
-        few_shot_examples = st.session_state.manager.approved_summaries[:st.session_state.manager.validated_example_idx]
-        current_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
-                                               few_shot_examples,
-                                               st.session_state.manager.bam_client.parameters['model_id'])
-        st.session_state.prompts = [baseline_prompt, current_prompt]
+        st.session_state.prompts = [prompt_to_compare, current_prompt]
 
         if 'count' not in st.session_state:
             st.session_state.count = 0
@@ -102,8 +118,8 @@ def run():
         # show prompts
         col1, col2 = st.columns(2)
         with col1:
-            st.write("Prompt 1 (baseline)")
-            st.text_area(label="text", value=st.session_state.prompts[0], label_visibility="collapsed", height=200)
+            st.write(f"Prompt 1 ({option})")
+            st.text_area(key="prompt_1", label="text", value=st.session_state.prompts[0], label_visibility="collapsed", height=200)
 
         with col2:
             st.write("Prompt 2 (latest cpe prompt)")
@@ -156,6 +172,7 @@ def run():
             if finish_clicked:
                 # showing aggregated results
                 results = calculate_results()
+                st.write(f"Compared between {option} and the latest cpe prompt")
                 total_votes = sum(results.values())
                 for item in results.most_common():
                     pct_val = '{0:.2f}'.format(100*item[1]/total_votes)
