@@ -4,6 +4,8 @@ import chardet
 
 
 def read_user_csv_file(uploaded_file):
+    if isinstance(uploaded_file, str):  # our data is correctly formatted
+        return pd.read_csv(uploaded_file)
     if 'csv' in uploaded_file.type:
         bytes_data = uploaded_file.read()
         assert(len(bytes_data) == uploaded_file.size)

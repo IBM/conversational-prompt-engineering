@@ -1,12 +1,11 @@
 from collections import Counter
 
 import streamlit as st
-import os
 import pandas as pd
 
 from conversational_prompt_engineering.backend.double_chat_manager import build_few_shot_prompt, BASELINE_PROMPT
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
-from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
+from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_eval
 
 NUM_EXAMPLES = 5
 
@@ -67,28 +66,21 @@ def run():
         # present instructions
         st.title("IBM Research Conversational Prompt Engineering - Evaluation")
         with st.expander("Instructions (click to expand)"):
-            st.markdown("1) First, upload test data in csv format, containing a single column named text.")
+            st.markdown("1) First, upload test data in csv format, containing a single column named text. Alternatively, if you used one of our pre curated datasets, you can proceed with its evaluation set")
             st.markdown(f"2) After file is uploaded, {NUM_EXAMPLES} examples are chosen at random for evaluation.")
             st.markdown("3) Below you can see the prompts that were curated during your chat and will be used for evaluation.")
             st.markdown(f"4) Next, click on ***Summarize***. Each prompt will be used to generate a summary for each of the {NUM_EXAMPLES} examples.")
             st.markdown("5) After the summaries are generated, select the best summary for each text. The order of the summaries is mixed for each example.")
             st.markdown("6) When you are done, click on ***Submit*** to present the evaluation scores.")
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("Reset evaluation"):
                 reset_evaluation()
 
         st.write(f"Using model [{st.session_state.manager.bam_client.parameters['model_id']}](https://bam.res.ibm.com/docs/models#{st.session_state.manager.bam_client.parameters['model_id'].replace('/', '-')})")
 
-        # upload test data
-        with col2:
-            uploaded_file = st.file_uploader("Upload test csv file")
-            if uploaded_file is not None:
-                df = read_user_csv_file(uploaded_file)
-                df = df.sample(NUM_EXAMPLES)
-                st.empty()
-                test_texts = df.text.tolist()
+        test_texts = create_choose_dataset_component_eval(st)
 
         # get prompts to evaluate
         if 'evaluation' not in st.session_state:
@@ -119,7 +111,7 @@ def run():
 
         # show summarize button
         st.session_state.evaluate_clicked = False
-        if uploaded_file is not None:
+        if test_texts is not None:
             st.session_state.evaluate_clicked = st.button("Summarize")
 
         # summarize texts using prompts

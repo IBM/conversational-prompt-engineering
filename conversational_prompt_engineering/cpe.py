@@ -7,8 +7,7 @@ from streamlit_js_eval import streamlit_js_eval
 
 from conversational_prompt_engineering.backend.double_chat_manager import DoubleChatManager
 from conversational_prompt_engineering.backend.manager import Manager, Mode
-from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
-
+from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_train
 from st_pages import Page, show_pages, hide_pages
 
 st.set_page_config(layout="wide")
@@ -25,6 +24,8 @@ def old_reset_chat():
     st.session_state.manager = Manager(st.session_state.mode, st.session_state.key)
     st.session_state.messages = []
 
+def reset_chat():
+    streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
 def new_cycle():
     # 1. create the manager if necessary
@@ -38,15 +39,12 @@ def new_cycle():
     # if len(prompts) < 2:
     #     hide_pages(["Evaluate"])
 
-    # 3. layout reset and upload buttons in 2 columns
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Reset chat"):
-            streamlit_js_eval(js_expressions="parent.window.location.reload()")
-    if manager.enable_upload_file:
-        with col2:
-            if uploaded_file := st.file_uploader("Upload text examples csv"):
-                manager.process_examples(read_user_csv_file(uploaded_file))
+    # 3. layout reset and upload buttons in 3 columns
+    if st.button("Reset chat"):
+        streamlit_js_eval(js_expressions="parent.window.location.reload()")
+
+
+    create_choose_dataset_component_train(st=st, manager=manager)
 
     # 4. user input
     if user_msg := st.chat_input("Write your message here"):
@@ -62,6 +60,7 @@ def new_cycle():
     if msg is not None:
         with st.chat_message(msg['role']):
             st.write(msg['content'])
+
 
 
 def old_cycle():
@@ -123,8 +122,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 st.title("IBM Research Conversational Prompt Engineering")
 if 'BAM_APIKEY' in os.environ:
     st.session_state['key'] = os.environ['BAM_APIKEY']
-    st.session_state.model = "llama3"
-
+    st.session_state.model = 'llama3'
 
 if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
     entry_page = st.empty()
