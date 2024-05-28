@@ -94,14 +94,16 @@ def extract_delimited_text(txt, delims):
 
 
 class DoubleChatManager:
-    def __init__(self, bam_api_key, model) -> None:
+    def __init__(self, bam_api_key, model, conv_id) -> None:
         with open("backend/bam_params.json", "r") as f:
             params = json.load(f)
         logging.info(f"selected {model}")
+        logging.info(f"conv id: {conv_id}")
         bam_params = params['models'][model]
         bam_params['api_key'] = bam_api_key
         bam_params['api_endpoint'] = params['api_endpoint']
         self.bam_client = BamGenerate(bam_params)
+        self.conv_id = conv_id
 
         self.user_chat = []
         self.hidden_chat = []
@@ -421,11 +423,20 @@ class DoubleChatManager:
         self.state = ConversationState.DONE
 
         # saving prompts
-        out_dir = f"_out/{name}"
+        out_dir = f"_out/{self.conv_id}"
         os.makedirs(out_dir, exist_ok=True)
-        with open(os.path.join(out_dir, "prompts.json"), "w") as f:
+        with open(os.path.join(out_dir, "final_prompts.json"), "w") as f:
+            for p in self.approved_prompts:
+                p['prompt_with_format'] = build_few_shot_prompt(prompt, [], self.bam_client.parameters['model_id'])
+                p['prompt_with_format_and_few_shots'] = build_few_shot_prompt(prompt,
+                                                                              self.approved_summaries[:self.validated_example_idx],
+                                                                              self.bam_client.parameters['model_id'])
             json.dump(self.approved_prompts, f)
-        logging.info(f"prompts saved for evaluation to {os.path.join(out_dir, 'prompts.json')}")
+        df = pd.DataFrame(self.user_chat)
+        df.to_csv(os.path.join(out_dir, "user_chat.csv"), index=False)
+        df = pd.DataFrame(self.hidden_chat)
+        df.to_csv(os.path.join(out_dir, "hidden_chat.csv"), index=False)
+        logging.info(f"conversation saved in {out_dir}")
 
     def _no_texts(self):
         return len(self.text_examples) == 0

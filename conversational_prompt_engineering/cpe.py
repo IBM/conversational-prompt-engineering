@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 import pandas as pd
 import streamlit as st
@@ -30,7 +31,9 @@ def reset_chat():
 def new_cycle():
     # 1. create the manager if necessary
     if "manager" not in st.session_state:
-        st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key, model=st.session_state.model)
+        st.session_state.conv_id = time.time()
+        st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key, model=st.session_state.model,
+                                                     conv_id=st.session_state.conv_id)
     manager = st.session_state.manager
 
     # 2. hide evaluation option in sidebar
