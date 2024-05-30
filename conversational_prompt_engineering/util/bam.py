@@ -84,8 +84,8 @@ class BamGenerate:
             logging.warning(f"ERROR Provided parameters are not valid: {e}")
         finally:
             if len(token_counts) < len(txt):
-                token_counts = [len(t.split()) * 3 for t in txt]
-            return token_counts  # tokenization failed, fallback to text split
+                token_counts = [len(t.split()) * 3 for t in txt] # tokenization failed, fallback to text split
+            return token_counts
 
     def send_messages(self, conversation, max_new_tokens=None):
         sys.tracebacklimit = 1000
