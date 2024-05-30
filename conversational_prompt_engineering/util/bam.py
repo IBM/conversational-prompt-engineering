@@ -1,12 +1,15 @@
+import logging
 import os
 from enum import Enum
 from urllib.parse import quote_plus
+import sys
 
 import pandas as pd
 # from dotenv import load_dotenv
 
 from genai.client import Client
 from genai.credentials import Credentials
+from genai.exceptions import ApiResponseException, ApiNetworkException, ValidationError
 from genai.schema import (
     DecodingMethod,
     HumanMessage,
@@ -14,7 +17,6 @@ from genai.schema import (
     TextGenerationParameters, ChatRole,
 )
 from tqdm import tqdm
-
 
 # make sure you have a .env file under genai root with
 # GENAI_KEY=<your-genai-key>
@@ -67,27 +69,57 @@ class BamGenerate:
         if type(txt) is str:
             txt = [txt]
         token_counts = []
-        for response in tqdm(self.client.text.tokenization.create(
-            model_id=self.parameters['model_id'],
-            input=txt),
-        ):
-            for result in response.results:
-                token_counts.append(result.token_count)
-        return token_counts
+        try:
+            for response in tqdm(self.client.text.tokenization.create(
+                model_id=self.parameters['model_id'],
+                input=txt),
+            ):
+                for result in response.results:
+                    token_counts.append(result.token_count)
+            return token_counts
+        except ApiResponseException as e:
+            logging.warning(f"ERROR Got API response exception: {e.response.model_dump_json()}")  # our handcrafted message
+        except ApiNetworkException as e:
+            logging.warning(f"ERROR The server could not be reached: {e}")
+        except ValidationError as e:
+            logging.warning(f"ERROR Provided parameters are not valid: {e}")
+        finally:
+            return [len(t.split()) for t in txt]  # tokenization failed, fallback to text split
 
     def send_messages(self, conversation, max_new_tokens=None):
-        parameters = TextGenerationParameters(
-            decoding_method=DecodingMethod.GREEDY,
-            max_new_tokens=max_new_tokens if max_new_tokens else self.parameters['max_new_tokens'],
-            min_new_tokens=1
-        )
-        response = self.client.text.generation.create(
-            model_id=self.parameters['model_id'],
-            inputs=[conversation],
-            parameters=parameters,
-        )
-        texts = [res.generated_text.strip() for resp in response for res in resp.results]
-        return texts
+        sys.tracebacklimit = 1000
+        for i in [0,1]:
+            try:
+                parameters = TextGenerationParameters(
+                    decoding_method=DecodingMethod.GREEDY,
+                    max_new_tokens=max_new_tokens if max_new_tokens else self.parameters['max_new_tokens'],
+                    min_new_tokens=1
+                )
+                response = self.client.text.generation.create(
+                    model_id=self.parameters['model_id'],
+                    inputs=[conversation],
+                    parameters=parameters,
+                )
+                texts = [res.generated_text.strip() for resp in response for res in resp.results]
+                return texts
+            except ApiResponseException as e:
+                if i == 0:
+                    logging.warning(
+                        f"ERROR Got API response exception: {e.response.model_dump_json()}")
+                else:
+                    logging.error("ERROR Got API response exception", e)
+            except ApiNetworkException as e:
+                if i == 0:
+                    logging.warning(f"ERROR The server could not be reached: {e}")
+                else:
+                    logging.error("ERROR The server could not be reached", e)
+            except ValidationError as e:
+                if i == 0:
+                    logging.warning(f"ERROR Provided parameters are not valid: {e}")
+                else:
+                    logging.error("ERROR Provided parameters are not valid", e)
+        sys.tracebacklimit = 0
+        raise Exception("There is an error in BAM. Please try again in a few minutes.")
 
     def save_prompt(self, name, text):
         count = 0
