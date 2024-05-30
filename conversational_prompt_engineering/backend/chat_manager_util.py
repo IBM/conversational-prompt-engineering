@@ -28,15 +28,17 @@ def _get_llama_header(role):
 
 
 class ChatManagerBase:
-    def __init__(self, bam_api_key, model) -> None:
+    def __init__(self, bam_api_key, model, conv_id) -> None:
         with open("backend/bam_params.json", "r") as f:
             params = json.load(f)
         logging.info(f"selected {model}")
+        logging.info(f"conv id: {conv_id}")
         bam_params = params['models'][model]
         bam_params['api_key'] = bam_api_key
         bam_params['api_endpoint'] = params['api_endpoint']
         self.bam_client = BamGenerate(bam_params)
-
+        self.conv_id = conv_id
+        self.dataset_name = None
         self.state = None
         self.timing_report = []
 

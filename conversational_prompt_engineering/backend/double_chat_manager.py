@@ -3,6 +3,7 @@ import logging
 import os
 import random
 
+import pandas as pd
 from genai.schema import ChatRole
 
 from conversational_prompt_engineering.backend.chat_manager_util import LLAMA_START_OF_INPUT, _get_llama_header, \
@@ -73,8 +74,8 @@ def build_few_shot_prompt_llama(prompt, texts_and_summaries):
 
 
 class DoubleChatManager(ChatManagerBase):
-    def __init__(self, bam_api_key, model) -> None:
-        super().__init__(bam_api_key, model)
+    def __init__(self, bam_api_key, model, conv_id) -> None:
+        super().__init__(bam_api_key, model, conv_id)
 
         self.user_chat = []
         self.hidden_chat = []
@@ -361,11 +362,22 @@ class DoubleChatManager(ChatManagerBase):
         self.state = ConversationState.DONE
 
         # saving prompts
-        out_dir = f"_out/{name}"
+        out_dir = f"_out/{self.conv_id}"
         os.makedirs(out_dir, exist_ok=True)
-        with open(os.path.join(out_dir, "prompts.json"), "w") as f:
+        with open(os.path.join(out_dir, "final_prompts.json"), "w") as f:
+            for p in self.approved_prompts:
+                p['prompt_with_format'] = build_few_shot_prompt(prompt, [], self.bam_client.parameters['model_id'])
+                p['prompt_with_format_and_few_shots'] = build_few_shot_prompt(prompt,
+                                                                              self.approved_summaries[:self.validated_example_idx],
+                                                                              self.bam_client.parameters['model_id'])
             json.dump(self.approved_prompts, f)
-        logging.info(f"prompts saved for evaluation to {os.path.join(out_dir, 'prompts.json')}")
+        with open(os.path.join(out_dir, "config.json"), "w") as f:
+            json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name}, f)
+        df = pd.DataFrame(self.user_chat)
+        df.to_csv(os.path.join(out_dir, "user_chat.csv"), index=False)
+        df = pd.DataFrame(self.hidden_chat)
+        df.to_csv(os.path.join(out_dir, "hidden_chat.csv"), index=False)
+        logging.info(f"conversation saved in {out_dir}")
 
     def _no_texts(self):
         return len(self.text_examples) == 0
@@ -464,7 +476,8 @@ class DoubleChatManager(ChatManagerBase):
 
         return self.user_chat[-1]
 
-    def process_examples(self, df):
+    def process_examples(self, df, dataset_name):
+        self.dataset_name = dataset_name
         self.enable_upload_file = False
         self.user_has_more_texts = False
 

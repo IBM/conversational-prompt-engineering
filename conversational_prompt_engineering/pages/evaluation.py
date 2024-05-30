@@ -1,3 +1,5 @@
+import json
+import os
 from collections import Counter
 
 import streamlit as st
@@ -6,6 +8,7 @@ import pandas as pd
 from conversational_prompt_engineering.backend.double_chat_manager import build_few_shot_prompt, BASELINE_PROMPT
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_eval
+import time
 
 NUM_EXAMPLES = 5
 
@@ -49,6 +52,15 @@ def select(prompt, side):
 def calculate_results():
     counter = Counter([d['selected_prompt'] for d in st.session_state.generated_data if d['selected_prompt'] is not None])
     return counter
+
+
+def save_results():
+    out_path = f"_out/{st.session_state.conv_id}/eval/{time.time()}"
+    os.makedirs(out_path, exist_ok=True)
+    df = pd.DataFrame(st.session_state.generated_data)
+    df.to_csv(os.path.join(out_path, f"eval_results.csv"))
+    with open(os.path.join(out_path, f"prompts.json"), "w") as f:
+        json.dump({str(i): st.session_state.prompts[i] for i in range(len(st.session_state.prompts))}, f)
 
 
 def reset_evaluation():
@@ -165,13 +177,13 @@ def run():
                 if st.button("Select", key="right", on_click=select, args=(st.session_state.generated_data[st.session_state.count]["1_prompt"], "1", )):
                     pass
                 display_selected("1")
-
             # if all([row['selected_prompt'] for row in st.session_state.generated_data]):
             st.divider()
             finish_clicked = st.button("Submit")
             if finish_clicked:
                 # showing aggregated results
                 results = calculate_results()
+                save_results()
                 st.write(f"Compared between {option} and the latest cpe prompt")
                 total_votes = sum(results.values())
                 for item in results.most_common():
