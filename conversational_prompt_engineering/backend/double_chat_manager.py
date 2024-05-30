@@ -104,6 +104,7 @@ class DoubleChatManager:
         bam_params['api_endpoint'] = params['api_endpoint']
         self.bam_client = BamGenerate(bam_params)
         self.conv_id = conv_id
+        self.dataset_name = None
 
         self.user_chat = []
         self.hidden_chat = []
@@ -432,6 +433,8 @@ class DoubleChatManager:
                                                                               self.approved_summaries[:self.validated_example_idx],
                                                                               self.bam_client.parameters['model_id'])
             json.dump(self.approved_prompts, f)
+        with open(os.path.join(out_dir, "config.json"), "w") as f:
+            json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name}, f)
         df = pd.DataFrame(self.user_chat)
         df.to_csv(os.path.join(out_dir, "user_chat.csv"), index=False)
         df = pd.DataFrame(self.hidden_chat)
@@ -542,7 +545,8 @@ class DoubleChatManager:
 
         return self.user_chat[-1]
 
-    def process_examples(self, df):
+    def process_examples(self, df, dataset_name):
+        self.dataset_name = dataset_name
         self.enable_upload_file = False
         self.user_has_more_texts = False
 
