@@ -1,4 +1,4 @@
-dataset_name_to_dir = {"Movie Reviews" : {"train":
+dataset_name_to_dir = {"Movie Reviews (for mixtral model only)" : {"train":
                                               "./data/movie reviews/train.csv",
                                           "eval": "./data/movie reviews/eval.csv",
                                           "desc": "This dataset consists of movie reviews \npublished at https://www.rogerebert.com/."},
