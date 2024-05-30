@@ -76,7 +76,6 @@ class BamGenerate:
             ):
                 for result in response.results:
                     token_counts.append(result.token_count)
-            return token_counts
         except ApiResponseException as e:
             logging.warning(f"ERROR Got API response exception: {e.response.model_dump_json()}")  # our handcrafted message
         except ApiNetworkException as e:
@@ -84,7 +83,9 @@ class BamGenerate:
         except ValidationError as e:
             logging.warning(f"ERROR Provided parameters are not valid: {e}")
         finally:
-            return [len(t.split()) for t in txt]  # tokenization failed, fallback to text split
+            if len(token_counts) < len(txt):
+                token_counts = [len(t.split()) * 3 for t in txt]
+            return token_counts  # tokenization failed, fallback to text split
 
     def send_messages(self, conversation, max_new_tokens=None):
         sys.tracebacklimit = 1000
