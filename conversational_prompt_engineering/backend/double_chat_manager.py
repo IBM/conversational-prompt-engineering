@@ -1,13 +1,12 @@
 import json
-import os
 import logging
+import os
 import random
-import time
 
-import pandas as pd
 from genai.schema import ChatRole
 
-from conversational_prompt_engineering.util.bam import BamGenerate
+from conversational_prompt_engineering.backend.chat_manager_util import LLAMA_START_OF_INPUT, _get_llama_header, \
+    LLAMA_END_OF_MESSAGE, ChatManagerBase, extract_delimited_text
 
 BASELINE_PROMPT = 'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.'
 
@@ -26,11 +25,6 @@ class ConversationState:
     EVALUATE_PROMPT = 'evaluate_prompt'
     CONFIRM_SUMMARY = 'confirm_summary'
     DONE = 'done'
-
-
-LLAMA_END_OF_MESSAGE = "<|eot_id|>"
-
-LLAMA_START_OF_INPUT = '<|begin_of_text|>'
 
 
 def build_few_shot_prompt(prompt, texts_and_summaries, model_id):
@@ -78,30 +72,9 @@ def build_few_shot_prompt_llama(prompt, texts_and_summaries):
     return prompt
 
 
-def _get_llama_header(role):
-    return "<|start_header_id|>" + role + "<|end_header_id|>"
-
-
-def extract_delimited_text(txt, delims):
-    if type(delims) is str:
-        delims = [delims]
-    for delim in delims:
-        if delim in txt:
-            begin = txt.index(delim) + len(delim)
-            end = begin + txt[begin:].index(delim)
-            return txt[begin:end]
-    return txt  # delims not found in text
-
-
-class DoubleChatManager:
+class DoubleChatManager(ChatManagerBase):
     def __init__(self, bam_api_key, model) -> None:
-        with open("backend/bam_params.json", "r") as f:
-            params = json.load(f)
-        logging.info(f"selected {model}")
-        bam_params = params['models'][model]
-        bam_params['api_key'] = bam_api_key
-        bam_params['api_endpoint'] = params['api_endpoint']
-        self.bam_client = BamGenerate(bam_params)
+        super().__init__(bam_api_key, model)
 
         self.user_chat = []
         self.hidden_chat = []
@@ -110,19 +83,17 @@ class DoubleChatManager:
         self.approved_prompts = []
         self.approved_summaries = []
         self.validated_example_idx = 0
-        self.state = None
 
         self.user_has_more_texts = True
         self.enable_upload_file = True
-        self.timing_report = []
+
+    def _get_assistant_response(self, chat=None, max_new_tokens=None):
+        return super()._get_assistant_response(chat or self.hidden_chat, max_new_tokens)
 
     def _load_admin_params(self):
         with open("backend/admin_params.json", "r") as f:
             params = json.load(f)
         return params
-
-    def _add_msg(self, chat, role, msg):
-        chat.append({'role': role, 'content': msg})
 
     def add_user_message(self, msg):
         logging.info(f"got input from user: {msg}")
@@ -145,37 +116,6 @@ class DoubleChatManager:
         for msg in messages:
             for chat in chats:
                 self._add_msg(chat, ChatRole.ASSISTANT, msg)
-
-    def _format_chat(self, chat):
-        if 'mixtral' in self.bam_client.parameters['model_id']:
-            return ''.join([f'\n<|{m["role"]}|>\n{m["content"]}\n' for m in chat]) + f'<|{ChatRole.ASSISTANT}|>'
-        elif 'llama' in self.bam_client.parameters['model_id']:
-            msg_str = LLAMA_START_OF_INPUT
-            for m in chat:
-                msg_str += _get_llama_header(m['role']) + "\n\n" + m['content'] + LLAMA_END_OF_MESSAGE
-            msg_str += _get_llama_header(ChatRole.ASSISTANT)
-            return msg_str
-        else:
-            raise Exception(f"model {self.bam_client.parameters['model_id']} not supported")
-
-    def _get_assistant_response(self, chat=None, max_new_tokens=None):
-        chat = chat or self.hidden_chat
-        conversation = self._format_chat(chat)
-        start_time = time.time()
-        generated_texts = self.bam_client.send_messages(conversation, max_new_tokens=max_new_tokens)
-        elapsed_time = time.time() - start_time
-        timing_dict = {"state": self.state, "context_length": len(conversation),
-                       "output_length": sum([len(gt) for gt in generated_texts]), "time": elapsed_time}
-        logging.info(timing_dict)
-        self.timing_report.append(timing_dict)
-        agent_response = ''
-        for txt in generated_texts:
-            if any([f'<|{r}|>' in txt for r in [ChatRole.SYSTEM, ChatRole.USER]]):
-                agent_response += txt[: txt.index('<|')]
-                break
-            agent_response += txt
-        logging.info(f"got response from model: {agent_response}")
-        return agent_response.strip()
 
     def _init_chats(self):
         self._add_system_msg(
@@ -357,7 +297,7 @@ class DoubleChatManager:
             resp = self._get_assistant_response(max_new_tokens=20)
             self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
             self.user_has_more_texts = ("not finished" in resp.lower()) or not (resp.lower().startswith("finished") or
-                "no more" in resp.lower() or "have finished" in resp.lower() or "they finished sharing" in resp.lower())
+                                                                                "no more" in resp.lower() or "have finished" in resp.lower() or "they finished sharing" in resp.lower())
             logging.info(f"user_has_more_texts is set to {self.user_has_more_texts}")
         return self.user_has_more_texts
 
@@ -430,17 +370,9 @@ class DoubleChatManager:
     def _no_texts(self):
         return len(self.text_examples) == 0
 
-    def print_timing_report(self):
-        df = pd.DataFrame(self.timing_report)
-        logging.info(df)
-        logging.info(f"Average processing time: {df['time'].mean()}")
-        self.timing_report = sorted(self.timing_report, key=lambda row: row['time'])
-        logging.info(f"Highest processing time: {self.timing_report[-1]}")
-        logging.info(f"Lowest processing time: {self.timing_report[0]}")
-
     def generate_agent_message(self):
         if (len(self.user_chat) > 0 and self.user_chat[-1]['role'] == ChatRole.ASSISTANT) or \
-                (self.state == ConversationState.INITIALIZING) :
+                (self.state == ConversationState.INITIALIZING):
             return None
 
         logging.info(f"in {self.state}")
@@ -482,7 +414,8 @@ class DoubleChatManager:
                         self._ask_for_text()
                         self.state = ConversationState.PROCESS_TEXTS
                     else:
-                        logging.info(f"user gave {len(self.text_examples)} text examples. ({self.validated_example_idx})")
+                        logging.info(
+                            f"user gave {len(self.text_examples)} text examples. ({self.validated_example_idx})")
                         self._evaluate_prompt()
                         self.state = ConversationState.CONFIRM_SUMMARY
                 else:
@@ -543,12 +476,13 @@ class DoubleChatManager:
             random.shuffle(texts)
 
         temp_chat = []
-        system_message = 'We are working on a tailored prompt for text summarization. '\
-                         'Following are few examples of texts to be summarized. '\
+        system_message = 'We are working on a tailored prompt for text summarization. ' \
+                         'Following are few examples of texts to be summarized. ' \
                          'Describe common characteristics of those examples which may be relevant for the summarization.'
         self._add_msg(temp_chat, ChatRole.SYSTEM, system_message)
 
-        max_len_tokens = self.bam_client.parameters['max_total_tokens'] - 1000  # random value to account for the role headers
+        max_len_tokens = self.bam_client.parameters[
+                             'max_total_tokens'] - 1000  # random value to account for the role headers
         token_counts = self.bam_client.count_tokens(texts)
         total_len = 0
         num_examples = 0
@@ -568,4 +502,3 @@ class DoubleChatManager:
 
     def get_prompts(self):
         return self.approved_prompts
-
