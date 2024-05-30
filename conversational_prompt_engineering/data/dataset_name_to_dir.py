@@ -15,7 +15,7 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
                                                  "desc": "This dataset consists blog entries from IBM blog."},
                        "climate blog": {"train": "./data/climate blog/train.csv",
                                     "eval": "./data/climate blog/test.csv",
-                                    "desc": "This dataset consists of articles about climate related issues \npublished in https://www.climaterealityproject.org"},
+                                    "desc": "This dataset consists of articles about climate related issues \npublished in https://www.climaterealityproject.org."},
 
                        "Reddit posts": {"train": "./data/tldr/train.csv",
                                         "eval": "./data/tldr/test.csv",
