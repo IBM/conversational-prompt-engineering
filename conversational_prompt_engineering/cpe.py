@@ -134,15 +134,15 @@ if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
         st.write(
             "This service is intended to help users build an effective prompt, tailored to their specific summarization use case, through a simple chat with an LLM.")
         st.write(
-            "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file.")
-        st.write("For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
+            "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.")
+        st.write("For more information feel free to contact us via slack at [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
         st.write(
             "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
         st.write("To proceed, please provide your BAM API key and select a model.")
         key = st.text_input(label="BAM API key")
-        model = st.radio(label="Select model", options=["llama3", "mixtral"],
-                         captions=["Recommended for most use-cases",
-                                   "Recommended for very long documents"])
+        model = st.radio(label="Select model", options=["llama-3", "mixtral"],
+                         captions=["llama-3-70B. Recommended for most use-cases",
+                                   "mixtral-8x7B. Recommended for very long documents"])
         submit = st.form_submit_button()
         if submit:
             st.session_state.key = key
