@@ -144,13 +144,14 @@ def run():
 
         # summarize texts using prompts
         if st.session_state.evaluate_clicked:
-            generated_data_mixed, generated_data_ordered = \
-                st.session_state.evaluation.summarize(st.session_state.prompts,
-                                                      test_texts)
-            st.session_state.generated_data = generated_data_mixed
-            for row in st.session_state.generated_data:
-                row['selected_side'] = None
-                row['selected_prompt'] = None
+            with st.spinner('Summarizing...'):
+                generated_data_mixed, generated_data_ordered = \
+                    st.session_state.evaluation.summarize(st.session_state.prompts,
+                                                          test_texts)
+                st.session_state.generated_data = generated_data_mixed
+                for row in st.session_state.generated_data:
+                    row['selected_side'] = None
+                    row['selected_prompt'] = None
 
         # showing texts and summaries to evaluate
         if 'generated_data' in st.session_state and len(st.session_state.generated_data) > 0:
