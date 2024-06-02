@@ -31,7 +31,7 @@ def reset_chat():
 def new_cycle():
     # 1. create the manager if necessary
     if "manager" not in st.session_state:
-        st.session_state.conv_id = hash(st.session_state.key)
+        st.session_state.conv_id = abs(hash(st.session_state.key))
         st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key, model=st.session_state.model,
                                                      conv_id=st.session_state.conv_id)
     manager = st.session_state.manager
