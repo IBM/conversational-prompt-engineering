@@ -11,6 +11,8 @@ from conversational_prompt_engineering.backend.chat_manager_util import LLAMA_ST
 
 BASELINE_PROMPT = 'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.'
 
+GRANITE_SYSTEM_MESSAGE = 'You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant that carefully follows instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You respond in a comprehensive manner unless instructed otherwise, providing explanations when needed while maintaining a neutral tone. You are capable of coding, writing, and roleplaying. You are cautious and refrain from generating real-time information, highly subjective or opinion-based topics. You are harmless and refrain from generating content involving any form of bias, violence, discrimination or inappropriate content. You always respond to greetings (for example, hi, hello, g\'day, morning, afternoon, evening, night, what\'s up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.'
+
 NUM_USER_EXAMPLES = 3
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
@@ -33,8 +35,25 @@ def build_few_shot_prompt(prompt, texts_and_summaries, model_id):
         return build_few_shot_prompt_llama(prompt, texts_and_summaries)
     elif 'mixtral' in model_id:
         return build_few_shot_prompt_mixtral(prompt, texts_and_summaries)
+    elif 'granite' in model_id:
+        return build_few_shot_prompt_granite(prompt, texts_and_summaries)
     else:
         raise Exception(f"model {model_id} not supported")
+
+
+def build_few_shot_prompt_granite(prompt, texts_and_summaries):
+    system_prompt = f'<|{ChatRole.SYSTEM}|>\nYou are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g\'day, morning, afternoon, evening, night, what\'s up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.'
+    prompt = system_prompt + '\n' + f'<|{ChatRole.USER}|>' + '\n' + prompt + 'Your response should only include the answer. Do not provide any further explanation.'
+    if len(texts_and_summaries) > 0:
+        prompt += "\n\nHere are some examples, complete the last one:\n"
+        for item in texts_and_summaries:
+            text = item['text']
+            summary = item['summary']
+            prompt += f"Text:\n{text}\nSummary:\n{summary}\n\n"
+    else:
+        prompt += "\n\n"
+    prompt += 'Text:\n{text}\nSummary:\n' + f'<|{ChatRole.ASSISTANT}|>'
+    return prompt
 
 
 def build_few_shot_prompt_mixtral(prompt, texts_and_summaries):
@@ -119,6 +138,8 @@ class DoubleChatManager(ChatManagerBase):
                 self._add_msg(chat, ChatRole.ASSISTANT, msg)
 
     def _init_chats(self):
+        if 'granite' in self.bam_client.parameters['model_id']:
+            self._add_system_msg(GRANITE_SYSTEM_MESSAGE)
         self._add_system_msg(
             "You are an IBM prompt building assistant that helps the user build an instruction for a text summarization task. "
             "You will be interacting with two actors: system and user. The direct interaction will be only with system. "
@@ -130,15 +151,16 @@ class DoubleChatManager(ChatManagerBase):
         assert resp.lower().startswith('understood')
         logging.info("initializing chat")
 
-        self._add_system_msg(
-            "Thanks. "
-            "Now, introduce yourself to the user, and present the following flow (do not act on this flow, just present it to the user): "
-            "1. You'll agree on an initial prompt based on some unlabeled data."
-            "2. You'll then refine the prompt based on the user's feedback on model outputs."
-            "3. You'll share the final few-shot prompt."
-            "\nMention to the user that after a prompt has been built, the user can evaluate it by clicking on Evaluate on the side-bar. "
-            "\nThen, suggest the user to select a dataset from our catalog, or to upload a csv file, where the first column contains the text inputs. "
+        intro_message = "Thanks. "\
+            "Now, introduce yourself to the user, and present the following flow (do not act on this flow, just present it to the user): "\
+            "1. You'll agree on an initial prompt based on some unlabeled data."\
+            "2. You'll then refine the prompt based on the user's feedback on model outputs."\
+            "3. You'll share the final few-shot prompt."\
+            "\nMention to the user that after a prompt has been built, the user can evaluate it by clicking on Evaluate on the side-bar. "\
+            "\nThen, suggest the user to select a dataset from our catalog, or to upload a csv file, where the first column contains the text inputs. "\
             "\nIf the user doesn't provide any evaluation data they can mention that in their response, and you'll proceed without it."
+        self._add_system_msg(
+            intro_message
         )
         static_assistant_hello_msg = ["Hello! I'm an IBM prompt building assistant, and I'm here to help you build an effective instruction for a text summarization task.\n",
                                       "We'll work together to craft a prompt that yields high-quality summaries. Here's an overview of our collaboration:\n",
@@ -227,7 +249,7 @@ class DoubleChatManager(ChatManagerBase):
             )
             resp = self._get_assistant_response(max_new_tokens=200)
             prompt = resp
-        else:  # mixtral
+        elif 'mixtral' in self.bam_client.parameters['model_id']:
             self._add_system_msg(
                 'Build the summarization prompt based on your current understanding (only the instruction). '
                 'Enclose the prompt in triple quotes (```).'
@@ -235,22 +257,39 @@ class DoubleChatManager(ChatManagerBase):
             resp = self._get_assistant_response(max_new_tokens=200)
             prompt = extract_delimited_text(resp, ['```', '"""'])
             prompt = prompt.strip("\"")
+        else:  # granite
+            self._add_system_msg('Build the prompt for summarization based on your current understanding '
+                                 '(only the instruction). Enclose the prompt in triple quotes (```).')
+            resp = self._get_assistant_response(max_new_tokens=200)
+            prompt = extract_delimited_text(resp, ['```', '"""'])
+            prompt = prompt.strip("\"")
 
         self._add_prompt(prompt, is_new=is_new)
         logging.info(f"added prompt: {prompt} | prompt is {'new' if is_new else 'corrected'}")
         self._add_assistant_msg(prompt, 'hidden')
-        self._add_system_msg('Please validate your suggested prompt with the user, and update it if necessary.')
+        if 'granite' not in self.bam_client.parameters['model_id']:
+            self._add_system_msg('Please validate your suggested prompt with the user, and update it if necessary.')
+        else:  # granite
+            self._add_system_msg('Share this prompt with the user, do not modify it, and ask them if it\'s ok or they would like to update it.')
         resp = self._get_assistant_response(max_new_tokens=200)
         self._add_assistant_msg(resp, 'both')
 
     def _user_asked_for_correction(self):
-        self._add_system_msg(
-            'Has the user asked for a correction or a modification of the suggested prompt in the last message? answer "yes" or "no"')
+        if 'granite' not in self.bam_client.parameters['model_id']:
+            self._add_system_msg(
+                'Has the user asked for a correction or a modification of the suggested prompt in the last message? answer "yes" or "no"')
+        else:  # granite
+            self._add_system_msg('Please write "changed" if user suggested a change to the prompt, and "no changes" otherwise.')
         resp = self._get_assistant_response(max_new_tokens=50)
         self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
-        if resp.lower().startswith('yes'):
-            return True
-        return False
+        if 'granite' not in self.bam_client.parameters['model_id']:
+            if resp.lower().startswith('yes'):
+                return True
+            return False
+        else:  # granite
+            if resp.lower().startswith('changed'):
+                return True
+            return False
 
     def _prompt_suggestion_accepted(self):
         self._add_system_msg(
@@ -337,12 +376,15 @@ class DoubleChatManager(ChatManagerBase):
         else:
             self.approved_summaries.append({'text': example, 'summary': summary})
 
-        self._add_system_msg(f'When the latest prompt was used for summarization of the example ```{example}``` '
-                             f'it produced the result ```{summary}```')
-        self._add_system_msg(
-            f'Present these results to the user, mention they are based on the text of example no. '
-            f'{(self.validated_example_idx + 1)} shared by the user, and ask if they want any changes.'
-        )
+        if 'granite' not in self.bam_client.parameters['model_id']:
+            self._add_system_msg(f'When the latest prompt was used for summarization of the example ```{example}``` '
+                                 f'it produced the result ```{summary}```')
+            self._add_system_msg(
+                f'Present these results to the user, mention they are based on the text of example no. '
+                f'{(self.validated_example_idx + 1)} shared by the user, and ask if they want any changes.'
+            )
+        else:  # granite
+            self._add_system_msg(f'Here is a summary of example no. {(self.validated_example_idx + 1)}:\n```{summary}```\nShare the summary with the user, do not modify it, and ask if they want to make any changes.')
         resp = self._get_assistant_response()
         self.hidden_chat = self.hidden_chat[:-2]  # remove the last messages
 
@@ -351,12 +393,15 @@ class DoubleChatManager(ChatManagerBase):
     def _share_prompt_and_save(self):
         prompt = self.approved_prompts[-1]['prompt']
         temp_chat = []
-        self._add_msg(temp_chat, ChatRole.USER,
-                      'Suggest a name for the following summarization prompt. '
-                      'The name should be short and descriptive, it will be used as a title in the prompt library. '
-                      f'Enclose the suggested name in triple quotes (```). The prompt is "{prompt}"')
-        resp = self._get_assistant_response(temp_chat)
-        name = extract_delimited_text(resp, "```").strip().replace('"', '').replace(" ", "_")[:50]
+        if 'granite' not in self.bam_client.parameters['model_id']:
+            self._add_msg(temp_chat, ChatRole.USER,
+                          'Suggest a name for the following summarization prompt. '
+                          'The name should be short and descriptive, it will be used as a title in the prompt library. '
+                          f'Enclose the suggested name in triple quotes (```). The prompt is "{prompt}"')
+            resp = self._get_assistant_response(temp_chat)
+            name = extract_delimited_text(resp, "```").strip().replace('"', '').replace(" ", "_")[:50]
+        else:  # granite
+            name = self.dataset_name + "_" + str(self.conv_id)
 
         prompt_str = build_few_shot_prompt(prompt, self.approved_summaries[:self.validated_example_idx],
                                            self.bam_client.parameters['model_id'])
@@ -494,23 +539,33 @@ class DoubleChatManager(ChatManagerBase):
             texts = texts[3:]
             random.shuffle(texts)
 
-        temp_chat = []
-        system_message = 'We are working on a tailored prompt for text summarization. ' \
-                         'Following are few examples of texts to be summarized. ' \
-                         'Describe common characteristics of those examples which may be relevant for the summarization.'
-        self._add_msg(temp_chat, ChatRole.SYSTEM, system_message)
-
         max_len_tokens = self.bam_client.parameters[
                              'max_total_tokens'] - 1000  # random value to account for the role headers
         token_counts = self.bam_client.count_tokens(texts)
         total_len = 0
         num_examples = 0
+        selected_examples = []
         for txt, token_count in zip(texts, token_counts):
             if total_len + token_count > max_len_tokens:
                 break
             num_examples += 1
             total_len += token_count
-            self._add_msg(temp_chat, ChatRole.SYSTEM, txt)
+            selected_examples.append(txt)
+
+        temp_chat = []
+
+        system_message = 'We are working on a tailored prompt for text summarization. ' \
+                         'Following are few examples of texts to be summarized. ' \
+                         'Describe common characteristics of those examples which may be relevant for the summarization.'
+
+        if 'granite' not in self.bam_client.parameters['model_id']:
+            self._add_msg(temp_chat, ChatRole.SYSTEM, system_message)
+            for txt in selected_examples:
+                self._add_msg(temp_chat, ChatRole.SYSTEM, txt)
+        else:  # granite
+            self._add_msg(temp_chat, ChatRole.SYSTEM, GRANITE_SYSTEM_MESSAGE)
+            user_message = system_message + '\n'.join(selected_examples)
+            self._add_msg(temp_chat, ChatRole.USER, user_message)
 
         characteristics = self._get_assistant_response(temp_chat)
         self._add_system_msg(f'The user has provided {num_examples} examples')
