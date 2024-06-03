@@ -37,7 +37,7 @@ def create_choose_dataset_component_train(st, manager):
 
     if "selected_dataset" in st.session_state:
         add_download_button(st, 'train')
-
+        st.write(f"Using {st.session_state['selected_dataset']} dataset")
 
 def create_choose_dataset_component_eval(st):
     datasets = list(dataset_name_to_dir.keys())
@@ -47,5 +47,7 @@ def create_choose_dataset_component_eval(st):
     rander_component(st, default_value_for_droplist=selected_index, split_name='eval')
     if "selected_dataset" in st.session_state:
         add_download_button(st, 'eval')
+        st.write(f"Using {st.session_state['selected_dataset']} dataset")
+
     if "csv_file_eval" in st.session_state:
         return read_user_csv_file(st.session_state["csv_file_eval"]).text.tolist()

@@ -140,8 +140,14 @@ class DoubleChatManager(ChatManagerBase):
             "\nThen, suggest the user to select a dataset from our catalog, or to upload a csv file, where the first column contains the text inputs. "
             "\nIf the user doesn't provide any evaluation data they can mention that in their response, and you'll proceed without it."
         )
-        resp = self._get_assistant_response(max_new_tokens=200)
-        self._add_assistant_msg(resp, 'both')
+        static_assistant_hello_msg = ["Hello! I'm an IBM prompt building assistant, and I'm here to help you build an effective instruction for a text summarization task.\n",
+                                      "We'll work together to craft a prompt that yields high-quality summaries. Here's an overview of our collaboration:\n",
+                                      "1. We'll start by agreeing on an initial prompt based on some unlabeled data.",
+                                      "2. Then, we'll refine the prompt based on your feedback on model outputs.",
+                                      "3. Finally, we'll share the final few-shot prompt.\n",
+                                      "Once we've built a prompt, you can evaluate its performance by clicking on \"Evaluate\" on the side-bar.\n",
+                                      "To get started, could you please select a dataset from our catalog or upload a CSV file containing the text inputs in the first column? If you don't have any evaluation data, feel free to let me know, and we'll proceed without it."]
+        self._add_assistant_msg("\n".join(static_assistant_hello_msg), 'both')
 
     def _add_prompt(self, prompt, is_new=True):
         prompt = prompt.strip("\n")
