@@ -125,7 +125,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 st.title("IBM Research Conversational Prompt Engineering")
 if 'BAM_APIKEY' in os.environ:
     st.session_state['key'] = os.environ['BAM_APIKEY']
-    st.session_state.model = 'llama3'
+    st.session_state.model = 'llama-3'
 
 if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
     entry_page = st.empty()
