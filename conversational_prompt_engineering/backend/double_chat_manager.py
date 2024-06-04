@@ -11,7 +11,7 @@ from conversational_prompt_engineering.backend.chat_manager_util import LLAMA_ST
 
 BASELINE_PROMPT = 'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.'
 
-GRANITE_SYSTEM_MESSAGE = 'You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant that carefully follows instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You respond in a comprehensive manner unless instructed otherwise, providing explanations when needed while maintaining a neutral tone. You are capable of coding, writing, and roleplaying. You are cautious and refrain from generating real-time information, highly subjective or opinion-based topics. You are harmless and refrain from generating content involving any form of bias, violence, discrimination or inappropriate content. You always respond to greetings (for example, hi, hello, g\'day, morning, afternoon, evening, night, what\'s up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.'
+GRANITE_SYSTEM_MESSAGE = 'You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g\'day, morning, afternoon, evening, night, what\'s up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.'
 
 NUM_USER_EXAMPLES = 3
 
@@ -42,8 +42,8 @@ def build_few_shot_prompt(prompt, texts_and_summaries, model_id):
 
 
 def build_few_shot_prompt_granite(prompt, texts_and_summaries):
-    system_prompt = f'<|{ChatRole.SYSTEM}|>\nYou are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g\'day, morning, afternoon, evening, night, what\'s up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.'
-    prompt = system_prompt + '\n' + f'<|{ChatRole.USER}|>' + '\n' + prompt + 'Your response should only include the answer. Do not provide any further explanation.'
+    system_prompt = f'<|{ChatRole.SYSTEM}|>\n{GRANITE_SYSTEM_MESSAGE}'
+    prompt = system_prompt + '\n' + f'<|{ChatRole.USER}|>' + '\n' + prompt + '\nYour response should only include the answer. Do not provide any further explanation.'
     if len(texts_and_summaries) > 0:
         prompt += "\n\nHere are some examples, complete the last one:\n"
         for item in texts_and_summaries:
