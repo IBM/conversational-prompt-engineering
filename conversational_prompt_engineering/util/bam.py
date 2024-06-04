@@ -94,7 +94,8 @@ class BamGenerate:
                 parameters = TextGenerationParameters(
                     decoding_method=DecodingMethod.GREEDY,
                     max_new_tokens=max_new_tokens if max_new_tokens else self.parameters['max_new_tokens'],
-                    min_new_tokens=1
+                    min_new_tokens=1,
+                    repetition_penalty=self.parameters['repetition_penalty'] if 'repetition_penalty' in self.parameters else 1
                 )
                 response = self.client.text.generation.create(
                     model_id=self.parameters['model_id'],

@@ -9,6 +9,12 @@
       "model_id": "meta-llama/llama-3-70b-instruct",
       "max_new_tokens": 2048,
       "max_total_tokens": 8196
+    },
+     "granite": {
+      "model_id": "ibm/granite-13b-chat-v2",
+      "max_new_tokens": 1024,
+      "max_total_tokens": 8192,
+      "repetition_penalty": 1.05
     }
   },
   "api_endpoint": "https://bam-api.res.ibm.com"

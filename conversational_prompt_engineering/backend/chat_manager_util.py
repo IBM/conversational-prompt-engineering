@@ -13,14 +13,17 @@ LLAMA_START_OF_INPUT = '<|begin_of_text|>'
 
 
 def extract_delimited_text(txt, delims):
-    if type(delims) is str:
-        delims = [delims]
-    for delim in delims:
-        if delim in txt:
-            begin = txt.index(delim) + len(delim)
-            end = begin + txt[begin:].index(delim)
-            return txt[begin:end]
-    return txt  # delims not found in text
+    try:
+        if type(delims) is str:
+            delims = [delims]
+        for delim in delims:
+            if delim in txt:
+                begin = txt.index(delim) + len(delim)
+                end = begin + txt[begin:].index(delim)
+                return txt[begin:end]
+        return txt  # delims not found in text
+    except ValueError:
+        return txt
 
 
 def _get_llama_header(role):
@@ -48,6 +51,8 @@ class ChatManagerBase:
     def _format_chat(self, chat):
         if 'mixtral' in self.bam_client.parameters['model_id']:
             return ''.join([f'\n<|{m["role"]}|>\n{m["content"]}\n' for m in chat]) + f'<|{ChatRole.ASSISTANT}|>'
+        elif 'granite' in self.bam_client.parameters['model_id']:
+            return ''.join([f'<|{m["role"]}|>\n{m["content"]}\n' for m in chat]) + f'<|{ChatRole.ASSISTANT}|>'
         elif 'llama' in self.bam_client.parameters['model_id']:
             msg_str = LLAMA_START_OF_INPUT
             for m in chat:
