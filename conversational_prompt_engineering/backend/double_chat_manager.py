@@ -573,6 +573,7 @@ class DoubleChatManager(ChatManagerBase):
         self._ask_text_questions()
 
         self.state = ConversationState.PROCESS_RESPONSES
+        return self.user_chat[-1]
 
     def get_prompts(self):
         return self.approved_prompts
