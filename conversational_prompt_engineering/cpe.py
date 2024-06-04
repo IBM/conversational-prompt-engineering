@@ -59,10 +59,11 @@ def new_cycle():
             st.write(msg['content'])
 
     # 6. generate and render the agent response
-    msg = manager.generate_agent_message()
-    if msg is not None:
-        with st.chat_message(msg['role']):
-            st.write(msg['content'])
+    with st.spinner("Thinking..."):
+        msg = manager.generate_agent_message()
+        if msg is not None:
+            with st.chat_message(msg['role']):
+                st.write(msg['content'])
 
 
 
