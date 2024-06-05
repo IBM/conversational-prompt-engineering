@@ -12,7 +12,7 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
                                         "desc": "This dataset consists of passages from legal documents \ndiscussing privacy policies or software licenses."},
                        "IBM blog": {"train": "./data/ibm blog/train.csv",
                                                 "eval": "./data/ibm blog/test.csv",
-                                                 "desc": "This dataset consists blog entries from IBM blog."},
+                                                 "desc": "This dataset contains blog entries from IBM blog."},
                        "climate blog": {"train": "./data/climate blog/train.csv",
                                     "eval": "./data/climate blog/test.csv",
                                     "desc": "This dataset consists of articles about climate related issues \npublished in https://www.climaterealityproject.org."},

@@ -146,9 +146,9 @@ if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
         st.write("To proceed, please provide your BAM API key and select a model.")
         key = st.text_input(label="BAM API key")
         model = st.radio(label="Select model", options=["llama-3", "mixtral", "granite"],
-                         captions=["llama-3-70B-instruct. Recommended for most use-cases",
-                                   "mixtral-8x7B-instruct-v01. Recommended for very long documents",
-                                   "granite-13b-chat-v2. Experimental"])
+                         captions=["llama-3-70B-instruct. Recommended for most use-cases.",
+                                   "mixtral-8x7B-instruct-v01. Recommended for very long documents.",
+                                   "granite-13b-chat-v2. Experimental."])
         submit = st.form_submit_button()
         if submit:
             st.session_state.key = key
