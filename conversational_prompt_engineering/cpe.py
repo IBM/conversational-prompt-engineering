@@ -8,6 +8,7 @@ from streamlit_js_eval import streamlit_js_eval
 
 from conversational_prompt_engineering.backend.double_chat_manager import DoubleChatManager
 from conversational_prompt_engineering.backend.manager import Manager, Mode
+from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_train
 from st_pages import Page, show_pages, hide_pages
 
@@ -46,10 +47,10 @@ def new_cycle():
     if st.button("Reset chat"):
         streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
+    uploaded_file = create_choose_dataset_component_train(st=st, manager=manager)
+    if uploaded_file:
+        manager.add_user_message("Selected data")
 
-    create_choose_dataset_component_train(st=st, manager=manager)
-
-    # 4. user input
     if user_msg := st.chat_input("Write your message here"):
         manager.add_user_message(user_msg)
 
@@ -60,11 +61,14 @@ def new_cycle():
 
     # 6. generate and render the agent response
     with st.spinner("Thinking..."):
-        msg = manager.generate_agent_message()
+        if not uploaded_file:
+            msg = manager.generate_agent_message()
+        else:
+            msg = manager.process_examples(read_user_csv_file(st.session_state["csv_file_train"]), st.session_state[
+                "selected_dataset"] if "selected_dataset" in st.session_state else "user")
         if msg is not None:
             with st.chat_message(msg['role']):
                 st.write(msg['content'])
-
 
 
 def old_cycle():

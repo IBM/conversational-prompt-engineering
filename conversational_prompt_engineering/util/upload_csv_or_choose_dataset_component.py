@@ -29,16 +29,17 @@ def rander_component(st, default_value_for_droplist, split_name):
 
 
 def create_choose_dataset_component_train(st, manager):
+    uploaded_file = False
     if manager.enable_upload_file:
         rander_component(st, default_value_for_droplist=None, split_name='train')
         if "csv_file_train" in st.session_state:
-            with st.spinner("Thinking..."):
-                manager.process_examples(read_user_csv_file(st.session_state["csv_file_train"]), st.session_state["selected_dataset"] if "selected_dataset" in st.session_state else "user")
-
-
+            uploaded_file = True
     if "selected_dataset" in st.session_state:
         add_download_button(st, 'train')
         st.write(f"Using {st.session_state['selected_dataset']} dataset")
+    return uploaded_file
+
+
 
 def create_choose_dataset_component_eval(st):
     datasets = list(dataset_name_to_dir.keys())
