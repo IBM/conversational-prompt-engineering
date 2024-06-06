@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import random
+import time
 
 import pandas as pd
 from genai.schema import ChatRole
@@ -106,6 +107,8 @@ class DoubleChatManager(ChatManagerBase):
 
         self.user_has_more_texts = True
         self.enable_upload_file = True
+        self.out_dir = f"_out/{self.conv_id}/{time.time()}"
+        os.makedirs(self.out_dir, exist_ok=True)
 
     def _get_assistant_response(self, chat=None, max_new_tokens=None):
         return super()._get_assistant_response(chat or self.hidden_chat, max_new_tokens)
@@ -416,23 +419,22 @@ class DoubleChatManager(ChatManagerBase):
         self._add_assistant_msg(final_msg, 'user')
         self.state = ConversationState.DONE
 
-        # saving prompts
-        out_dir = f"_out/{self.conv_id}"
-        os.makedirs(out_dir, exist_ok=True)
-        with open(os.path.join(out_dir, "final_prompts.json"), "w") as f:
+    def save_data(self):
+        chat_dir = os.path.join(self.out_dir, "chat")
+        os.makedirs(chat_dir, exist_ok=True)
+        with open(os.path.join(chat_dir, "final_prompts.json"), "w") as f:
             for p in self.approved_prompts:
-                p['prompt_with_format'] = build_few_shot_prompt(prompt, [], self.bam_client.parameters['model_id'])
-                p['prompt_with_format_and_few_shots'] = build_few_shot_prompt(prompt,
-                                                                              self.approved_summaries[:self.validated_example_idx],
+                p['prompt_with_format'] = build_few_shot_prompt(p['prompt'], [], self.bam_client.parameters['model_id'])
+                p['prompt_with_format_and_few_shots'] = build_few_shot_prompt(p['prompt'], self.approved_summaries[:self.validated_example_idx],
                                                                               self.bam_client.parameters['model_id'])
             json.dump(self.approved_prompts, f)
-        with open(os.path.join(out_dir, "config.json"), "w") as f:
+        with open(os.path.join(chat_dir, "config.json"), "w") as f:
             json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name}, f)
         df = pd.DataFrame(self.user_chat)
-        df.to_csv(os.path.join(out_dir, "user_chat.csv"), index=False)
+        df.to_csv(os.path.join(chat_dir, "user_chat.csv"), index=False)
         df = pd.DataFrame(self.hidden_chat)
-        df.to_csv(os.path.join(out_dir, "hidden_chat.csv"), index=False)
-        logging.info(f"conversation saved in {out_dir}")
+        df.to_csv(os.path.join(chat_dir, "hidden_chat.csv"), index=False)
+        logging.info(f"conversation saved in {chat_dir}")
 
     def _no_texts(self):
         return len(self.text_examples) == 0
@@ -535,6 +537,7 @@ class DoubleChatManager(ChatManagerBase):
         elif self.state == ConversationState.DONE:
             self._add_msg(self.user_chat, ChatRole.ASSISTANT, 'Please press the "Reset" button to restart the session')
 
+        self.save_data()
         return self.user_chat[-1]
 
     def process_examples(self, df, dataset_name):
