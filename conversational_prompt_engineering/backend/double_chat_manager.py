@@ -162,13 +162,13 @@ class DoubleChatManager(ChatManagerBase):
         self._add_system_msg(
             intro_message
         )
-        static_assistant_hello_msg = ["Hello! I'm an IBM prompt building assistant, and I'm here to help you build an effective instruction for a text summarization task.\n",
+        static_assistant_hello_msg = ["Hello! I'm an IBM prompt building assistant, and I'm here to help you build an effective instruction, personalized to your text summarization task. At a high-level, we will work together through the following two stages - \n",
                                       "We'll work together to craft a prompt that yields high-quality summaries. Here's an overview of our collaboration:\n",
-                                      "1. We'll start by agreeing on an initial prompt based on some unlabeled data.",
-                                      "2. Then, we'll refine the prompt based on your feedback on model outputs.",
-                                      "3. Finally, we'll share the final few-shot prompt.\n",
-                                      "Once we've built a prompt, you can evaluate its performance by clicking on \"Evaluate\" on the side-bar.\n",
-                                      "To get started, could you please select a dataset from our catalog or upload a CSV file containing the text inputs in the first column? If you don't have any evaluation data, feel free to let me know, and we'll proceed without it."]
+                                      "1.	Agree on an initial zero-shot prompt based on some unlabeled data you will share, and your feedback.\n",
+                                      "2.	Refine the prompt and add a few examples, approved by you, to turn it into a few-shot prompt. \n",
+                                      "At any stage you can evaluate the performance of the obtained prompt by clicking on \"Evaluate\" on the sidebar. Once done, you can download the prompt and use it for your task.\n",
+                                      "To get started, please select a dataset from our catalogue or upload a CSV file containing the text inputs in the first column, with ‘text’ as the header. If you don't have any unlabeled data to share, please let me know, and we'll proceed without it.\n"]
+
         self._add_assistant_msg("\n".join(static_assistant_hello_msg), 'both')
 
     def _add_prompt(self, prompt, is_new=True):
