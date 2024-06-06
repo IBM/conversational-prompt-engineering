@@ -309,6 +309,15 @@ class DoubleChatManager(ChatManagerBase):
             return True
         return False
 
+    def _prompts_should_be_corrected(self):
+        self._add_system_msg(
+            'Has the user asked for a correction or a modification of the prompt? Answer "yes" or "no"')
+        resp = self._get_assistant_response(max_new_tokens=50)
+        self.hidden_chat = self.hidden_chat[:-1]  # remove the last question
+        if resp.lower().startswith('yes'):
+            return True
+        return False
+
     def _ask_for_text(self):
         self._add_system_msg(
             "Ask the user to provide up to three typical examples of the texts he or she wish to summarize. "
@@ -369,23 +378,19 @@ class DoubleChatManager(ChatManagerBase):
                                            self.bam_client.parameters['model_id'])
         example = self.text_examples[self.validated_example_idx]
         prompt_str = prompt_str.format(text=example)
-        summary = self.bam_client.send_messages(prompt_str)[0]
+        self._add_system_msg(prompt_str)
+        summary = self._get_assistant_response()
+        #summary = self.bam_client.send_messages(prompt_str)[0]
 
         if summary_correction:
+            logging.info(f"correcting approved summary for example {self.validated_example_idx}")
+            logging.info(f"new summary is {summary}")
             self.approved_summaries[self.validated_example_idx]['summary'] = summary
         else:
             self.approved_summaries.append({'text': example, 'summary': summary})
 
-        if 'granite' not in self.bam_client.parameters['model_id']:
-            self._add_system_msg(f'When the latest prompt was used for summarization of the example ```{example}``` '
-                                 f'it produced the result ```{summary}```')
-            self._add_system_msg(
-                f'Present these results to the user, mention they are based on the text of example no. '
-                f'{(self.validated_example_idx + 1)} shared by the user, and ask if they want any changes.'
-            )
-        else:  # granite
-            self._add_system_msg(f'Here is a summary of example no. {(self.validated_example_idx + 1)}:\n```{summary}```\nShare the summary with the user, do not modify it, and ask if they want to make any changes.')
-        resp = self._get_assistant_response()
+        #resp = self._get_assistant_response()
+        resp = f"{summary}\n\nThis summary result is based on the text of example no. {(self.validated_example_idx + 1)} you shared. Is this summary satisfactory? If you'd like to make any changes or adjustments, please let me know!"
         self.hidden_chat = self.hidden_chat[:-2]  # remove the last messages
 
         self._add_assistant_msg(resp, 'both')
@@ -451,6 +456,7 @@ class DoubleChatManager(ChatManagerBase):
                 self._ask_for_text()
                 next_state = ConversationState.PROCESS_TEXTS
             else:
+                raise ValueError("I should be inside this case!")
                 instruction_txt = 'Look at the following text examples, and suggest a summarization prompt for them. ' \
                                   'Do not include the examples into the prompt. ' \
                                   'Enclose the suggested prompt in triple quotes (```).\n'
@@ -518,9 +524,14 @@ class DoubleChatManager(ChatManagerBase):
                 else:
                     self._evaluate_prompt()
             else:
-                logging.info("user did not approve so making changes to prompt")
-                self._confirm_prompt(is_new=True)
-                self.state = ConversationState.CONFIRM_PROMPT
+                logging.info("user did not approve the summary")
+                if self._prompts_should_be_corrected():
+                    logging.info("making changes to the prompt")
+                    self._confirm_prompt(is_new=True)
+                    self.state = ConversationState.CONFIRM_PROMPT
+                else: # only the summary should be corrected
+                    self._evaluate_prompt()
+
 
         elif self.state == ConversationState.DONE:
             self._add_msg(self.user_chat, ChatRole.ASSISTANT, 'Please press the "Reset" button to restart the session')
@@ -571,7 +582,6 @@ class DoubleChatManager(ChatManagerBase):
         self._add_system_msg(f'The user has provided {num_examples} examples')
         self._add_msg(self.hidden_chat, ChatRole.ASSISTANT, characteristics)
         self._ask_text_questions()
-
         self.state = ConversationState.PROCESS_RESPONSES
         return self.user_chat[-1]
 
