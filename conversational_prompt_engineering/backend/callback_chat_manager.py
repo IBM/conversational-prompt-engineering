@@ -25,7 +25,8 @@ class CallbackChatManager(ChatManagerBase):
     def submit_model_chat_and_process_response(self):
         resp = self._get_assistant_response(self.model_chat)
         self._add_msg(self.model_chat, ChatRole.ASSISTANT, resp)
-        exec(resp.replace('\n', '\\n'))
+        escaped_resp = resp.replace('\n', '\\n').replace('\\nself.', '\n')
+        exec(escaped_resp)
 
 
 class TestManager(CallbackChatManager):
@@ -34,6 +35,7 @@ class TestManager(CallbackChatManager):
         self.user_chat = []
         self.examples = None
         self.prompts = []
+        self.next_instruction = None
 
     def add_user_message(self, message):
         self._add_msg(self.user_chat, ChatRole.USER, message)
@@ -68,16 +70,23 @@ class TestManager(CallbackChatManager):
             )
         else:
             self.add_system_message(
-                'Do ALL the produced summaries satisfy the user comments and the approved summaries from the previous discussion? '
-                'If not, suggest a better prompt via submit_prompt call directly, without involving the user.'
-                "If ALL the produced summaries satisfy the previous discussion, discuss them with the user, one by one."
+                'Summarize the user comments and approved summaries from the discussion for each example. '
+                # 'Is the prompt good, i.e. do ALL the produced summaries satisfy the user comments and the approved summaries from the previous discussion? '
+                'Reply to the system not to the user.'
                 'Remember to communicate only via API calls.'
             )
+            self.next_instruction = \
+                'Compare the approved summaries to the produced summaries ones. Decide whether the prompt is good or you rather improve it.' \
+                'If the prompt is not good - suggest a better prompt via submit_prompt call directly, without involving the user or system.\n' \
+                'If the prompt is good - discuss the produced summaries with the user via submit_message_to_user, one example at a time.\n' \
+                'Remember to communicate only via API calls.'
         self.submit_model_chat_and_process_response()
 
-    def submit_summary_feedback(self, feedback):
-        self.add_system_message('Suggest a new prompt that would take into account the user feedback.')
-        self.submit_model_chat_and_process_response()
+    def submit_message_to_system(self, message):
+        if self.next_instruction is not None:
+            self.add_system_message(self.next_instruction)
+            self.next_instruction = None
+            self.submit_model_chat_and_process_response()
 
     def init_chat(self, df, max_num_examples=3):
         task_instruction = \
@@ -90,15 +99,16 @@ class TestManager(CallbackChatManager):
             'Format ALL your answers python code calling one of the following functions:'
         api = {
             'self.submit_message_to_user(message)': 'call this function to submit your message to the user',
+            'self.submit_message_to_system(message)': 'call this function to submit your message to system (me) when I ask you a direct question',
             'self.submit_prompt(prompt)': 'call this function to inform the system that you have a suggestion for the prompt',
-            'self.submit_summary_feedback(feedback)': 'call this function to submit the user feedback to the summary generated with your last prompt'
         }
         self.set_instructions(task_instruction, api_instruction, api)
 
         self.examples = df['text'].sample(max_num_examples).tolist()
         self.add_system_message('The user has provided the following examples for the texts to summarize, '
                                 'briefly discuss them with the user before suggesting the prompt. '
-                                'Your suggestion should take into account the user comments and corrections.')
+                                'Your suggestion should take into account the user comments and corrections.'
+                                'Remember to communicate only via API calls.')
         for i, ex in enumerate(self.examples):
             self.add_system_message(f'Example {i + 1}: {ex}')
 
