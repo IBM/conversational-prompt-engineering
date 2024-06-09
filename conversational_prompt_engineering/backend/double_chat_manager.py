@@ -163,7 +163,6 @@ class DoubleChatManager(ChatManagerBase):
             intro_message
         )
         static_assistant_hello_msg = ["Hello! I'm an IBM prompt building assistant, and I'm here to help you build an effective instruction, personalized to your text summarization task. At a high-level, we will work together through the following two stages - \n",
-                                      "We'll work together to craft a prompt that yields high-quality summaries. Here's an overview of our collaboration:\n",
                                       "1.	Agree on an initial zero-shot prompt based on some unlabeled data you will share, and your feedback.\n",
                                       "2.	Refine the prompt and add a few examples, approved by you, to turn it into a few-shot prompt. \n",
                                       "At any stage you can evaluate the performance of the obtained prompt by clicking on \"Evaluate\" on the sidebar. Once done, you can download the prompt and use it for your task.\n",

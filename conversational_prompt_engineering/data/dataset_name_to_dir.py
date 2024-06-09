@@ -19,6 +19,10 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
 
                        "Reddit posts": {"train": "./data/tldr/train.csv",
                                         "eval": "./data/tldr/test.csv",
-                                        "desc": "This dataset consists of posts from Reddit (TL;DR dataset)"}
+                                        "desc": "This dataset consists of posts from Reddit (TL;DR dataset)"},
+
+                       "Restaurant reviews": {"train": "./data/lentricote_trip_advisor/train.csv",
+                                        "eval": "./data/lentricote_trip_advisor/test.csv",
+                                        "desc": "This dataset consists of reviewes of the restaurant\n \"L'entrecote\" in London, posted on the trip-advisor website"}
 
                        }
