@@ -592,6 +592,7 @@ class DoubleChatManager(ChatManagerBase):
         self._add_system_msg(f'The user has provided {num_examples} examples')
         self._add_msg(self.hidden_chat, ChatRole.ASSISTANT, characteristics)
         self._ask_text_questions()
+
         self.state = ConversationState.PROCESS_RESPONSES
         return self.user_chat[-1]
 
