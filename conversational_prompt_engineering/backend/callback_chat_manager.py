@@ -1,7 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
 
-import numpy as np
-import pandas as pd
 from genai.schema import ChatRole
 
 from conversational_prompt_engineering.backend.chat_manager_util import ChatManagerBase
@@ -12,6 +10,16 @@ class CallbackChatManager(ChatManagerBase):
         super().__init__(bam_api_key, model, conv_id)
 
         self.model_chat = []
+        self.model_chat_length = 0
+        self.user_chat = []
+        self.user_chat_length = 0
+
+        self.dataset_name = None
+        self.enable_upload_file = True
+
+        self.examples = None
+        self.prompts = []
+        self.next_instruction = None
 
     def add_system_message(self, msg):
         self._add_msg(self.model_chat, ChatRole.SYSTEM, msg)
@@ -23,24 +31,28 @@ class CallbackChatManager(ChatManagerBase):
             self.add_system_message(f'function {fun_sign}: {fun_descr}')
 
     def submit_model_chat_and_process_response(self):
-        resp = self._get_assistant_response(self.model_chat)
-        self._add_msg(self.model_chat, ChatRole.ASSISTANT, resp)
-        escaped_resp = resp.replace('\n', '\\n').replace('\\nself.', '\n')
-        exec(escaped_resp)
-
-
-class TestManager(CallbackChatManager):
-    def __init__(self, bam_api_key, model, conv_id) -> None:
-        super().__init__(bam_api_key, model, conv_id)
-        self.user_chat = []
-        self.examples = None
-        self.prompts = []
-        self.next_instruction = None
+        if len(self.model_chat) > self.model_chat_length:
+            resp = self._get_assistant_response(self.model_chat)
+            self._add_msg(self.model_chat, ChatRole.ASSISTANT, resp)
+            self.model_chat_length = len(self.model_chat)
+            escaped_resp = resp.replace('\n', '\\n').replace('\\n\\nself.', '\n\nself.')
+            exec(escaped_resp)
 
     def add_user_message(self, message):
         self._add_msg(self.user_chat, ChatRole.USER, message)
+        self.user_chat_length = len(self.user_chat)  # user message is rendered by cpe
         self._add_msg(self.model_chat, ChatRole.USER, message)
+
+    def generate_agent_messages(self):
         self.submit_model_chat_and_process_response()
+        agent_messages = []
+        if len(self.user_chat) > self.user_chat_length:
+            for msg in self.user_chat[self.user_chat_length:]:
+                if msg['role'] == ChatRole.ASSISTANT:
+                    agent_messages.append(msg)
+            self.user_chat_length = len(self.user_chat)
+
+        return agent_messages
 
     def submit_message_to_user(self, message):
         self._add_msg(self.user_chat, ChatRole.ASSISTANT, message)
@@ -71,13 +83,12 @@ class TestManager(CallbackChatManager):
         else:
             self.add_system_message(
                 'Summarize the user comments and approved summaries from the discussion for each example. '
-                # 'Is the prompt good, i.e. do ALL the produced summaries satisfy the user comments and the approved summaries from the previous discussion? '
-                'Reply to the system not to the user.'
+                'Reply to the system and not to the user.'
                 'Remember to communicate only via API calls.'
             )
             self.next_instruction = \
-                'Compare the approved summaries to the produced summaries ones. Decide whether the prompt is good or you rather improve it.' \
-                'If the prompt is not good - suggest a better prompt via submit_prompt call directly, without involving the user or system.\n' \
+                'Compare the produced summaries to the approved ones. Decide whether the prompt is good or should be improved. ' \
+                'If the prompt should be improved - suggest a better prompt. Notify the user via submit_message_to_user, and submit it via submit_prompt.\n' \
                 'If the prompt is good - discuss the produced summaries with the user via submit_message_to_user, one example at a time.\n' \
                 'Remember to communicate only via API calls.'
         self.submit_model_chat_and_process_response()
@@ -114,22 +125,8 @@ class TestManager(CallbackChatManager):
 
         self.submit_model_chat_and_process_response()
 
+    def process_examples(self, df, dataset_name):
+        self.dataset_name = dataset_name
+        self.enable_upload_file = False
+        self.init_chat(df)
 
-def delme_test():
-    mgr = TestManager('pak-Q-b9JJQlQYaVH3gS_KCY_ObSMRv3HTNAHUp_XIzWbyY', "llama3", 'a')
-    mgr.init_chat(pd.read_csv(
-        '/Users/artemspector/PycharmProjects/ace/conversational-prompt-engineering/conversational_prompt_engineering/data/legal_plain_english/train.csv'))
-
-    while True:
-        try:
-            from_idx = len(mgr.user_chat) - list(reversed([msg['role'] for msg in mgr.user_chat])).index(ChatRole.USER)
-        except ValueError:
-            from_idx = 0
-        for msg in mgr.user_chat[from_idx:]:
-            print(f'{msg["role"]}: {msg["content"]}')
-        user_msg = input('user: ')
-        mgr.add_user_message(user_msg)
-
-
-if __name__ == '__main__':
-    delme_test()

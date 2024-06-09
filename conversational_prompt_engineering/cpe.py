@@ -4,11 +4,14 @@ import time
 
 import pandas as pd
 import streamlit as st
+from genai.schema import ChatRole
 from streamlit_js_eval import streamlit_js_eval
 
+from conversational_prompt_engineering.backend.callback_chat_manager import CallbackChatManager
 from conversational_prompt_engineering.backend.double_chat_manager import DoubleChatManager
 from conversational_prompt_engineering.backend.manager import Manager, Mode
-from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_train
+from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
+    create_choose_dataset_component_train
 from st_pages import Page, show_pages, hide_pages
 
 st.set_page_config(layout="wide")
@@ -25,8 +28,10 @@ def old_reset_chat():
     st.session_state.manager = Manager(st.session_state.mode, st.session_state.key)
     st.session_state.messages = []
 
+
 def reset_chat():
     streamlit_js_eval(js_expressions="parent.window.location.reload()")
+
 
 def new_cycle():
     # 1. create the manager if necessary
@@ -46,7 +51,6 @@ def new_cycle():
     if st.button("Reset chat"):
         streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
-
     create_choose_dataset_component_train(st=st, manager=manager)
 
     # 4. user input
@@ -64,6 +68,33 @@ def new_cycle():
         with st.chat_message(msg['role']):
             st.write(msg['content'])
 
+
+def callback_cycle():
+    # 1. create the manager if necessary
+    if "manager" not in st.session_state:
+        st.session_state.conv_id = abs(hash(st.session_state.key))
+        st.session_state.manager = CallbackChatManager(bam_api_key=st.session_state.key, model=st.session_state.model,
+                                                       conv_id=st.session_state.conv_id)
+    manager = st.session_state.manager
+
+    # 3. layout reset and upload buttons in 3 columns
+    if st.button("Reset chat"):
+        streamlit_js_eval(js_expressions="parent.window.location.reload()")
+
+    create_choose_dataset_component_train(st=st, manager=manager)
+
+    if user_msg := st.chat_input("Write your message here"):
+        manager.add_user_message(user_msg)
+
+    for msg in manager.user_chat:
+        with st.chat_message(msg['role']):
+            st.write(msg['content'])
+
+    # 6. generate and render the agent response
+    messages = manager.generate_agent_messages()
+    for msg in messages:
+        with st.chat_message(msg['role']):
+            st.write(msg['content'])
 
 
 def old_cycle():
@@ -135,7 +166,8 @@ if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
             "This service is intended to help users build an effective prompt, tailored to their specific summarization use case, through a simple chat with an LLM.")
         st.write(
             "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file.")
-        st.write("For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
+        st.write(
+            "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
         st.write(
             "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
         st.write("To proceed, please provide your BAM API key and select a model.")
@@ -150,5 +182,6 @@ if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
             entry_page.empty()
 
 if 'key' in st.session_state:
-    new_cycle()
+    callback_cycle()
+    # new_cycle()
     # old_cycle()
