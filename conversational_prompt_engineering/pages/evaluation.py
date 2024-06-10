@@ -55,7 +55,7 @@ def calculate_results():
 
 
 def save_results():
-    out_path = f"_out/{st.session_state.conv_id}/eval/{time.time()}"
+    out_path = os.path.join(st.session_state.manager.out_dir, "eval")
     os.makedirs(out_path, exist_ok=True)
     df = pd.DataFrame(st.session_state.generated_data)
     df.to_csv(os.path.join(out_path, f"eval_results.csv"))

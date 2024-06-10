@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import random
+import datetime
 
 import pandas as pd
 from genai.schema import ChatRole
@@ -106,6 +107,8 @@ class DoubleChatManager(ChatManagerBase):
 
         self.user_has_more_texts = True
         self.enable_upload_file = True
+        self.out_dir = f'_out/{self.conv_id}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
+        os.makedirs(self.out_dir, exist_ok=True)
 
     def _get_assistant_response(self, chat=None, max_new_tokens=None):
         return super()._get_assistant_response(chat or self.hidden_chat, max_new_tokens)
@@ -416,23 +419,30 @@ class DoubleChatManager(ChatManagerBase):
         self._add_assistant_msg(final_msg, 'user')
         self.state = ConversationState.DONE
 
-        # saving prompts
-        out_dir = f"_out/{self.conv_id}"
-        os.makedirs(out_dir, exist_ok=True)
-        with open(os.path.join(out_dir, "final_prompts.json"), "w") as f:
+    def save_data(self):
+        chat_dir = os.path.join(self.out_dir, "chat")
+        os.makedirs(chat_dir, exist_ok=True)
+        with open(os.path.join(chat_dir, "final_prompts.json"), "w") as f:
+            approved_prompts = self.approved_prompts
+            if self.state == ConversationState.CONFIRM_PROMPT:
+                approved_prompts = approved_prompts[:-1] #the last prompt is not confirmed yet
             for p in self.approved_prompts:
-                p['prompt_with_format'] = build_few_shot_prompt(prompt, [], self.bam_client.parameters['model_id'])
-                p['prompt_with_format_and_few_shots'] = build_few_shot_prompt(prompt,
-                                                                              self.approved_summaries[:self.validated_example_idx],
+                p['prompt_with_format'] = build_few_shot_prompt(p['prompt'], [], self.bam_client.parameters['model_id'])
+                p['prompt_with_format_and_few_shots'] = build_few_shot_prompt(p['prompt'], self.approved_summaries[:self.validated_example_idx],
                                                                               self.bam_client.parameters['model_id'])
             json.dump(self.approved_prompts, f)
-        with open(os.path.join(out_dir, "config.json"), "w") as f:
+        with open(os.path.join(chat_dir, "config.json"), "w") as f:
             json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name}, f)
         df = pd.DataFrame(self.user_chat)
-        df.to_csv(os.path.join(out_dir, "user_chat.csv"), index=False)
+        df.to_csv(os.path.join(chat_dir, "user_chat.csv"), index=False)
         df = pd.DataFrame(self.hidden_chat)
-        df.to_csv(os.path.join(out_dir, "hidden_chat.csv"), index=False)
-        logging.info(f"conversation saved in {out_dir}")
+        df.to_csv(os.path.join(chat_dir, "hidden_chat.csv"), index=False)
+        with open(os.path.join(chat_dir, "hidden_chat.html"),"w") as html_out:
+            content = "\n".join([f"<p><b>{x['role'].upper()}: </b>{x['content']}</p>".replace("\n", "<br>") for x in self.user_chat])
+            header = "<h1>IBM Research Conversational Prompt Engineering</h1>"
+            html_template = f'<!DOCTYPE html><html>\n<head>\n<title>CPE</title>\n</head>\n<body style="font-size:20px;">{header}\n{content}\n</body>\n</html>'
+            html_out.write(html_template)
+            logging.info(f"conversation saved in {chat_dir}")
 
     def _no_texts(self):
         return len(self.text_examples) == 0
@@ -535,6 +545,7 @@ class DoubleChatManager(ChatManagerBase):
         elif self.state == ConversationState.DONE:
             self._add_msg(self.user_chat, ChatRole.ASSISTANT, 'Please press the "Reset" button to restart the session')
 
+        self.save_data()
         return self.user_chat[-1]
 
     def process_examples(self, df, dataset_name):
@@ -581,6 +592,7 @@ class DoubleChatManager(ChatManagerBase):
         self._add_system_msg(f'The user has provided {num_examples} examples')
         self._add_msg(self.hidden_chat, ChatRole.ASSISTANT, characteristics)
         self._ask_text_questions()
+
         self.state = ConversationState.PROCESS_RESPONSES
         return self.user_chat[-1]
 

@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+import hashlib
 
 import pandas as pd
 import streamlit as st
@@ -32,7 +33,9 @@ def reset_chat():
 def new_cycle():
     # 1. create the manager if necessary
     if "manager" not in st.session_state:
-        st.session_state.conv_id = abs(hash(st.session_state.key))
+        sha1 = hashlib.sha1()
+        sha1.update(st.session_state.key.encode('utf-8'))
+        st.session_state.conv_id = sha1.hexdigest()[:16] # deterministic hash of 16 characters
         st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key, model=st.session_state.model,
                                                      conv_id=st.session_state.conv_id)
     manager = st.session_state.manager
