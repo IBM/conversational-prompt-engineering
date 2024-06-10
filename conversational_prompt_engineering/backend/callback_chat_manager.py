@@ -92,8 +92,9 @@ class CallbackChatManager(ChatManagerBase):
             'Communicate your decision to the user.\n' \
             'If the prompt should be improved - suggest a better prompt, and submit it via submit_prompt API call.\n' \
             'If the prompt is good - for each example present to the user the produced summary, and discuss it with them, one example at a time.\n' \
-            'You dont have to go through all the examples, when you have gathered enough feedback to suggest a new prompt - submit it.\n' \
-            'Remember to communicate only via API calls.'
+            'You dont have to go through all the examples, when you have gathered enough feedback to suggest a new prompt - submit it.' \
+            'Remember that the goal is a prompt that would directly produce summaries like approved by the user.\n' \
+            'Also remember to communicate only via API calls.'
 
         self.submit_model_chat_and_process_response()
 
@@ -109,7 +110,7 @@ class CallbackChatManager(ChatManagerBase):
             'You will interact with the user to gather information, and discuss the summaries. ' \
             'I will generate the summaries from the prompts you suggest, and pass them back to you, ' \
             'so that you could discuss them with the user. ' \
-            'User time is valuable, keep the conversation pragmatic. Take the obvious decisions by yourself.'
+            'User time is valuable, keep the conversation pragmatic. Make the obvious decisions by yourself.'
 
         api_instruction = \
             'You should communicate with the user and system ONLY via python API described below, and not via direct messages. ' \
