@@ -9,6 +9,8 @@ class CallbackChatManager(ChatManagerBase):
     def __init__(self, bam_api_key, model, conv_id) -> None:
         super().__init__(bam_api_key, model, conv_id)
 
+        self.api_names = None
+
         self.model_chat = []
         self.model_chat_length = 0
         self.user_chat = []
@@ -25,6 +27,7 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(self.model_chat, ChatRole.SYSTEM, msg)
 
     def set_instructions(self, task_instruction, api_instruction, function2description):
+        self.api_names = [key[:key.index('(')] for key in function2description.keys()]
         self.add_system_message(task_instruction)
         self.add_system_message(api_instruction)
         for fun_sign, fun_descr in function2description.items():
@@ -35,8 +38,16 @@ class CallbackChatManager(ChatManagerBase):
             resp = self._get_assistant_response(self.model_chat)
             self._add_msg(self.model_chat, ChatRole.ASSISTANT, resp)
             self.model_chat_length = len(self.model_chat)
-            escaped_resp = resp.replace('\n', '\\n').replace('\\n\\nself.', '\n\nself.')
-            exec(escaped_resp)
+            api_indices = sorted([resp.index(name) for name in self.api_names if name in resp])
+            api_calls = [resp[begin: end].strip() for begin, end in zip(api_indices, api_indices[1:] + [len(resp)])]
+            for call in api_calls:
+                escaped_call = call.replace('\n', '\\n')
+                try:
+                    exec(escaped_call)
+                except SyntaxError:
+                    self.add_system_message(
+                        'The last API call produced a syntax error. Return the same call with fixed error.')
+                    self.submit_model_chat_and_process_response()
 
     def add_user_message(self, message):
         self._add_msg(self.user_chat, ChatRole.USER, message)
@@ -72,25 +83,18 @@ class CallbackChatManager(ChatManagerBase):
             summary = f.result()
             self.add_system_message(f'Example {i + 1}: {summary}')
 
-        if len(self.prompts) == 1:
-            self.add_system_message(
-                'Present the summaries for the examples one by one and discuss them with the user. '
-                'Ask the user if they want to see the original text. '
-                'You dont have to go through all the examples, '
-                'when you have gathered enough feedback to suggest a new prompt - submit it.'
-                'Remember to communicate only via API calls.'
-            )
-        else:
-            self.add_system_message(
-                'Summarize the user comments and approved summaries from the discussion for each example. '
-                'Reply to the system and not to the user.'
-                'Remember to communicate only via API calls.'
-            )
-            self.next_instruction = \
-                'Compare the produced summaries to the approved ones. Decide whether the prompt is good or should be improved. ' \
-                'If the prompt should be improved - suggest a better prompt. Notify the user via submit_message_to_user, and submit it via submit_prompt.\n' \
-                'If the prompt is good - discuss the produced summaries with the user via submit_message_to_user, one example at a time.\n' \
-                'Remember to communicate only via API calls.'
+        self.add_system_message(
+            'Summarize the user comments and approved summaries if exist from the discussion for each example. '
+            'Reply to the system via submit_message_to_system API call.'
+        )
+        self.next_instruction = \
+            'Compare the produced summaries to the approved ones and the comments. Decide whether the prompt is good or should be improved. ' \
+            'Communicate your decision to the user.\n' \
+            'If the prompt should be improved - suggest a better prompt, and submit it via submit_prompt API call.\n' \
+            'If the prompt is good - for each example present to the user the produced summary, and discuss it with them, one example at a time.\n' \
+            'You dont have to go through all the examples, when you have gathered enough feedback to suggest a new prompt - submit it.\n' \
+            'Remember to communicate only via API calls.'
+
         self.submit_model_chat_and_process_response()
 
     def submit_message_to_system(self, message):
@@ -99,23 +103,27 @@ class CallbackChatManager(ChatManagerBase):
             self.next_instruction = None
             self.submit_model_chat_and_process_response()
 
-    def init_chat(self, df, max_num_examples=3):
+    def init_chat(self, examples):
         task_instruction = \
             'You and I (system) will work together to build a prompt for summarization task for the user.' \
             'You will interact with the user to gather information, and discuss the summaries. ' \
             'I will generate the summaries from the prompts you suggest, and pass them back to you, ' \
-            'so that you could discuss them with the user.'
+            'so that you could discuss them with the user. ' \
+            'User time is valuable, keep the conversation pragmatic. Take the obvious decisions by yourself.'
+
         api_instruction = \
             'You should communicate with the user and system ONLY via python API described below, and not via direct messages. ' \
+            'The input parameters to API functions are strings. Enclose them in double quotes, and escape all double quotes inside these strings. ' \
             'Format ALL your answers python code calling one of the following functions:'
+
         api = {
-            'self.submit_message_to_user(message)': 'call this function to submit your message to the user',
-            'self.submit_message_to_system(message)': 'call this function to submit your message to system (me) when I ask you a direct question',
-            'self.submit_prompt(prompt)': 'call this function to inform the system that you have a suggestion for the prompt',
+            'self.submit_message_to_user(message)': 'call this function to submit your message to the user. Use markdown to mark the prompts and the summaries.',
+            'self.submit_message_to_system(message)': 'call this function to submit your message to system (me), only when I instruct you to',
+            'self.submit_prompt(prompt)': 'call this function to inform the system that you have a new suggestion for the prompt',
         }
         self.set_instructions(task_instruction, api_instruction, api)
 
-        self.examples = df['text'].sample(max_num_examples).tolist()
+        self.examples = examples
         self.add_system_message('The user has provided the following examples for the texts to summarize, '
                                 'briefly discuss them with the user before suggesting the prompt. '
                                 'Your suggestion should take into account the user comments and corrections.'
@@ -128,5 +136,5 @@ class CallbackChatManager(ChatManagerBase):
     def process_examples(self, df, dataset_name):
         self.dataset_name = dataset_name
         self.enable_upload_file = False
-        self.init_chat(df)
-
+        examples = df['text'].tolist()[:3]
+        self.init_chat(examples)
