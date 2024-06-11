@@ -121,7 +121,7 @@ class BamGenerate:
                 else:
                     logging.error("ERROR Provided parameters are not valid", e)
         sys.tracebacklimit = 0
-        raise Exception("There is an error in BAM. Please try again in a few minutes.")
+        raise Exception("There is an error connecting to BAM. Either check your API key or try again in a few minutes.")
 
     def save_prompt(self, name, text):
         count = 0

@@ -153,10 +153,12 @@ if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
                                    "mixtral-8x7B-instruct-v01. Recommended for very long documents.",
                                    "granite-13b-chat-v2. Experimental."])
         submit = st.form_submit_button()
-        if submit:
+        if submit and len(key) > 20:
             st.session_state.key = key
             st.session_state.model = model
             entry_page.empty()
+        elif submit and len(key) <= 20:
+            st.write("BAM key too short")
 
 if 'key' in st.session_state:
     new_cycle()
