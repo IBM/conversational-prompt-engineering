@@ -58,7 +58,7 @@ def build_few_shot_prompt_granite(prompt, texts_and_summaries):
 
 
 def build_few_shot_prompt_mixtral(prompt, texts_and_summaries):
-    prompt += "\n\n"
+    prompt = f'[INST] {prompt}\n\n'
     if len(texts_and_summaries) > 0:
         if len(texts_and_summaries) > 1:  # we already have at least two approved summary examples
             prompt += "Here are some typical text examples and their corresponding summaries."
@@ -69,7 +69,7 @@ def build_few_shot_prompt_mixtral(prompt, texts_and_summaries):
             summary = item['summary']
             prompt += f"\n\nText: {text}\n\nSummary: {summary}"
         prompt += "\n\nNow, please summarize the following text.\n\n"
-    prompt += "Text: {text}\n\nSummary: "
+    prompt += "Text: {text}\n\nSummary: [\INST]"
     return prompt
 
 
