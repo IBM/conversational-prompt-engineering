@@ -1,3 +1,7 @@
+import os
+import json
+import datetime
+
 from concurrent.futures import ThreadPoolExecutor
 
 from genai.schema import ChatRole
@@ -22,6 +26,10 @@ class CallbackChatManager(ChatManagerBase):
         self.examples = None
         self.prompts = []
         self.next_instruction = None
+
+        self.out_dir = f'_out/{self.conv_id}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
+        os.makedirs(self.out_dir, exist_ok=True)
+
 
     def add_system_message(self, msg):
         self._add_msg(self.model_chat, ChatRole.SYSTEM, msg)
@@ -62,8 +70,18 @@ class CallbackChatManager(ChatManagerBase):
                 if msg['role'] == ChatRole.ASSISTANT:
                     agent_messages.append(msg)
             self.user_chat_length = len(self.user_chat)
-
+        self.save_data()
         return agent_messages
+
+
+    def save_data(self):
+        chat_dir = os.path.join(self.out_dir, "chat")
+        os.makedirs(chat_dir, exist_ok=True)
+        with open(os.path.join(chat_dir, "hidden_chat.html"),"w") as html_out:
+            content = "\n".join([f"<p><b>{x['role'].upper()}: </b>{x['content']}</p>".replace("\n", "<br>") for x in self.user_chat])
+            header = "<h1>IBM Research Conversational Prompt Engineering</h1>"
+            html_template = f'<!DOCTYPE html><html>\n<head>\n<title>CPE</title>\n</head>\n<body style="font-size:20px;">{header}\n{content}\n</body>\n</html>'
+            html_out.write(html_template)
 
     def submit_message_to_user(self, message):
         self._add_msg(self.user_chat, ChatRole.ASSISTANT, message)
