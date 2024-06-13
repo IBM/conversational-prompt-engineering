@@ -33,6 +33,7 @@ def old_reset_chat():
 def reset_chat():
     streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
+
 def new_cycle():
     # 1. create the manager if necessary
     if "manager" not in st.session_state:
@@ -70,7 +71,7 @@ def new_cycle():
 
 
 def callback_cycle():
-    # 1. create the manager if necessary
+    # create the manager if necessary
     if "manager" not in st.session_state:
         sha1 = hashlib.sha1()
         sha1.update(st.session_state.key.encode('utf-8'))
@@ -80,7 +81,7 @@ def callback_cycle():
                                                        conv_id=st.session_state.conv_id)
     manager = st.session_state.manager
 
-    # 3. layout reset and upload buttons in 3 columns
+    # layout reset and upload buttons in 3 columns
     if st.button("Reset chat"):
         streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
@@ -89,18 +90,15 @@ def callback_cycle():
     if user_msg := st.chat_input("Write your message here"):
         manager.add_user_message(user_msg)
 
-    for msg in manager.user_chat:
+    for msg in manager.user_chat[:manager.user_chat_length]:
         with st.chat_message(msg['role']):
             st.write(msg['content'])
 
-    # 6. generate and render the agent response
+    # generate and render the agent response
     messages = manager.generate_agent_messages()
     for msg in messages:
         with st.chat_message(msg['role']):
             st.write(msg['content'])
-
-
-
 
 
 def old_cycle():
