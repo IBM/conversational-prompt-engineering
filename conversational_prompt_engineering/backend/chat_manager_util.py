@@ -1,6 +1,9 @@
 import json
 import logging
 import time
+import os
+import json
+import datetime
 
 import pandas as pd
 from genai.schema import ChatRole
@@ -41,6 +44,19 @@ class ChatManagerBase:
         self.dataset_name = None
         self.state = None
         self.timing_report = []
+
+        self.out_dir = f'_out/{self.conv_id}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
+        os.makedirs(self.out_dir, exist_ok=True)
+
+    def save_chat_html(self, chat, file_name):
+        chat_dir = os.path.join(self.out_dir, "chat")
+        os.makedirs(chat_dir, exist_ok=True)
+        with open(os.path.join(chat_dir, file_name), "w") as html_out:
+            content = "\n".join(
+                [f"<p><b>{x['role'].upper()}: </b>{x['content']}</p>".replace("\n", "<br>") for x in chat])
+            header = "<h1>IBM Research Conversational Prompt Engineering</h1>"
+            html_template = f'<!DOCTYPE html><html>\n<head>\n<title>CPE</title>\n</head>\n<body style="font-size:20px;">{header}\n{content}\n</body>\n</html>'
+            html_out.write(html_template)
 
     def _add_msg(self, chat, role, msg):
         chat.append({'role': role, 'content': msg})
