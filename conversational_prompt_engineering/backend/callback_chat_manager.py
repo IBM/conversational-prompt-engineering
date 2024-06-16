@@ -69,6 +69,18 @@ class CallbackChatManager(ChatManagerBase):
         self.prompts = []
         self.next_instruction = None
 
+    @property
+    def approved_prompts(self):
+        return [{'prompt': p} for p in self.prompts]
+
+    @property
+    def approved_summaries(self):
+        return [{'text': t, 'summary': s} for t, s in zip(self.examples, self.summaries) if s is not None]
+
+    @property
+    def validated_example_idx(self):
+        return len([s for s in self.summaries if s is not None])
+
     def add_system_message(self, msg):
         self._add_msg(self.model_chat, ChatRole.SYSTEM, msg)
 
