@@ -79,6 +79,8 @@ def callback_cycle():
 
         st.session_state.manager = CallbackChatManager(bam_api_key=st.session_state.key, model=st.session_state.model,
                                                        conv_id=st.session_state.conv_id)
+        st.session_state.manager.add_welcome_message()
+
     manager = st.session_state.manager
 
     # layout reset and upload buttons in 3 columns
@@ -157,7 +159,7 @@ def old_cycle():
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-st.title("IBM Research Conversational Prompt Engineering")
+st.title(":blue[IBM Research Conversational Prompt Engineering]")
 if 'BAM_APIKEY' in os.environ:
     st.session_state['key'] = os.environ['BAM_APIKEY']
     st.session_state.model = 'llama3'
