@@ -23,6 +23,7 @@ class ModelPrompts:
             'self.submit_message_to_user(message)': 'call this function to submit your message to the user. Use markdown to mark the prompts and the summaries.',
             'self.submit_message_to_system(message)': 'call this function to submit your message to system (me), only when I instruct you to',
             'self.submit_prompt(prompt)': 'call this function to inform the system that you have a new suggestion for the prompt',
+            'self.summary_accepted(example_num, summary)': 'call this function every time the user accepts a summary. Pass the example number and the summary text as parameters.',
         }
 
         self.examples_instruction = \
@@ -39,7 +40,8 @@ class ModelPrompts:
             'Compare the produced summaries to the approved ones and the comments. Decide whether the prompt is good or should be improved. ' \
             'Communicate your decision to the user.\n' \
             'If the prompt should be improved - suggest a better prompt, and submit it via submit_prompt API call.\n' \
-            'If the prompt is good - for each example present to the user the produced summary, and discuss it with them, one example at a time.\n' \
+            'If the prompt is good - for each example present to the user the produced summary, and discuss it with them, one example at a time. ' \
+            'If the user accepts a summary (directly or indirectly), remember to call summary_accepted API passing the example number and the summary text, and continue your conversation.\n' \
             'You dont have to go through all the examples, when you have gathered enough feedback to suggest a new prompt - submit it.' \
             'Remember that the goal is a prompt that would directly produce summaries like approved by the user.\n' \
             'Also remember to communicate only via API calls.'
@@ -63,6 +65,7 @@ class CallbackChatManager(ChatManagerBase):
         self.enable_upload_file = True
 
         self.examples = None
+        self.summaries = None
         self.prompts = []
         self.next_instruction = None
 
@@ -139,6 +142,10 @@ class CallbackChatManager(ChatManagerBase):
             self.next_instruction = None
             self.submit_model_chat_and_process_response()
 
+    def summary_accepted(self, example_num, summary):
+        example_idx = int(example_num) - 1
+        self.summaries[example_idx] = summary
+
     def set_instructions(self, task_instruction, api_instruction, function2description):
         self.api_names = [key[:key.index('(')] for key in function2description.keys()]
         self.add_system_message(task_instruction)
@@ -150,6 +157,7 @@ class CallbackChatManager(ChatManagerBase):
         self.set_instructions(self.model_prompts.task_instruction, self.model_prompts.api_instruction,
                               self.model_prompts.api)
 
+        self.summaries = [None] * len(examples)
         self.examples = examples
         self.add_system_message(self.model_prompts.examples_instruction)
         for i, ex in enumerate(self.examples):
