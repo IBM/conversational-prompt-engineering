@@ -27,9 +27,10 @@ class ModelPrompts:
             'self.done()': 'call this function when the user is satisfied with the prompt and the results it produces.',
         }
 
+        self.examples_intro = 'The user has provided the following examples for the texts to summarize:'
+
         self.examples_instruction = \
-            'The user has provided the following examples for the texts to summarize, ' \
-            'briefly discuss them with the user before suggesting the prompt. ' \
+            'Briefly discuss the text examples with the user before suggesting the prompt. ' \
             'Your suggestion should take into account the user comments and corrections.' \
             'Share the suggested prompt with the user before submitting it.' \
             'Remember to communicate only via API calls.'
@@ -167,9 +168,12 @@ class CallbackChatManager(ChatManagerBase):
 
         self.summaries = [None] * len(examples)
         self.examples = examples
-        self.add_system_message(self.model_prompts.examples_instruction)
+
+        self.add_system_message(self.model_prompts.examples_intro)
         for i, ex in enumerate(self.examples):
             self.add_system_message(f'Example {i + 1}: {ex}')
+
+        self.add_system_message(self.model_prompts.examples_instruction)
 
         self.submit_model_chat_and_process_response()
 
