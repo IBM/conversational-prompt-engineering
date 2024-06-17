@@ -87,7 +87,9 @@ def callback_cycle():
     if st.button("Reset chat"):
         streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
-    create_choose_dataset_component_train(st=st, manager=manager)
+    uploaded_file = create_choose_dataset_component_train(st=st, manager=manager)
+    if uploaded_file:
+        manager.add_user_message("Selected data")
 
     if user_msg := st.chat_input("Write your message here"):
         manager.add_user_message(user_msg)

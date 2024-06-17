@@ -12,7 +12,8 @@ class ModelPrompts:
             'You will interact with the user to gather information, and discuss the summaries. ' \
             'I will generate the summaries from the prompts you suggest, and pass them back to you, ' \
             'so that you could discuss them with the user. ' \
-            'User time is valuable, keep the conversation pragmatic. Make the obvious decisions by yourself.'
+            'User time is valuable, keep the conversation pragmatic. Make the obvious decisions by yourself.' \
+            'Don\'t greet the user at your first interaction.'
 
         self.api_instruction = \
             'You should communicate with the user and system ONLY via python API described below, and not via direct messages. ' \
@@ -33,11 +34,12 @@ class ModelPrompts:
             'Remember to communicate only via API calls.'
 
         self.result_intro = 'The suggested prompt has produced the following summaries for the user examples:'
+
         self.analyze_result_instruction = \
             'Summarize the user comments and approved summaries if exist from the discussion for each example. ' \
             'Reply to the system via submit_message_to_system API call.'
-        self.analyze_result_next_instruction = \
-            'Compare the produced summaries to the approved ones and the comments. Decide whether the prompt is good or should be improved. ' \
+
+        analyze_result_next_instruction_common = \
             'Communicate your decision to the user.\n' \
             'If the prompt should be improved - suggest a better prompt, and submit it via submit_prompt API call.\n' \
             'If the prompt is good - for each example present to the user the produced summary, and discuss it with them, one example at a time. ' \
@@ -45,6 +47,14 @@ class ModelPrompts:
             'You dont have to go through all the examples, when you have gathered enough feedback to suggest a new prompt - submit it.' \
             'Remember that the goal is a prompt that would directly produce summaries like approved by the user.\n' \
             'Also remember to communicate only via API calls.'
+
+        self.analyze_result_next_instruction = \
+            'Compare the produced summaries to the approved ones and the comments. Decide whether the prompt is good or should be improved. ' + \
+                analyze_result_next_instruction_common
+
+        self.analyze_result_next_instruction_no_approved_summaries = \
+            'Review the produced summaries and verify they fulfill the instructions in the prompt. Decide whether the prompt is good or should be improved. ' + \
+                analyze_result_next_instruction_common
 
         self.syntax_err_instruction = 'The last API call produced a syntax error. Return the same call with fixed error.'
 
@@ -111,6 +121,7 @@ class CallbackChatManager(ChatManagerBase):
                     agent_messages.append(msg)
             self.user_chat_length = len(self.user_chat)
         self.save_chat_html(self.user_chat, "user_chat.html")
+        self.save_chat_html(self.model_chat, "model_chat.html")
         return agent_messages
 
     def submit_message_to_user(self, message):
@@ -130,9 +141,13 @@ class CallbackChatManager(ChatManagerBase):
         for i, f in futures.items():
             summary = f.result()
             self.add_system_message(f'Example {i + 1}: {summary}')
+        if self.check_accepted_summary_exist():
+            self.add_system_message(self.model_prompts.analyze_result_instruction)
+            self.next_instruction = self.model_prompts.analyze_result_next_instruction
 
-        self.add_system_message(self.model_prompts.analyze_result_instruction)
-        self.next_instruction = self.model_prompts.analyze_result_next_instruction
+        else:
+            self.add_system_message(self.model_prompts.analyze_result_next_instruction_no_approved_summaries)
+            self.next_instruction = None # not really needed here, just to make sure there's no "next" instruction
 
         self.submit_model_chat_and_process_response()
 
@@ -145,6 +160,9 @@ class CallbackChatManager(ChatManagerBase):
     def summary_accepted(self, example_num, summary):
         example_idx = int(example_num) - 1
         self.summaries[example_idx] = summary
+
+    def check_accepted_summary_exist(self):
+        return self.summaries.count(None) < len(self.summaries)
 
     def set_instructions(self, task_instruction, api_instruction, function2description):
         self.api_names = [key[:key.index('(')] for key in function2description.keys()]
