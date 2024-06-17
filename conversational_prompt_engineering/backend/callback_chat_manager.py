@@ -25,6 +25,7 @@ class ModelPrompts:
             'self.submit_message_to_system(message)': 'call this function to submit your message to system (me), only when I instruct you to',
             'self.submit_prompt(prompt)': 'call this function to inform the system that you have a new suggestion for the prompt',
             'self.summary_accepted(example_num, summary)': 'call this function every time the user accepts a summary. Pass the example number and the summary text as parameters.',
+            'self.done()': 'call this function when the user is satisfied with the prompt and the results it produces.',
         }
 
         self.examples_instruction = \
@@ -46,7 +47,8 @@ class ModelPrompts:
             'If the user accepts a summary (directly or indirectly), remember to call summary_accepted API passing the example number and the summary text, and continue your conversation.\n' \
             'You dont have to go through all the examples, when you have gathered enough feedback to suggest a new prompt - submit it.' \
             'Remember that the goal is a prompt that would directly produce summaries like approved by the user.\n' \
-            'Also remember to communicate only via API calls.'
+            'If the user is satisfied with the prompt ad all the produced results, call done() API' \
+            'Remember to communicate only via API calls.'
 
         self.analyze_result_next_instruction = \
             'Compare the produced summaries to the approved ones and the comments. Decide whether the prompt is good or should be improved. ' + \
@@ -175,6 +177,10 @@ class CallbackChatManager(ChatManagerBase):
 
     def check_accepted_summary_exist(self):
         return self.summaries.count(None) < len(self.summaries)
+
+    def done(self):
+        # placeholder
+        pass
 
     def set_instructions(self, task_instruction, api_instruction, function2description):
         self.api_names = [key[:key.index('(')] for key in function2description.keys()]
