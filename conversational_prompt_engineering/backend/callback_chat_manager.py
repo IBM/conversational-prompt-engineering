@@ -22,7 +22,6 @@ class ModelPrompts:
 
         self.api = {
             'self.submit_message_to_user(message)': 'call this function to submit your message to the user. Use markdown to mark the prompts and the summaries.',
-            'self.submit_message_to_system(message)': 'call this function to submit your message to system (me), only when I instruct you to',
             'self.submit_prompt(prompt)': 'call this function to inform the system that you have a new suggestion for the prompt',
             'self.summary_accepted(example_num, summary)': 'call this function every time the user accepts a summary. Pass the example number and the summary text as parameters.',
             'self.done()': 'call this function when the user is satisfied with the prompt and the results it produces.',
@@ -32,31 +31,19 @@ class ModelPrompts:
             'The user has provided the following examples for the texts to summarize, ' \
             'briefly discuss them with the user before suggesting the prompt. ' \
             'Your suggestion should take into account the user comments and corrections.' \
+            'Share the suggested prompt with the user before submitting it.' \
             'Remember to communicate only via API calls.'
 
         self.result_intro = 'The suggested prompt has produced the following summaries for the user examples:'
 
         self.analyze_result_instruction = \
-            'Summarize the user comments and approved summaries if exist from the discussion for each example. ' \
-            'Reply to the system via submit_message_to_system API call.'
-
-        analyze_result_next_instruction_common = \
-            'Communicate your decision to the user.\n' \
-            'If the prompt should be improved - suggest a better prompt, and submit it via submit_prompt API call.\n' \
-            'If the prompt is good - for each example present to the user the produced summary, and discuss it with them, one example at a time. ' \
-            'If the user accepts a summary (directly or indirectly), remember to call summary_accepted API passing the example number and the summary text, and continue your conversation.\n' \
-            'You dont have to go through all the examples, when you have gathered enough feedback to suggest a new prompt - submit it.' \
+            'For each example show the full produced summary to the user and discuss it with them, one example at a time. ' \
+            'The discussion should result in a summary accepted by the user.\n' \
+            'When the user accepts a summary (directly or indirectly), call summary_accepted API passing the example number and the summary text. ' \
+            'Continue your conversation with the user in any case.\n' \
             'Remember that the goal is a prompt that would directly produce summaries like approved by the user.\n' \
-            'If the user is satisfied with the prompt ad all the produced results, call done() API' \
+            'If this goal is achieved - inform the user and call done(). If the summaries had to be adjusted, suggest a new prompt that would produce those summaries directly.\n' \
             'Remember to communicate only via API calls.'
-
-        self.analyze_result_next_instruction = \
-            'Compare the produced summaries to the approved ones and the comments. Decide whether the prompt is good or should be improved. ' + \
-                analyze_result_next_instruction_common
-
-        self.analyze_result_next_instruction_no_approved_summaries = \
-            'Review the produced summaries and verify they fulfill the instructions in the prompt. Decide whether the prompt is good or should be improved. ' + \
-                analyze_result_next_instruction_common
 
         self.syntax_err_instruction = 'The last API call produced a syntax error. Return the same call with fixed error.'
 
@@ -79,7 +66,6 @@ class CallbackChatManager(ChatManagerBase):
         self.examples = None
         self.summaries = None
         self.prompts = []
-        self.next_instruction = None
 
     @property
     def approved_prompts(self):
@@ -155,28 +141,14 @@ class CallbackChatManager(ChatManagerBase):
         for i, f in futures.items():
             summary = f.result()
             self.add_system_message(f'Example {i + 1}: {summary}')
-        if self.check_accepted_summary_exist():
-            self.add_system_message(self.model_prompts.analyze_result_instruction)
-            self.next_instruction = self.model_prompts.analyze_result_next_instruction
 
-        else:
-            self.add_system_message(self.model_prompts.analyze_result_next_instruction_no_approved_summaries)
-            self.next_instruction = None # not really needed here, just to make sure there's no "next" instruction
+        self.add_system_message(self.model_prompts.analyze_result_instruction)
 
         self.submit_model_chat_and_process_response()
-
-    def submit_message_to_system(self, message):
-        if self.next_instruction is not None:
-            self.add_system_message(self.next_instruction)
-            self.next_instruction = None
-            self.submit_model_chat_and_process_response()
 
     def summary_accepted(self, example_num, summary):
         example_idx = int(example_num) - 1
         self.summaries[example_idx] = summary
-
-    def check_accepted_summary_exist(self):
-        return self.summaries.count(None) < len(self.summaries)
 
     def done(self):
         # placeholder
