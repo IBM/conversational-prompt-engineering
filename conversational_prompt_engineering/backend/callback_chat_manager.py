@@ -41,8 +41,8 @@ class ModelPrompts:
             'The discussion should result in a summary accepted by the user.\n' \
             'When the user accepts a summary (directly or indirectly), call summary_accepted API passing the example number and the summary text. ' \
             'Continue your conversation with the user in any case.\n' \
-            'Remember that the goal is a prompt that would directly produce summaries like approved by the user.\n' \
-            'If this goal is achieved - inform the user and call done(). If the summaries had to be adjusted, suggest a new prompt that would produce those summaries directly.\n' \
+            'After discussing the examples, see if any summaries neede adjustments, or all the produced summaries were approved as-is.\n' \
+            'If the summaries were good as-is - inform the user and call done(). If the summaries had to be adjusted, suggest a new prompt such as would produce those summaries directly.\n' \
             'Remember to communicate only via API calls.'
 
         self.syntax_err_instruction = 'The last API call produced a syntax error. Return the same call with fixed error.'
