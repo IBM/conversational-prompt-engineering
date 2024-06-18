@@ -28,7 +28,8 @@ class ModelPrompts:
             'self.submit_message_to_user(message)': 'call this function to submit your message to the user. Use markdown to mark the prompts and the outputs.',
             'self.submit_prompt(prompt)': 'call this function to inform the system that you have a new suggestion for the prompt',
             'self.output_accepted(example_num, output)': 'call this function every time the user accepts an output. Pass the example number and the output text as parameters.',
-            'self.done()': 'call this function when the user is sfied with the prompt and the results it produces.',
+            'self.end_outputs_discussion()': 'call this function after all the outputs have been discussed with the user.',
+            'self.conversation_end()': 'call this function when the user wants to end the conversation.',
         }
 
         self.examples_intro = 'The user has provided the following examples for the input texts to perform the task:'
@@ -44,12 +45,11 @@ class ModelPrompts:
 
         self.analyze_result_instruction = \
             'For each example show the full model output to the user and discuss it with them, one example at a time. ' \
+            'Note that the user has not seen these outputs yet, when presenting an output show its full text.\n' \
             'The discussion should result in an output accepted by the user.\n' \
             'When the user accepts an output (directly or indirectly), call output_accepted API passing the example number and the output text. ' \
             'Continue your conversation with the user in any case.\n' \
-            'After discussing the outputs, see if of the model outputs needed adjustments, or all the original model outputs were approved as-is.\n' \
-            'If the outputs were good as-is - inform the user and call done(). ' \
-            'If the outputs had to be adjusted, suggest a new prompt to better align the model outputs with the outputs approved by the user.\n' \
+            'After all the outputs were accepted by the user, call end_outputs_discussion.\n' \
             'Remember to communicate only via API calls.'
 
         self.syntax_err_instruction = 'The last API call produced a syntax error. Return the same call with fixed error.'
@@ -73,6 +73,8 @@ class CallbackChatManager(ChatManagerBase):
         self.examples = None
         self.outputs = None
         self.prompts = []
+
+        self.output_discussion_state = None
 
     @property
     def approved_prompts(self):
@@ -120,8 +122,7 @@ class CallbackChatManager(ChatManagerBase):
                                       "Once we've built a prompt, you can evaluate its performance by clicking on \"Evaluate\" on the side-bar.\n",
                                       "To get started, could you please describe your task in a few words? After describing the task please upload your data."]
 
-        self._add_msg(chat = self.user_chat, role = ChatRole.ASSISTANT, msg= "\n".join(static_assistant_hello_msg))
-
+        self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg="\n".join(static_assistant_hello_msg))
 
     def generate_agent_messages(self):
         self.submit_model_chat_and_process_response()
@@ -148,10 +149,14 @@ class CallbackChatManager(ChatManagerBase):
                 self._add_msg(tmp_chat, ChatRole.SYSTEM, prompt + '\Text: ' + example + '\nOutput: ')
                 futures[i] = executor.submit(self._get_assistant_response, tmp_chat)
 
+        self.output_discussion_state = {
+            'produced_summaries': [None] * len(self.examples),
+            'user_chat_begin': self.user_chat_length
+        }
         self.add_system_message(self.model_prompts.result_intro)
         for i, f in futures.items():
-            output = f.result()
-            self.add_system_message(f'Example {i + 1}: {output}')
+            summary = f.result()
+            self.add_system_message(f'Example {i + 1}: {summary}')
 
         self.add_system_message(self.model_prompts.analyze_result_instruction)
 
@@ -161,7 +166,33 @@ class CallbackChatManager(ChatManagerBase):
         example_idx = int(example_num) - 1
         self.outputs[example_idx] = output
 
-    def done(self):
+    def end_outputs_discussion(self):
+        analyze_discussion_task = \
+            f'You need to decide whether the outputs produced by the prompt "{self.prompts[-1]}" ' \
+            f'were accepted by the user as-is or needed some adjustments. ' \
+            f'Compare the produced summaries to the accepted ones and give recommendations for the prompt improvement so that it would produce the accepted summaries directly.'
+
+        analyze_discussion_user_comments = 'Here are the user comments about the produced summaries:\n'
+
+        analyze_discussion_continue = 'Continue your conversation with the user taking into account these recommendations above.'
+
+        temp_chat = []
+        self._add_msg(temp_chat, ChatRole.SYSTEM, analyze_discussion_task)
+        txt_produced_accepted = zip(self.examples, self.output_discussion_state['produced_summaries'], self.summaries)
+        for i, (txt, produced, accepted) in enumerate(txt_produced_accepted):
+            example_txt = f'Example {i + 1}\nText:{txt}\nProduced summary:{produced}\nAccepted summary:{accepted}'
+            self._add_msg(temp_chat, ChatRole.SYSTEM, example_txt)
+
+        self._add_msg(temp_chat, ChatRole.SYSTEM, analyze_discussion_user_comments)
+        temp_chat += [msg for msg in self.user_chat[self.output_discussion_state['user_chat_begin']:]
+                      if msg['role'] == ChatRole.USER]
+
+        recommendations = self._get_assistant_response(temp_chat)
+        self.add_system_message(recommendations + '\n' + analyze_discussion_continue)
+        self.output_discussion_state = None
+        self.submit_model_chat_and_process_response()
+
+    def conversation_end(self):
         # placeholder
         pass
 
