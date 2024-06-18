@@ -12,7 +12,6 @@ class ModelPrompts:
             'You will interact with the user to gather information, and discuss the summaries. ' \
             'I will generate the summaries from the prompts you suggest, and pass them back to you, ' \
             'so that you could discuss them with the user. ' \
-            'User time is valuable, keep the conversation pragmatic. Make the obvious decisions by yourself.' \
             'Don\'t greet the user at your first interaction.'
 
         self.api_instruction = \
@@ -42,8 +41,8 @@ class ModelPrompts:
             'The discussion should result in a summary accepted by the user.\n' \
             'When the user accepts a summary (directly or indirectly), call summary_accepted API passing the example number and the summary text. ' \
             'Continue your conversation with the user in any case.\n' \
-            'After discussing the examples, see if any summaries neede adjustments, or all the produced summaries were approved as-is.\n' \
-            'If the summaries were good as-is - inform the user and call done(). If the summaries had to be adjusted, suggest a new prompt such as would produce those summaries directly.\n' \
+            'After all summaries are accepted, summarize the user\'s comments that led to each of the accepted summaries, ' \
+            'and update the prompt based on the user\'s feedback to better align it with their requirements, if an update is necessary.\n' \
             'Remember to communicate only via API calls.'
 
         self.syntax_err_instruction = 'The last API call produced a syntax error. Return the same call with fixed error.'
@@ -104,14 +103,14 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(self.model_chat, ChatRole.USER, message)
 
     def add_welcome_message(self):
-        static_assistant_hello_msg = ["Hello! I'm an IBM prompt building assistant, and I'm here to help you build an effective instruction, personalized to your text summarization task. At a high-level, we will work together through the following two stages - \n",
-                                      "1.	Agree on an initial zero-shot prompt based on some unlabeled data you will share, and your feedback.\n",
-                                      "2.	Refine the prompt and add a few examples, approved by you, to turn it into a few-shot prompt. \n",
-                                      "At any stage you can evaluate the performance of the obtained prompt by clicking on \"Evaluate\" on the sidebar. Once done, you can download the prompt and use it for your task.\n",
-                                      "To get started, please select a dataset from our catalogue or upload a CSV file containing the text inputs in the first column, with ‘text’ as the header. If you don't have any unlabeled data to share, please let me know, and we'll proceed without it.\n"]
+        static_assistant_hello_msg = [
+            "Hello! I'm an IBM prompt building assistant, and I'm here to help you build an effective instruction, personalized to your text summarization task. At a high-level, we will work together through the following two stages - \n",
+            "1.	Agree on an initial zero-shot prompt based on some unlabeled data you will share, and your feedback.\n",
+            "2.	Refine the prompt and add a few examples, approved by you, to turn it into a few-shot prompt. \n",
+            "At any stage you can evaluate the performance of the obtained prompt by clicking on \"Evaluate\" on the sidebar. Once done, you can download the prompt and use it for your task.\n",
+            "To get started, please select a dataset from our catalogue or upload a CSV file containing the text inputs in the first column, with ‘text’ as the header. If you don't have any unlabeled data to share, please let me know, and we'll proceed without it.\n"]
 
-        self._add_msg(chat = self.user_chat, role = ChatRole.ASSISTANT, msg= "\n".join(static_assistant_hello_msg))
-
+        self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg="\n".join(static_assistant_hello_msg))
 
     def generate_agent_messages(self):
         self.submit_model_chat_and_process_response()
