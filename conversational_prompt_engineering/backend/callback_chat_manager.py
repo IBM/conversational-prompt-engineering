@@ -49,7 +49,7 @@ class ModelPrompts:
             'Note that the user has not seen these outputs yet, when presenting an output show its full text.\n' \
             'The discussion should result in an output accepted by the user.\n' \
             'When the user accepts an output (directly or indirectly), call output_accepted API passing the example number and the output text. ' \
-            'Continue your conversation with the user in any case.\n' \
+            'Continue your conversation with the user after they accept the output.\n' \
             'After all the outputs were accepted by the user, call end_outputs_discussion.\n' \
             'Remember to communicate only via API calls.'
 
@@ -76,6 +76,7 @@ class CallbackChatManager(ChatManagerBase):
         self.prompts = []
 
         self.output_discussion_state = None
+        self.calls_queue = []
 
     @property
     def approved_prompts(self):
@@ -93,17 +94,23 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(self.model_chat, ChatRole.SYSTEM, msg)
 
     def submit_model_chat_and_process_response(self):
+        execute_calls = len(self.calls_queue) == 0
         if len(self.model_chat) > self.model_chat_length:
             resp = self._get_assistant_response(self.model_chat)
             self._add_msg(self.model_chat, ChatRole.ASSISTANT, resp)
             self.model_chat_length = len(self.model_chat)
             api_indices = sorted([resp.index(name) for name in self.api_names if name in resp])
-            api_calls = [resp[begin: end].strip() for begin, end in zip(api_indices, api_indices[1:] + [len(resp)])]
-            for call in api_calls:
-                escaped_call = call.replace('\n', '\\n')
+            api_calls = [resp[begin: end].strip().replace('\n', '\\n')
+                         for begin, end in zip(api_indices, api_indices[1:] + [len(resp)])]
+            self.calls_queue += api_calls
+
+        if execute_calls:
+            while len(self.calls_queue) > 0:
                 try:
-                    exec(escaped_call)
+                    exec(self.calls_queue[0])
+                    del self.calls_queue[0]
                 except SyntaxError:
+                    self.calls_queue = []
                     self.add_system_message(self.model_prompts.syntax_err_instruction)
                     self.submit_model_chat_and_process_response()
 
