@@ -83,7 +83,7 @@ class CallbackChatManager(ChatManagerBase):
 
     @property
     def approved_outputs(self):
-        return [{'text': t, 'output': s} for t, s in zip(self.examples, self.outputs) if s is not None]
+        return [{'text': t, 'summary': s} for t, s in zip(self.examples, self.outputs) if s is not None]
 
     @property
     def validated_example_idx(self):

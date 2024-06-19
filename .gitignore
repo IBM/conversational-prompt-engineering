@@ -1,5 +1,5 @@
 # Project only
-conversational_prompt_engineering/_out*
+conversational_prompt_engineering/_out/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
