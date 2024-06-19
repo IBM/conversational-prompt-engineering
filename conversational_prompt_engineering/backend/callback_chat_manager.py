@@ -21,12 +21,14 @@ class ModelPrompts:
 
         self.api_instruction = \
             'You should communicate with the user and system ONLY via python API described below, and not via direct messages. ' \
-            'The input parameters to API functions are strings. Enclose them in double quotes, and escape all double quotes inside these strings. ' \
+            'The input parameters to API functions are strings. Enclose them in double quotes, and escape all double quotes inside these strings to avoid syntax errors. ' \
+            'Note that the user is not aware of the API, so don\'t not tell the user which API you are going to call.\n' \
             'Format ALL your answers python code calling one of the following functions:'
 
         self.api = {
             'self.submit_message_to_user(message)': 'call this function to submit your message to the user. Use markdown to mark the prompts and the outputs.',
             'self.submit_prompt(prompt)': 'call this function to inform the system that you have a new suggestion for the prompt',
+            'self.show_original_text(example_num)': 'call this function when the user asks to show the original text of an example, and pass the example number as parameter',
             'self.output_accepted(example_num, output)': 'call this function every time the user accepts an output. Pass the example number and the output text as parameters.',
             'self.end_outputs_discussion()': 'call this function after all the outputs have been discussed with the user.',
             'self.conversation_end()': 'call this function when the user wants to end the conversation.',
@@ -48,6 +50,7 @@ class ModelPrompts:
             'For each example show the full model output to the user and discuss it with them, one example at a time. ' \
             'Note that the user has not seen these outputs yet, when presenting an output show its full text.\n' \
             'The discussion should result in an output accepted by the user.\n' \
+            'When the user asks to show the original text of an example, call show_original_text API passing the example number.\n' \
             'When the user accepts an output (directly or indirectly), call output_accepted API passing the example number and the output text. ' \
             'Continue your conversation with the user after they accept the output.\n' \
             'After all the outputs were accepted by the user, call end_outputs_discussion.\n' \
@@ -146,6 +149,11 @@ class CallbackChatManager(ChatManagerBase):
 
     def submit_message_to_user(self, message):
         self._add_msg(self.user_chat, ChatRole.ASSISTANT, message)
+
+    def show_original_text(self, example_num):
+        txt = self.examples[int(example_num) - 1]
+        self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg=txt)
+        self.add_system_message(f'The original text for Example {example_num} was shown to the user.')
 
     def submit_prompt(self, prompt):
         self.prompts.append(prompt)
