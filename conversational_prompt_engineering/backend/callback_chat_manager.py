@@ -9,12 +9,12 @@ class ModelPrompts:
     def __init__(self) -> None:
         self.task_instruction = \
             'You and I (system) will work together to build a prompt for the task of the user via a chat with the user.' \
-            'This prompt will be fed to another model to perform the user\'s task.' \
-            'Our aim is to build a prompt such that the model outputs will align with the user\'s expectations.' \
+            'This prompt will be fed to a model dedicated to perform the user\'s task.' \
+            'Our aim is to build a prompt that when fed to the model, produce outputs that are aligned with the user\'s expectations.' \
             'Thus, the prompt should reflect the specific requirements and preferences of the user ' \
             'from the output as expressed in the chat.'\
             'You will interact with the user to gather information regarding their preferences and needs. ' \
-            'I will send the prompts you suggest to the model to generate outputs, and pass them back to you, ' \
+            'I will send the prompts you suggest to the dedicated model to generate outputs, and pass them back to you, ' \
             'so that you could discuss them with the user and get feedback. ' \
             'User time is valuable, keep the conversation pragmatic. Make the obvious decisions by yourself.' \
             'Don\'t greet the user at your first interaction.'
@@ -32,16 +32,17 @@ class ModelPrompts:
             'self.conversation_end()': 'call this function when the user wants to end the conversation.',
         }
 
-        self.examples_intro = 'The user has provided the following examples for the input texts to perform the task:'
+        self.examples_intro = 'Here are some examples of the input texts provided by the user:'
 
         self.examples_instruction = \
-            'Start with asking the user which task he would like to perfrom with these texts. Briefly discuss the text examples with the user before suggesting the prompt. ' \
-            'Your suggestion should take into account the user comments and corrections.' \
+            'Start with asking the user which task they would like to perform. ' \
+            'Then, before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences.  ' \
+            'Your suggested prompt should reflect the user\'s expectations from the task output as expressed during the chat.' \
             'Share the suggested prompt with the user before submitting it.' \
             'Remember to communicate only via API calls.'
 
 
-        self.result_intro = 'Based on the suggest prompt, the model has produced the following outputs for the user input examples:'
+        self.result_intro = 'Based on the suggested prompt, the model has produced the following outputs for the user input examples:'
 
         self.analyze_result_instruction = \
             'For each example show the full model output to the user and discuss it with them, one example at a time. ' \
