@@ -35,7 +35,7 @@ class ModelPrompts:
         self.examples_intro = 'Here are some examples of the input texts provided by the user:'
 
         self.examples_instruction = \
-            'Start with asking the user which task they would like to perform. ' \
+            'Start with asking the user which task they would like to perform on the texts. ' \
             'Then, before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences.  ' \
             'Your suggested prompt should reflect the user\'s expectations from the task output as expressed during the chat.' \
             'Share the suggested prompt with the user before submitting it.' \
