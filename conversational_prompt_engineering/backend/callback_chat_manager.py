@@ -183,7 +183,8 @@ class CallbackChatManager(ChatManagerBase):
 
         analyze_discussion_user_comments = 'Here are the user comments about the model outputs:\n'
 
-        analyze_discussion_continue = 'Continue your conversation with the user taking into account these recommendations above.'
+        analyze_discussion_continue = 'Continue your conversation with the user taking into account these recommendations above. ' \
+                                      'If the prompt should be modified based on these recommendations, then present it to the user.'
 
         temp_chat = []
         self._add_msg(temp_chat, ChatRole.SYSTEM, analyze_discussion_task)
