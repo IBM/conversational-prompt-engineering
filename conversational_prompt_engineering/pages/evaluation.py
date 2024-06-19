@@ -89,12 +89,11 @@ def run():
         # present instructions
         st.title("IBM Research Conversational Prompt Engineering - Evaluation")
         with st.expander("Instructions (click to expand)"):
-            st.markdown("1) First, upload test data in csv format, containing a single column named text. Alternatively, if you used one of our pre curated datasets, you can proceed with its evaluation set.")
-            st.markdown(f"2) In case you uploaded your own file, {NUM_EXAMPLES} examples are chosen at random for evaluation.")
-            st.markdown("3) Below you can see the prompts that were curated during your chat and will be used for evaluation.")
-            st.markdown(f"4) Next, click on ***Generate output***. Each prompt will be used to generate an output for each of the examples.")
-            st.markdown("5) After the outputs are generated, select the best output for each text. The order of the outputs is mixed for each example.")
-            st.markdown("6) When you are done, click on ***Submit*** to present the evaluation scores.")
+            st.markdown(f"1) In case you built the prompt using your own data rather than a datasets from our catalog, you should upload a csv file with the evaluation examples. {NUM_EXAMPLES} examples are chosen at random for evaluation.")
+            st.markdown("2) Below you can see the prompts that were curated during your chat and will be used for evaluation.")
+            st.markdown(f"3) Next, click on ***Generate output***. Each prompt will be used to generate an output for each of the examples.")
+            st.markdown("4) After the outputs are generated, select the best output for each text. The order of the outputs is mixed for each example.")
+            st.markdown("5) When you are done, click on ***Submit*** to present the evaluation scores.")
 
         col1, col2, col3 = st.columns(3)
         with col1:
