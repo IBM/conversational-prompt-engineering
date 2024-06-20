@@ -24,7 +24,7 @@ def rander_component(st, default_value_for_droplist, split_name):
 
     with col2:
         if selected_dataset == upload_your_csv:
-            if uploaded_file := st.file_uploader("Upload text examples csv"):
+            if uploaded_file := st.file_uploader("Upload text examples csv (comma separated) file.\n\n Your file should contain a column named \"text\""):
                 st.session_state[f"csv_file_{split_name}"] = uploaded_file
 
 
