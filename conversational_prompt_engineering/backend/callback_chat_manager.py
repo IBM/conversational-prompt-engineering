@@ -73,6 +73,23 @@ class MixtralPrompts(ModelPrompts):
     def __init__(self) -> None:
         super().__init__()
 
+        self.api_instruction = \
+            'You should communicate with the user and system ONLY via python API described below, and not via direct messages. ' \
+            'The input parameters to API functions are strings, pass them directly to the functions, do not define variables. Your code should contain only the function calls.\n' \
+            'Create valid python code, pay attention to closing brackets, escaping qoute signs etc. ' \
+            'Note that the user is not aware of the API, so don\'t not tell them which API you are going to call.\n' \
+            'You can call the following functions:'
+
+        self.analyze_result_instruction = \
+            'For each example show the full model output to the user and discuss it with them, one example at a time. ' \
+            'Note that the user has not seen these outputs yet, when presenting an output show its full text.\n' \
+            'The discussion should result in an output accepted by the user.\n' \
+            'When the user asks to show the original text of an example, call show_original_text API passing the value of example number.\n' \
+            'When the user accepts an output (directly or indirectly), call output_accepted API passing the example number and the output text. ' \
+            'Continue your conversation with the user after they accept the output.\n' \
+            'After all the outputs were accepted by the user, call end_outputs_discussion.\n' \
+            'Remember to communicate only via API calls.'
+
 
 class Llama3Prompts(ModelPrompts):
     def __init__(self) -> None:
@@ -138,8 +155,8 @@ class CallbackChatManager(ChatManagerBase):
 
         if execute_calls:
             while len(self.calls_queue) > 0:
+                call = self.calls_queue.pop(0)
                 try:
-                    call = self.calls_queue.pop(0)
                     exec(call)
                 except SyntaxError:
                     self.calls_queue = []
@@ -210,7 +227,8 @@ class CallbackChatManager(ChatManagerBase):
     def end_outputs_discussion(self):
         self.calls_queue = []
         temp_chat = []
-        self._add_msg(temp_chat, ChatRole.SYSTEM, self.model_prompts.analyze_discussion_task.replace('PROMPT', self.prompts[-1]))
+        self._add_msg(temp_chat, ChatRole.SYSTEM,
+                      self.model_prompts.analyze_discussion_task.replace('PROMPT', self.prompts[-1]))
         txt_produced_accepted = zip(self.examples, self.output_discussion_state['model_outputs'], self.outputs)
         for i, (txt, produced, accepted) in enumerate(txt_produced_accepted):
             example_txt = f'Example {i + 1}\nText:{txt}\nModel output:{produced}\nAccepted output:{accepted}'
