@@ -186,9 +186,12 @@ if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
                                    "Recommended for very long documents"])
         submit = st.form_submit_button()
         if submit:
-            st.session_state.key = key
-            st.session_state.model = model
-            entry_page.empty()
+            if len(key) != 0:
+                st.session_state.key = key
+                st.session_state.model = model
+                entry_page.empty()
+            else:
+                st.error(':heavy_exclamation_mark: You cannot proceed without providing your BAM API key')
 
 if 'key' in st.session_state:
     callback_cycle()
