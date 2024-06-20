@@ -123,15 +123,8 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(self.model_chat, ChatRole.USER, message)
 
     def add_welcome_message(self):
-        static_assistant_hello_msg = ["Hello! I'm an IBM prompt building assistant. I'm here to help you build an effective instruction for your task.\n",
-                                      "We'll work together to craft a prompt that yields high-quality results that are aligned with your output preferences. \n"
-                                      "Here's an overview of our collaboration:\n",
-                                      "\n1. I'll first ask you to share a short description of your task."
-                                      "\n2. I'll then ask you to share some typical input texts for the task, without their outputs, and will use them to generate an initial dedicated prompt."
-                                      "\n3. I'll refine the prompt based on your feedback on my generated outputs."
-                                      "\n4. Finally, I'll share the resultant few-shot prompt."
-                                      "Once we've built a prompt, you can evaluate its performance by clicking on \"Evaluate\" on the side-bar.\n",
-                                      "To get started, could you please upload your data."]
+        static_assistant_hello_msg = ["Hello! I'm an IBM prompt building assistant. In the following session we will work together through a natural conversation, to build an effective instruction – a.k.a. prompt – personalized for your task and data.",
+                                      "\nTo begin, please upload your data, or select a dataset from our datasets catalog above."]
 
         self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg="\n".join(static_assistant_hello_msg))
 
