@@ -5,7 +5,7 @@ from collections import Counter
 import streamlit as st
 import pandas as pd
 
-from conversational_prompt_engineering.backend.double_chat_manager import build_few_shot_prompt, BASELINE_PROMPT
+from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt, BASELINE_SUMMARIZATION_PROMPT
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_eval
 import time
@@ -76,7 +76,7 @@ def run():
         st.write("Evaluation will be open after at least one prompt has been curated in the chat.")
     else:
 
-        baseline_prompt = build_few_shot_prompt(BASELINE_PROMPT, [],
+        baseline_prompt = build_few_shot_prompt(BASELINE_SUMMARIZATION_PROMPT, [],
                                                 st.session_state.manager.bam_client.parameters['model_id'])
         zero_shot_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
                                                  [],
