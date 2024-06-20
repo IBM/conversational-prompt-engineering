@@ -123,9 +123,9 @@ class CallbackChatManager(ChatManagerBase):
         execute_calls = len(self.calls_queue) == 0
         if len(self.model_chat) > self.model_chat_length:
             resp = self._get_assistant_response(self.model_chat)
+            self._add_msg(self.model_chat, ChatRole.ASSISTANT, resp)
             if resp.startswith('```python\n'):
                 resp = resp[len('```python\n'): -len('\n```')]
-            self._add_msg(self.model_chat, ChatRole.ASSISTANT, resp)
             self.model_chat_length = len(self.model_chat)
             api_indices = sorted([resp.index(name) for name in self.api_names if name in resp])
             api_calls = [resp[begin: end].strip().replace('\n', '\\n')
