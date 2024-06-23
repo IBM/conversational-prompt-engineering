@@ -50,9 +50,28 @@ class ChatManagerBase:
 
         os.makedirs(self.out_dir, exist_ok=True)
 
+    def save_prompts_and_config(self, approved_prompts):
+        chat_dir = os.path.join(self.out_dir, "chat")
+        os.makedirs(chat_dir, exist_ok=True)
+        with open(os.path.join(chat_dir, "prompts.json"), "w") as f:
+            # if self.state == ConversationState.CONFIRM_PROMPT:
+            #     approved_prompts = approved_prompts[:-1]  # the last prompt is not confirmed yet
+            # for p in approved_prompts:
+            #     p['prompt_with_format'] = build_few_shot_prompt(p['prompt'], [],
+            #                                                     self.bam_client.parameters['model_id'])
+            #     p['prompt_with_format_and_few_shots'] = build_few_shot_prompt(p['prompt'], self.approved_summaries[
+            #                                                                                :self.validated_example_idx],
+            #                                                                   self.bam_client.parameters[
+            #                                                                       'model_id'])
+            json.dump(approved_prompts, f)
+        with open(os.path.join(chat_dir, "config.json"), "w") as f:
+            json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name}, f)
+
     def save_chat_html(self, chat, file_name):
         chat_dir = os.path.join(self.out_dir, "chat")
         os.makedirs(chat_dir, exist_ok=True)
+        df = pd.DataFrame(chat)
+        df.to_csv(os.path.join(chat_dir, f"{file_name.split('.')[0]}.csv"), index=False)
         with open(os.path.join(chat_dir, file_name), "w") as html_out:
             content = "\n".join(
                 [f"<p><b>{x['role'].upper()}: </b>{x['content']}</p>".replace("\n", "<br>") for x in chat])

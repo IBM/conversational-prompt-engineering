@@ -204,6 +204,7 @@ class CallbackChatManager(ChatManagerBase):
             self.user_chat_length = len(self.user_chat)
         self.save_chat_html(self.user_chat, "user_chat.html")
         self.save_chat_html(self.model_chat, "model_chat.html")
+        self.save_prompts_and_config(self.approved_prompts)
         return agent_messages
 
     def submit_message_to_user(self, message):
@@ -233,7 +234,7 @@ class CallbackChatManager(ChatManagerBase):
         with ThreadPoolExecutor(max_workers=len(self.examples)) as executor:
             for i, example in enumerate(self.examples):
                 tmp_chat = []
-                self._add_msg(tmp_chat, ChatRole.SYSTEM, prompt + '\Text: ' + example + '\nOutput: ')
+                self._add_msg(tmp_chat, ChatRole.SYSTEM, prompt + '\nText: ' + example + '\nOutput: ')
                 futures[i] = executor.submit(self._get_assistant_response, tmp_chat)
 
         self.output_discussion_state = {
