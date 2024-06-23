@@ -1,3 +1,4 @@
+import logging
 from concurrent.futures import ThreadPoolExecutor
 
 from genai.schema import ChatRole
@@ -33,18 +34,24 @@ class ModelPrompts:
             'self.output_accepted(example_num, output)': 'call this function every time the user accepts an output. Pass the example number and the output text as parameters.',
             'self.end_outputs_discussion()': 'call this function after all the outputs have been discussed with the user and all the outputs were accepted by the user.',
             'self.conversation_end()': 'call this function when the user wants to end the conversation.',
+            'self.create_baseline_instruction(instruction)': 'call this function the user explains the task. You should only use this callback when asked to'
         }
 
         self.discuss_example_num = 'Discuss with the user the output of Example '
 
         self.examples_intro = 'Here are some examples of the input texts provided by the user:'
 
-        self.examples_instruction = \
+        self.task_definition_instruction = \
             'Start with asking the user which task they would like to perform on the texts. ' \
-            'Then, before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences. Please take into account the specific characteristics of the data. ' \
+            'Once the task is clear to you, call create_baseline_instruction API with your suggestion of a general prompt.'
+
+        self.analyze_examples = \
+            'Before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences. Please take into account the specific characteristics of the data. ' \
             'Your suggested prompt should reflect the user\'s expectations from the task output as expressed during the chat.' \
             'Share the suggested prompt with the user before submitting it.' \
             'Remember to communicate only via API calls.'
+
+
 
         self.result_intro = 'Based on the suggested prompt, the model has produced the following outputs for the user input examples:'
 
@@ -121,9 +128,12 @@ class CallbackChatManager(ChatManagerBase):
         self.examples = None
         self.outputs = None
         self.prompts = []
+        self.baseline_prompt = ""
 
         self.output_discussion_state = None
         self.calls_queue = []
+
+        self.user_baseline_model = True
 
     @property
     def approved_prompts(self):
@@ -215,6 +225,16 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg=txt)
         self.add_system_message(f'The original text for Example {example_num} was shown to the user.')
 
+
+    def create_baseline_instruction(self, baseline_instruction):
+        logging.info(f"baseline instruction suggested by the model is: {baseline_instruction}")
+        self.baseline_prompt = baseline_instruction
+        #tmp_chat = self.model_chat[:] # create a side chat with the existing context
+        #self._add_msg(tmp_chat, ChatRole.SYSTEM, "Given the task and examples provided by the user, suggest a general prompt for the task")
+        #resp = self._get_assistant_response(tmp_chat)
+        self.add_system_message(self.model_prompts.analyze_examples)
+        self.submit_model_chat_and_process_response()
+
     def switch_to_example(self, example_num):
         example_num = int(example_num)
         self.example_num = example_num
@@ -299,7 +319,7 @@ class CallbackChatManager(ChatManagerBase):
             self.add_system_message(f'Example {example_num}: {ex}', example_num)
         self.example_num = None
 
-        self.add_system_message(self.model_prompts.examples_instruction)
+        self.add_system_message(self.model_prompts.task_definition_instruction)
 
         self.submit_model_chat_and_process_response()
 
