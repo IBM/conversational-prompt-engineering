@@ -28,11 +28,14 @@ class ModelPrompts:
         self.api = {
             'self.submit_message_to_user(message)': 'call this function to submit your message to the user. Use markdown to mark the prompts and the outputs.',
             'self.submit_prompt(prompt)': 'call this function to inform the system that you have a new suggestion for the prompt. Use it only with the prompts approved by the user.',
+            'self.switch_to_example(example_num)': 'call this function before you start discussing with the user an output of a specific example, and pass the example number as parameter.',
             'self.show_original_text(example_num)': 'call this function when the user asks to show the original text of an example, and pass the example number as parameter',
             'self.output_accepted(example_num, output)': 'call this function every time the user accepts an output. Pass the example number and the output text as parameters.',
             'self.end_outputs_discussion()': 'call this function after all the outputs have been discussed with the user and all the outputs were accepted by the user.',
             'self.conversation_end()': 'call this function when the user wants to end the conversation.',
         }
+
+        self.discuss_example_num = 'Discuss with the user the output of Example '
 
         self.examples_intro = 'Here are some examples of the input texts provided by the user:'
 
@@ -108,6 +111,7 @@ class CallbackChatManager(ChatManagerBase):
 
         self.model_chat = []
         self.model_chat_length = 0
+        self.example_num = None
         self.user_chat = []
         self.user_chat_length = 0
 
@@ -133,13 +137,24 @@ class CallbackChatManager(ChatManagerBase):
     def validated_example_idx(self):
         return len([s for s in self.outputs if s is not None])
 
-    def add_system_message(self, msg):
-        self._add_msg(self.model_chat, ChatRole.SYSTEM, msg)
+    def _add_msg(self, chat, role, msg, example_num=None):
+        message = {'role': role, 'content': msg}
+        if example_num is not None:
+            message['example_num'] = example_num
+        chat.append(message)
+
+    def add_system_message(self, msg, example_num=None):
+        self._add_msg(self.model_chat, ChatRole.SYSTEM, msg, example_num)
+
+    @property
+    def _filtered_model_chat(self):
+        return [msg for msg in self.model_chat
+                if self.example_num is None or msg.get('example_num', self.example_num) == self.example_num]
 
     def submit_model_chat_and_process_response(self):
         execute_calls = len(self.calls_queue) == 0
         if len(self.model_chat) > self.model_chat_length:
-            resp = self._get_assistant_response(self.model_chat)
+            resp = self._get_assistant_response(self._filtered_model_chat)
             self._add_msg(self.model_chat, ChatRole.ASSISTANT, resp)
             if resp.startswith('```python\n'):
                 resp = resp[len('```python\n'): -len('\n```')]
@@ -199,6 +214,17 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg=txt)
         self.add_system_message(f'The original text for Example {example_num} was shown to the user.')
 
+    def switch_to_example(self, example_num):
+        example_num = int(example_num)
+        self.example_num = example_num
+        self.calls_queue = []
+        last_msg = self.model_chat[-1]
+        submit_message_to_user = 'self.submit_message_to_user'
+        if submit_message_to_user in last_msg['content']:
+            last_msg['content'] = last_msg['content'][:last_msg['content'].index(submit_message_to_user)]
+        self.add_system_message(self.model_prompts.discuss_example_num + str(self.example_num))
+        self.submit_model_chat_and_process_response()
+
     def submit_prompt(self, prompt):
         self.calls_queue = []
         self.prompts.append(prompt)
@@ -217,11 +243,11 @@ class CallbackChatManager(ChatManagerBase):
         self.add_system_message(self.model_prompts.result_intro)
         for i, f in futures.items():
             output = f.result()
-            self.add_system_message(f'Example {i + 1}: {output}')
+            example_num = i + 1
+            self.add_system_message(f'Example {example_num}: {output}')
             self.output_discussion_state['model_outputs'][i] = output
 
         self.add_system_message(self.model_prompts.analyze_result_instruction)
-
         self.submit_model_chat_and_process_response()
 
     def output_accepted(self, example_num, output):
@@ -267,7 +293,10 @@ class CallbackChatManager(ChatManagerBase):
 
         self.add_system_message(self.model_prompts.examples_intro)
         for i, ex in enumerate(self.examples):
-            self.add_system_message(f'Example {i + 1}: {ex}')
+            example_num = i + 1
+            self.example_num = example_num
+            self.add_system_message(f'Example {example_num}: {ex}', example_num)
+        self.example_num = None
 
         self.add_system_message(self.model_prompts.examples_instruction)
 
