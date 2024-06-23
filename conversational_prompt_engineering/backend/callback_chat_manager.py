@@ -101,7 +101,7 @@ class CallbackChatManager(ChatManagerBase):
         super().__init__(bam_api_key, model, conv_id)
         self.model_prompts = {
             'mixtral': MixtralPrompts,
-            'llama3': Llama3Prompts,
+            'llama-3': Llama3Prompts,
         }[model]()
 
         self.api_names = None
@@ -166,7 +166,11 @@ class CallbackChatManager(ChatManagerBase):
     def add_user_message(self, message):
         self._add_msg(self.user_chat, ChatRole.USER, message)
         self.user_chat_length = len(self.user_chat)  # user message is rendered by cpe
-        self._add_msg(self.model_chat, ChatRole.USER, message)
+        self._add_msg(self.model_chat, ChatRole.USER, message)  # not adding dummy initial user message
+
+    def add_user_message_only_to_user_chat(self, message):
+        self._add_msg(self.user_chat, ChatRole.USER, message)
+        self.user_chat_length = len(self.user_chat)  # user message is rendered by cpe
 
     def add_welcome_message(self):
         static_assistant_hello_msg = [
