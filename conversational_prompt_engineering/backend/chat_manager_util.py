@@ -84,7 +84,31 @@ class ChatManagerBase:
 
     def _format_chat(self, chat):
         if 'mixtral' in self.bam_client.parameters['model_id']:
-            return ''.join([f'\n<|{m["role"]}|>\n{m["content"]}\n' for m in chat]) + f'<|{ChatRole.ASSISTANT}|>'
+            bos_token = '<s>'
+            eos_token = '</s>'
+            chat_for_mixtral=[]
+            prev_role = None
+            for m in chat:
+                if m["role"] == prev_role:
+                    chat_for_mixtral[-1]["content"] += "\n"+m["content"]
+                else:
+                    chat_for_mixtral.append(m)
+                prev_role = m["role"]
+
+            for m in chat_for_mixtral:
+                if m["role"] == 'user':
+                    m["content"] = 'user: ' + m["content"]
+                elif m["role"] == 'system':
+                    m["role"] = 'user'
+                    m["content"] = 'system: ' + m["content"]
+
+            prompt = bos_token
+            for m in chat_for_mixtral:
+                if m['role'] == 'user':
+                    prompt += '[INST] ' + m['content'] + ' [/INST] '
+                else:
+                    prompt += m['content'] + eos_token + ' '
+            return prompt
         elif 'llama' in self.bam_client.parameters['model_id']:
             msg_str = LLAMA_START_OF_INPUT
             for m in chat:
