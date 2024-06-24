@@ -85,23 +85,6 @@ class MixtralPrompts(ModelPrompts):
     def __init__(self) -> None:
         super().__init__()
 
-        self.api_instruction = \
-            'You should communicate with the user and system ONLY via python API described below, and not via direct messages. ' \
-            'The input parameters to API functions are strings, pass them directly to the functions, do not define variables. Your code should contain only the function calls.\n' \
-            'Create valid python code, pay attention to closing brackets, escaping qoute signs etc. ' \
-            'Note that the user is not aware of the API, so don\'t not tell them which API you are going to call.\n' \
-            'You can call the following functions:'
-
-        self.analyze_result_instruction = \
-            'For each example show the full model output to the user and discuss it with them, one example at a time. ' \
-            'Note that the user has not seen these outputs yet, when presenting an output show its full text.\n' \
-            'The discussion should result in an output accepted by the user.\n' \
-            'When the user asks to show the original text of an example, call show_original_text API passing the value of example number.\n' \
-            'When the user accepts an output (directly or indirectly), call output_accepted API passing the example number and the output text. ' \
-            'Continue your conversation with the user after they accept the output.\n' \
-            'After all the outputs were accepted by the user, call end_outputs_discussion.\n' \
-            'Remember to communicate only via API calls.'
-
 
 class Llama3Prompts(ModelPrompts):
     def __init__(self) -> None:
@@ -250,7 +233,8 @@ class CallbackChatManager(ChatManagerBase):
         submit_message_to_user = 'self.submit_message_to_user'
         if submit_message_to_user in last_msg['content']:
             last_msg['content'] = last_msg['content'][:last_msg['content'].index(submit_message_to_user)]
-        self.add_system_message(self.model_prompts.discuss_example_num + str(self.example_num))
+        discuss_ex = self.model_prompts.discuss_example_num + str(self.example_num) + f'out of {len(self.examples)}'
+        self.add_system_message(discuss_ex)
         self.submit_model_chat_and_process_response()
 
     def submit_prompt(self, prompt):
