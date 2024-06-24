@@ -16,7 +16,7 @@ from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_compone
     create_choose_dataset_component_train
 from st_pages import Page, show_pages, hide_pages
 
-version = "callback manager v1.0.3"
+version = "callback manager v1.0.4"
 st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"})
 
 show_pages(
