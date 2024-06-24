@@ -149,19 +149,6 @@ def run():
 
         test_texts = create_choose_dataset_component_eval(st)
 
-        col1, col2 = st.columns(2)
-        with col1:
-            # option = st.selectbox(
-            #     "Select prompt to compare",
-            #     options=["Baseline prompt", "Zero-shot prompt"])
-            option = "Baseline prompt"
-            if option == "Baseline prompt":
-                prompt_to_compare = baseline_prompt
-            else: # option == "Zero-shot prompt":
-                prompt_to_compare = zero_shot_prompt
-            if prompt_to_compare == current_prompt:
-                st.write("Note: prompt 1 is identical to prompt 2")
-
         # get prompts to evaluate
         if 'evaluation' not in st.session_state:
             st.session_state.evaluation = Evaluation(st.session_state.manager.bam_client)
@@ -173,7 +160,7 @@ def run():
 
         # show prompts
         prompt_cols = st.columns(NUM_PROMPTS_TO_COMPARE)
-        prompt_text_area_titles = [f"Prompt 1 ({option})", "Prompt 2 (CPE zero shot prompt)", "Prompt 3 (CPE few shot prompt)"]
+        prompt_text_area_titles = ["Prompt 1 (Baseline prompt)", "Prompt 2 (CPE zero shot prompt)", "Prompt 3 (CPE few shot prompt)"]
         assert (len(prompt_text_area_titles) == NUM_PROMPTS_TO_COMPARE)
         for i in range(NUM_PROMPTS_TO_COMPARE):
             with prompt_cols[i]:
@@ -245,7 +232,7 @@ def run():
                 # showing aggregated results
                 results, num_of_examples = calculate_results()
                 save_results()
-                st.write(f"Compared between {option} and the latest cpe prompt")
+                st.write(f"Compared between {len(st.session_state.prompts)} prompts")
                 for prompt_id in results:
                     num_of_time_prompt_is_best = results[prompt_id][0]
                     pct_val = '{0:.2f}'.format(100*num_of_time_prompt_is_best/num_of_examples)
