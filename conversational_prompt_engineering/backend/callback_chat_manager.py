@@ -214,9 +214,13 @@ class CallbackChatManager(ChatManagerBase):
                 if msg['role'] == ChatRole.ASSISTANT:
                     agent_messages.append(msg)
             self.user_chat_length = len(self.user_chat)
+
         self.save_chat_html(self.user_chat, "user_chat.html")
         self.save_chat_html(self.model_chat, "model_chat.html")
+        if self.example_num is not None:
+            self.save_chat_html(self._filtered_model_chat, f'model_chat_example_{self.example_num}.html')
         self.save_prompts_and_config(self.approved_prompts)
+
         return agent_messages
 
     def submit_message_to_user(self, message):
@@ -226,7 +230,6 @@ class CallbackChatManager(ChatManagerBase):
         txt = self.examples[int(example_num) - 1]
         self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg=txt)
         self.add_system_message(f'The original text for Example {example_num} was shown to the user.')
-
 
     def task_is_defined(self):
         # open side chat with model
@@ -269,10 +272,10 @@ class CallbackChatManager(ChatManagerBase):
         for i, f in futures.items():
             output = f.result()
             example_num = i + 1
-            self.add_system_message(f'Example {example_num}: {output}')
+            self.add_system_message(f'Example {example_num}: {output}', example_num)
             self.output_discussion_state['model_outputs'][i] = output
 
-        self.add_system_message(self.model_prompts.analyze_result_instruction, example_num)
+        self.add_system_message(self.model_prompts.analyze_result_instruction)
         self.submit_model_chat_and_process_response()
 
     def output_accepted(self, example_num, output):

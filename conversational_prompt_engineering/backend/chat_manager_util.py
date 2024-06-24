@@ -16,14 +16,17 @@ LLAMA_START_OF_INPUT = '<|begin_of_text|>'
 
 
 def extract_delimited_text(txt, delims):
-    if type(delims) is str:
-        delims = [delims]
-    for delim in delims:
-        if delim in txt:
-            begin = txt.index(delim) + len(delim)
-            end = begin + txt[begin:].index(delim)
-            return txt[begin:end]
-    return txt  # delims not found in text
+    try:
+        if type(delims) is str:
+            delims = [delims]
+        for delim in delims:
+            if delim in txt:
+                begin = txt.index(delim) + len(delim)
+                end = begin + txt[begin:].index(delim)
+                return txt[begin:end]
+        return txt  # delims not found in text
+    except ValueError:
+        return txt
 
 
 def _get_llama_header(role):

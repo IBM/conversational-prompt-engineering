@@ -16,7 +16,7 @@ from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_compone
     create_choose_dataset_component_train, add_evaluator_input
 from st_pages import Page, show_pages, hide_pages
 
-version = "callback manager v1.0.4"
+version = "callback manager v1.0.5"
 st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"})
 
 show_pages(
@@ -41,7 +41,9 @@ def reset_chat():
 def new_cycle():
     # 1. create the manager if necessary
     if "manager" not in st.session_state:
-        st.session_state.conv_id = abs(hash(st.session_state.key))
+        sha1 = hashlib.sha1()
+        sha1.update(st.session_state.key.encode('utf-8'))
+        st.session_state.conv_id = sha1.hexdigest()[:16] # deterministic hash of 16 characters
         st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key, model=st.session_state.model,
                                                      conv_id=st.session_state.conv_id)
     manager = st.session_state.manager
@@ -72,6 +74,7 @@ def new_cycle():
     if msg is not None:
         with st.chat_message(msg['role']):
             st.write(msg['content'])
+
 
 
 def callback_cycle():
