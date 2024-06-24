@@ -231,7 +231,6 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg=txt)
         self.add_system_message(f'The original text for Example {example_num} was shown to the user.')
 
-
     def task_is_defined(self):
         # open side chat with model
         assert (self.baseline_prompt == "", "second callback to task_is_defined!")
@@ -273,10 +272,10 @@ class CallbackChatManager(ChatManagerBase):
         for i, f in futures.items():
             output = f.result()
             example_num = i + 1
-            self.add_system_message(f'Example {example_num}: {output}')
+            self.add_system_message(f'Example {example_num}: {output}', example_num)
             self.output_discussion_state['model_outputs'][i] = output
 
-        self.add_system_message(self.model_prompts.analyze_result_instruction, example_num)
+        self.add_system_message(self.model_prompts.analyze_result_instruction)
         self.submit_model_chat_and_process_response()
 
     def output_accepted(self, example_num, output):
