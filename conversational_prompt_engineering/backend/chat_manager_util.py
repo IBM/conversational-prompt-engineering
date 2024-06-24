@@ -64,7 +64,7 @@ class ChatManagerBase:
         chat.append({'role': role, 'content': msg})
 
     def _format_chat(self, chat):
-        if 'mixtral' in self.bam_client.parameters['model_id']:
+        if 'mixtral' in self.bam_client.parameters['model_id'] or 'prometheus' in self.bam_client.parameters['model_id']:
             return ''.join([f'\n<|{m["role"]}|>\n{m["content"]}\n' for m in chat]) + f'<|{ChatRole.ASSISTANT}|>'
         elif 'llama' in self.bam_client.parameters['model_id']:
             msg_str = LLAMA_START_OF_INPUT
