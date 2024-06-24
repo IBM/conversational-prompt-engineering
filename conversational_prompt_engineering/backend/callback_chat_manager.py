@@ -214,9 +214,13 @@ class CallbackChatManager(ChatManagerBase):
                 if msg['role'] == ChatRole.ASSISTANT:
                     agent_messages.append(msg)
             self.user_chat_length = len(self.user_chat)
+
         self.save_chat_html(self.user_chat, "user_chat.html")
         self.save_chat_html(self.model_chat, "model_chat.html")
+        if self.example_num is not None:
+            self.save_chat_html(self._filtered_model_chat, f'model_chat_example_{self.example_num}.html')
         self.save_prompts_and_config(self.approved_prompts)
+
         return agent_messages
 
     def submit_message_to_user(self, message):
