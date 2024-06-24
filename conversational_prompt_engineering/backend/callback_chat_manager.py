@@ -34,7 +34,7 @@ class ModelPrompts:
             'self.output_accepted(example_num, output)': 'call this function every time the user accepts an output. Pass the example number and the output text as parameters.',
             'self.end_outputs_discussion()': 'call this function after all the outputs have been discussed with the user and all the outputs were accepted by the user.',
             'self.conversation_end()': 'call this function when the user wants to end the conversation.',
-            'self.create_baseline_instruction(instruction)': 'call this function the user explains the task. You should only use this callback when asked to'
+            'self.task_is_defined()': 'call this function when the user has defined the task. You should only use this callback once'
         }
 
         self.discuss_example_num = 'Discuss with the user the output of Example '
@@ -43,7 +43,7 @@ class ModelPrompts:
 
         self.task_definition_instruction = \
             'Start with asking the user which task they would like to perform on the texts. ' \
-            'Once the task is clear to you, call create_baseline_instruction API with your suggestion of a general prompt.'
+            'Once the task is clear to you, call task_is_defined API.'
 
         self.analyze_examples = \
             'Before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences. Please take into account the specific characteristics of the data. ' \
@@ -51,7 +51,8 @@ class ModelPrompts:
             'Share the suggested prompt with the user before submitting it.' \
             'Remember to communicate only via API calls.'
 
-
+        self.generate_baseline_instruction_task = \
+            'After the user has provided the task description and the examples, generate a general prompt for this task'
 
         self.result_intro = 'Based on the suggested prompt, the model has produced the following outputs for the user input examples:'
 
@@ -226,12 +227,14 @@ class CallbackChatManager(ChatManagerBase):
         self.add_system_message(f'The original text for Example {example_num} was shown to the user.')
 
 
-    def create_baseline_instruction(self, baseline_instruction):
-        logging.info(f"baseline instruction suggested by the model is: {baseline_instruction}")
-        self.baseline_prompt = baseline_instruction
-        #tmp_chat = self.model_chat[:] # create a side chat with the existing context
-        #self._add_msg(tmp_chat, ChatRole.SYSTEM, "Given the task and examples provided by the user, suggest a general prompt for the task")
-        #resp = self._get_assistant_response(tmp_chat)
+    def task_is_defined(self):
+        # open side chat with model
+        assert (self.baseline_prompt == "", "second callback to task_is_defined!")
+        tmp_chat = self.model_chat[:]
+        self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.generate_baseline_instruction_task)
+        resp = self._get_assistant_response(tmp_chat)
+        self.baseline_prompt = resp[:-1].replace("self.submit_prompt(", "")
+        logging.info(f"baseline prompt is {self.baseline_prompt}")
         self.add_system_message(self.model_prompts.analyze_examples)
         self.submit_model_chat_and_process_response()
 
