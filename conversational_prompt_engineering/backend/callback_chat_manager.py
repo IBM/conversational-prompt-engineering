@@ -34,7 +34,7 @@ class ModelPrompts:
             'self.output_accepted(example_num, output)': 'call this function every time the user accepts an output. Pass the example number and the output text as parameters.',
             'self.end_outputs_discussion()': 'call this function after all the outputs have been discussed with the user and all NUM_EXAMPLES outputs were accepted by the user.',
             'self.conversation_end()': 'call this function when the user wants to end the conversation.',
-            'self.task_is_defined()': 'call this function when the user has defined the task. You should only use this callback once'
+            'self.task_is_defined()': 'call this function when the user has defined the task and it\'s clear to you. You should only use this callback once'
         }
 
         self.discuss_example_num = 'Discuss with the user the output of Example '
@@ -49,7 +49,8 @@ class ModelPrompts:
             'Before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences. Please take into account the specific characteristics of the data. ' \
             'Your suggested prompt should reflect the user\'s expectations from the task output as expressed during the chat.' \
             'Share the suggested prompt with the user before submitting it.' \
-            'Remember to communicate only via API calls.'
+            'Remember to communicate only via API calls.'\
+            'From this point, don\'t use task_is_defined API'
 
         self.generate_baseline_instruction_task = \
             'After the user has provided the task description and the examples, generate a general prompt for this task'
@@ -225,13 +226,13 @@ class CallbackChatManager(ChatManagerBase):
 
     def task_is_defined(self):
         # open side chat with model
-        assert (self.baseline_prompt == "", "second callback to task_is_defined!")
+        assert self.baseline_prompt == "", "second callback to task_is_defined!"
         self.calls_queue = []
 
         tmp_chat = self.model_chat[:]
         self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.generate_baseline_instruction_task)
         resp = self._get_assistant_response(tmp_chat)
-        self.baseline_prompt = resp[:-1].replace("self.submit_prompt(", "")
+        self.baseline_prompt = resp[:-2].replace("self.submit_prompt(\"", "")
         logging.info(f"baseline prompt is {self.baseline_prompt}")
         self.add_system_message(self.model_prompts.analyze_examples)
         self.submit_model_chat_and_process_response()
