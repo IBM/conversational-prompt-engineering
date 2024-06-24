@@ -219,8 +219,8 @@ class CallbackChatManager(ChatManagerBase):
         self.save_chat_html(self.model_chat, "model_chat.html")
         if self.example_num is not None:
             self.save_chat_html(self._filtered_model_chat, f'model_chat_example_{self.example_num}.html')
-        self.save_prompts_and_config(self.approved_prompts)
-
+        if self.outputs:
+            self.save_prompts_and_config(self.approved_prompts, self.approved_outputs)
         return agent_messages
 
     def submit_message_to_user(self, message):

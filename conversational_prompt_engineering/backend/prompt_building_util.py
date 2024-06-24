@@ -1,14 +1,20 @@
 
 from genai.schema import ChatRole
 
-from conversational_prompt_engineering.backend.chat_manager_util import LLAMA_START_OF_INPUT, _get_llama_header, \
-    LLAMA_END_OF_MESSAGE, ChatManagerBase, extract_delimited_text
 
+LLAMA_END_OF_MESSAGE = "<|eot_id|>"
+
+LLAMA_START_OF_INPUT = '<|begin_of_text|>'
 
 
 GRANITE_SYSTEM_MESSAGE = 'You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g\'day, morning, afternoon, evening, night, what\'s up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.'
 
 BASELINE_SUMMARIZATION_INSTRUCTION = 'Summarize the following text in 2-3 sentences, highlighting the main ideas and key points.'
+
+
+def _get_llama_header(role):
+    return "<|start_header_id|>" + role + "<|end_header_id|>"
+
 
 def build_few_shot_prompt(prompt, texts_and_summaries, model_id):
     if 'llama' in model_id:
