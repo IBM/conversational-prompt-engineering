@@ -61,6 +61,7 @@ class ModelPrompts:
             'The discussion should result in an output accepted by the user.\n' \
             'When the user asks to show the original text of an example, call show_original_text API passing the example number.\n' \
             'When the user accepts an output (directly or indirectly), call output_accepted API passing the example number and the output text. ' \
+            'when the user asks to update the prompt, share the prompt with him.\n' \
             'Continue your conversation with the user after they accept the output.\n' \
             'Remember to communicate only via API calls.'
 
@@ -110,7 +111,7 @@ class CallbackChatManager(ChatManagerBase):
     def __init__(self, bam_api_key, model, conv_id) -> None:
         super().__init__(bam_api_key, model, conv_id)
         self.model_prompts = {
-            'mixtral': MixtralPrompts,
+            'mixtral': Llama3Prompts,
             'llama-3': Llama3Prompts,
         }[model]()
 
