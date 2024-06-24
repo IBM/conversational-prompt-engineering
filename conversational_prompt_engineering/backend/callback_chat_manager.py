@@ -217,6 +217,8 @@ class CallbackChatManager(ChatManagerBase):
     def task_is_defined(self):
         # open side chat with model
         assert (self.baseline_prompt == "", "second callback to task_is_defined!")
+        self.calls_queue = []
+
         tmp_chat = self.model_chat[:]
         self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.generate_baseline_instruction_task)
         resp = self._get_assistant_response(tmp_chat)
@@ -225,14 +227,17 @@ class CallbackChatManager(ChatManagerBase):
         self.add_system_message(self.model_prompts.analyze_examples)
         self.submit_model_chat_and_process_response()
 
-    def switch_to_example(self, example_num):
-        example_num = int(example_num)
-        self.example_num = example_num
-        self.calls_queue = []
+    def _strip_user_message(self):
         last_msg = self.model_chat[-1]
         submit_message_to_user = 'self.submit_message_to_user'
         if submit_message_to_user in last_msg['content']:
             last_msg['content'] = last_msg['content'][:last_msg['content'].index(submit_message_to_user)]
+
+    def switch_to_example(self, example_num):
+        example_num = int(example_num)
+        self.example_num = example_num
+        self.calls_queue = []
+        self._strip_user_message()
         discuss_ex = self.model_prompts.discuss_example_num + str(self.example_num) + f'out of {len(self.examples)}'
         self.add_system_message(discuss_ex)
         self.submit_model_chat_and_process_response()
