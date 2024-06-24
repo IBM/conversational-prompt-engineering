@@ -62,6 +62,7 @@ class ModelPrompts:
             'The discussion should result in an output accepted by the user.\n' \
             'When the user asks to show the original text of an example, call show_original_text API passing the example number.\n' \
             'When the user accepts an output (directly or indirectly), call output_accepted API passing the example number and the output text. ' \
+            'when the user asks to update the prompt, share the prompt with him.\n' \
             'Continue your conversation with the user after they accept the output.\n' \
             'Remember to communicate only via API calls.'
 
@@ -271,7 +272,7 @@ class CallbackChatManager(ChatManagerBase):
             self.add_system_message(f'Example {example_num}: {output}')
             self.output_discussion_state['model_outputs'][i] = output
 
-        self.add_system_message(self.model_prompts.analyze_result_instruction)
+        self.add_system_message(self.model_prompts.analyze_result_instruction, example_num)
         self.submit_model_chat_and_process_response()
 
     def output_accepted(self, example_num, output):

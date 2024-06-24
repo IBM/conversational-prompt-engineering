@@ -9,6 +9,11 @@
       "model_id": "meta-llama/llama-3-70b-instruct",
       "max_new_tokens": 2048,
       "max_total_tokens": 8196
+    },
+    "prometheus_7b": {
+        "model_id": "kaist-ai/prometheus-8x7b-v2",
+        "max_new_tokens": 4096,
+        "max_total_tokens": 32768
     }
   },
   "api_endpoint": "https://bam-api.res.ibm.com"
