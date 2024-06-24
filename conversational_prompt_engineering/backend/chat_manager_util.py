@@ -8,11 +8,9 @@ import datetime
 import pandas as pd
 from genai.schema import ChatRole
 
+from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt, LLAMA_END_OF_MESSAGE, \
+    _get_llama_header, LLAMA_START_OF_INPUT
 from conversational_prompt_engineering.util.bam import BamGenerate
-
-LLAMA_END_OF_MESSAGE = "<|eot_id|>"
-
-LLAMA_START_OF_INPUT = '<|begin_of_text|>'
 
 
 def extract_delimited_text(txt, delims):
@@ -28,9 +26,6 @@ def extract_delimited_text(txt, delims):
     except ValueError:
         return txt
 
-
-def _get_llama_header(role):
-    return "<|start_header_id|>" + role + "<|end_header_id|>"
 
 
 class ChatManagerBase:
@@ -53,19 +48,14 @@ class ChatManagerBase:
 
         os.makedirs(self.out_dir, exist_ok=True)
 
-    def save_prompts_and_config(self, approved_prompts):
+    def save_prompts_and_config(self, approved_prompts, approved_outputs):
         chat_dir = os.path.join(self.out_dir, "chat")
         os.makedirs(chat_dir, exist_ok=True)
         with open(os.path.join(chat_dir, "prompts.json"), "w") as f:
-            # if self.state == ConversationState.CONFIRM_PROMPT:
-            #     approved_prompts = approved_prompts[:-1]  # the last prompt is not confirmed yet
-            # for p in approved_prompts:
-            #     p['prompt_with_format'] = build_few_shot_prompt(p['prompt'], [],
-            #                                                     self.bam_client.parameters['model_id'])
-            #     p['prompt_with_format_and_few_shots'] = build_few_shot_prompt(p['prompt'], self.approved_summaries[
-            #                                                                                :self.validated_example_idx],
-            #                                                                   self.bam_client.parameters[
-            #                                                                       'model_id'])
+            for p in approved_prompts:
+                p['prompt_with_format'] = build_few_shot_prompt(p['prompt'], [], self.bam_client.parameters['model_id'])
+                p['prompt_with_format_and_few_shots'] = build_few_shot_prompt(p['prompt'], approved_outputs,
+                                                                              self.bam_client.parameters['model_id'])
             json.dump(approved_prompts, f)
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
             json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name}, f)
