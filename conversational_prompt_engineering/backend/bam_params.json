@@ -5,7 +5,7 @@
       "max_new_tokens": 4096,
       "max_total_tokens": 32768
     },
-    "llama3": {
+    "llama-3": {
       "model_id": "meta-llama/llama-3-70b-instruct",
       "max_new_tokens": 2048,
       "max_total_tokens": 8196

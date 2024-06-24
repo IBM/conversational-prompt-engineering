@@ -1,3 +1,4 @@
+import logging
 from concurrent.futures import ThreadPoolExecutor
 
 from genai.schema import ChatRole
@@ -28,20 +29,29 @@ class ModelPrompts:
         self.api = {
             'self.submit_message_to_user(message)': 'call this function to submit your message to the user. Use markdown to mark the prompts and the outputs.',
             'self.submit_prompt(prompt)': 'call this function to inform the system that you have a new suggestion for the prompt. Use it only with the prompts approved by the user.',
+            'self.switch_to_example(example_num)': 'call this function before you start discussing with the user an output of a specific example, and pass the example number as parameter.',
             'self.show_original_text(example_num)': 'call this function when the user asks to show the original text of an example, and pass the example number as parameter',
             'self.output_accepted(example_num, output)': 'call this function every time the user accepts an output. Pass the example number and the output text as parameters.',
             'self.end_outputs_discussion()': 'call this function after all the outputs have been discussed with the user and all the outputs were accepted by the user.',
             'self.conversation_end()': 'call this function when the user wants to end the conversation.',
+            'self.create_baseline_instruction(instruction)': 'call this function the user explains the task. You should only use this callback when asked to'
         }
+
+        self.discuss_example_num = 'Discuss with the user the output of Example '
 
         self.examples_intro = 'Here are some examples of the input texts provided by the user:'
 
-        self.examples_instruction = \
+        self.task_definition_instruction = \
             'Start with asking the user which task they would like to perform on the texts. ' \
-            'Then, before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences. Please take into account the specific characteristics of the data. ' \
+            'Once the task is clear to you, call create_baseline_instruction API with your suggestion of a general prompt.'
+
+        self.analyze_examples = \
+            'Before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences. Please take into account the specific characteristics of the data. ' \
             'Your suggested prompt should reflect the user\'s expectations from the task output as expressed during the chat.' \
             'Share the suggested prompt with the user before submitting it.' \
             'Remember to communicate only via API calls.'
+
+
 
         self.result_intro = 'Based on the suggested prompt, the model has produced the following outputs for the user input examples:'
 
@@ -51,6 +61,7 @@ class ModelPrompts:
             'The discussion should result in an output accepted by the user.\n' \
             'When the user asks to show the original text of an example, call show_original_text API passing the example number.\n' \
             'When the user accepts an output (directly or indirectly), call output_accepted API passing the example number and the output text. ' \
+            'when the user asks to update the prompt, share the prompt with him.\n' \
             'Continue your conversation with the user after they accept the output.\n' \
             'Remember to communicate only via API calls.'
 
@@ -101,13 +112,14 @@ class CallbackChatManager(ChatManagerBase):
         super().__init__(bam_api_key, model, conv_id)
         self.model_prompts = {
             'mixtral': MixtralPrompts,
-            'llama3': Llama3Prompts,
+            'llama-3': Llama3Prompts,
         }[model]()
 
         self.api_names = None
 
         self.model_chat = []
         self.model_chat_length = 0
+        self.example_num = None
         self.user_chat = []
         self.user_chat_length = 0
 
@@ -117,9 +129,12 @@ class CallbackChatManager(ChatManagerBase):
         self.examples = None
         self.outputs = None
         self.prompts = []
+        self.baseline_prompt = ""
 
         self.output_discussion_state = None
         self.calls_queue = []
+
+        self.user_baseline_model = True
 
     @property
     def approved_prompts(self):
@@ -133,13 +148,24 @@ class CallbackChatManager(ChatManagerBase):
     def validated_example_idx(self):
         return len([s for s in self.outputs if s is not None])
 
-    def add_system_message(self, msg):
-        self._add_msg(self.model_chat, ChatRole.SYSTEM, msg)
+    def _add_msg(self, chat, role, msg, example_num=None):
+        message = {'role': role, 'content': msg}
+        if example_num is not None:
+            message['example_num'] = example_num
+        chat.append(message)
+
+    def add_system_message(self, msg, example_num=None):
+        self._add_msg(self.model_chat, ChatRole.SYSTEM, msg, example_num)
+
+    @property
+    def _filtered_model_chat(self):
+        return [msg for msg in self.model_chat
+                if self.example_num is None or msg.get('example_num', self.example_num) == self.example_num]
 
     def submit_model_chat_and_process_response(self):
         execute_calls = len(self.calls_queue) == 0
         if len(self.model_chat) > self.model_chat_length:
-            resp = self._get_assistant_response(self.model_chat)
+            resp = self._get_assistant_response(self._filtered_model_chat)
             self._add_msg(self.model_chat, ChatRole.ASSISTANT, resp)
             if resp.startswith('```python\n'):
                 resp = resp[len('```python\n'): -len('\n```')]
@@ -166,7 +192,11 @@ class CallbackChatManager(ChatManagerBase):
     def add_user_message(self, message):
         self._add_msg(self.user_chat, ChatRole.USER, message)
         self.user_chat_length = len(self.user_chat)  # user message is rendered by cpe
-        self._add_msg(self.model_chat, ChatRole.USER, message)
+        self._add_msg(self.model_chat, ChatRole.USER, message)  # not adding dummy initial user message
+
+    def add_user_message_only_to_user_chat(self, message):
+        self._add_msg(self.user_chat, ChatRole.USER, message)
+        self.user_chat_length = len(self.user_chat)  # user message is rendered by cpe
 
     def add_welcome_message(self):
         static_assistant_hello_msg = [
@@ -185,6 +215,7 @@ class CallbackChatManager(ChatManagerBase):
             self.user_chat_length = len(self.user_chat)
         self.save_chat_html(self.user_chat, "user_chat.html")
         self.save_chat_html(self.model_chat, "model_chat.html")
+        self.save_prompts_and_config(self.approved_prompts)
         return agent_messages
 
     def submit_message_to_user(self, message):
@@ -195,6 +226,27 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg=txt)
         self.add_system_message(f'The original text for Example {example_num} was shown to the user.')
 
+
+    def create_baseline_instruction(self, baseline_instruction):
+        logging.info(f"baseline instruction suggested by the model is: {baseline_instruction}")
+        self.baseline_prompt = baseline_instruction
+        #tmp_chat = self.model_chat[:] # create a side chat with the existing context
+        #self._add_msg(tmp_chat, ChatRole.SYSTEM, "Given the task and examples provided by the user, suggest a general prompt for the task")
+        #resp = self._get_assistant_response(tmp_chat)
+        self.add_system_message(self.model_prompts.analyze_examples)
+        self.submit_model_chat_and_process_response()
+
+    def switch_to_example(self, example_num):
+        example_num = int(example_num)
+        self.example_num = example_num
+        self.calls_queue = []
+        last_msg = self.model_chat[-1]
+        submit_message_to_user = 'self.submit_message_to_user'
+        if submit_message_to_user in last_msg['content']:
+            last_msg['content'] = last_msg['content'][:last_msg['content'].index(submit_message_to_user)]
+        self.add_system_message(self.model_prompts.discuss_example_num + str(self.example_num))
+        self.submit_model_chat_and_process_response()
+
     def submit_prompt(self, prompt):
         self.calls_queue = []
         self.prompts.append(prompt)
@@ -203,7 +255,7 @@ class CallbackChatManager(ChatManagerBase):
         with ThreadPoolExecutor(max_workers=len(self.examples)) as executor:
             for i, example in enumerate(self.examples):
                 tmp_chat = []
-                self._add_msg(tmp_chat, ChatRole.SYSTEM, prompt + '\Text: ' + example + '\nOutput: ')
+                self._add_msg(tmp_chat, ChatRole.SYSTEM, prompt + '\nText: ' + example + '\nOutput: ')
                 futures[i] = executor.submit(self._get_assistant_response, tmp_chat)
 
         self.output_discussion_state = {
@@ -213,11 +265,11 @@ class CallbackChatManager(ChatManagerBase):
         self.add_system_message(self.model_prompts.result_intro)
         for i, f in futures.items():
             output = f.result()
-            self.add_system_message(f'Example {i + 1}: {output}')
+            example_num = i + 1
+            self.add_system_message(f'Example {example_num}: {output}')
             self.output_discussion_state['model_outputs'][i] = output
 
-        self.add_system_message(self.model_prompts.analyze_result_instruction)
-
+        self.add_system_message(self.model_prompts.analyze_result_instruction, example_num)
         self.submit_model_chat_and_process_response()
 
     def output_accepted(self, example_num, output):
@@ -263,9 +315,12 @@ class CallbackChatManager(ChatManagerBase):
 
         self.add_system_message(self.model_prompts.examples_intro)
         for i, ex in enumerate(self.examples):
-            self.add_system_message(f'Example {i + 1}: {ex}')
+            example_num = i + 1
+            self.example_num = example_num
+            self.add_system_message(f'Example {example_num}: {ex}', example_num)
+        self.example_num = None
 
-        self.add_system_message(self.model_prompts.examples_instruction)
+        self.add_system_message(self.model_prompts.task_definition_instruction)
 
         self.submit_model_chat_and_process_response()
 
