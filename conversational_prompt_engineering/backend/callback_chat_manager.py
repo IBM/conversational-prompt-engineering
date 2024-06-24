@@ -111,7 +111,7 @@ class CallbackChatManager(ChatManagerBase):
     def __init__(self, bam_api_key, model, conv_id) -> None:
         super().__init__(bam_api_key, model, conv_id)
         self.model_prompts = {
-            'mixtral': Llama3Prompts,
+            'mixtral': MixtralPrompts,
             'llama-3': Llama3Prompts,
         }[model]()
 
