@@ -5,7 +5,7 @@ from collections import Counter
 import streamlit as st
 import pandas as pd
 
-from conversational_prompt_engineering.backend.double_chat_manager import build_few_shot_prompt, BASELINE_PROMPT
+from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_eval
 import time
@@ -34,7 +34,7 @@ def previous_text():
 
 def display_summary(side):
     summary = st.session_state.generated_data[st.session_state.count][side]
-    st.text_area(label=f"summary_{side}", value=summary, label_visibility="collapsed", height=200)
+    st.text_area(label=f"output_{side}", value=summary, label_visibility="collapsed", height=200)
 
 
 def display_selected(selection):
@@ -76,12 +76,12 @@ def run():
         st.write("Evaluation will be open after at least one prompt has been curated in the chat.")
     else:
 
-        baseline_prompt = build_few_shot_prompt(BASELINE_PROMPT, [],
+        baseline_prompt = build_few_shot_prompt(st.session_state.manager.baseline_instruction, [],
                                                 st.session_state.manager.bam_client.parameters['model_id'])
         zero_shot_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
                                                  [],
                                                  st.session_state.manager.bam_client.parameters['model_id'])
-        few_shot_examples = st.session_state.manager.approved_summaries[:st.session_state.manager.validated_example_idx]
+        few_shot_examples = st.session_state.manager.approved_outputs[:st.session_state.manager.validated_example_idx]
         current_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
                                                few_shot_examples,
                                                st.session_state.manager.bam_client.parameters['model_id'])
@@ -89,12 +89,11 @@ def run():
         # present instructions
         st.title("IBM Research Conversational Prompt Engineering - Evaluation")
         with st.expander("Instructions (click to expand)"):
-            st.markdown("1) First, upload test data in csv format, containing a single column named text. Alternatively, if you used one of our pre curated datasets, you can proceed with its evaluation set.")
-            st.markdown(f"2) In case you uploaded your own file, {NUM_EXAMPLES} examples are chosen at random for evaluation.")
-            st.markdown("3) Below you can see the prompts that were curated during your chat and will be used for evaluation.")
-            st.markdown(f"4) Next, click on ***Summarize***. Each prompt will be used to generate a summary for each of the examples.")
-            st.markdown("5) After the summaries are generated, select the best summary for each text. The order of the summaries is mixed for each example.")
-            st.markdown("6) When you are done, click on ***Submit*** to present the evaluation scores.")
+            st.markdown(f"1) In case you built the prompt using your own data rather than a datasets from our catalog, you should upload a csv file with the evaluation examples. {NUM_EXAMPLES} examples are chosen at random for evaluation.")
+            st.markdown("2) Below you can see the prompts that were curated during your chat and will be used for evaluation.")
+            st.markdown(f"3) Next, click on ***Generate output***. Each prompt will be used to generate an output for each of the examples.")
+            st.markdown("4) After the outputs are generated, select the best output for each text. The order of the outputs is mixed for each example.")
+            st.markdown("5) When you are done, click on ***Submit*** to present the evaluation scores.")
 
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -140,11 +139,11 @@ def run():
         # show summarize button
         st.session_state.evaluate_clicked = False
         if test_texts is not None:
-            st.session_state.evaluate_clicked = st.button("Summarize")
+            st.session_state.evaluate_clicked = st.button("Generate outputs")
 
         # summarize texts using prompts
         if st.session_state.evaluate_clicked:
-            with st.spinner('Summarizing...'):
+            with st.spinner('Generating outputs...'):
                 generated_data_mixed, generated_data_ordered = \
                     st.session_state.evaluation.summarize(st.session_state.prompts,
                                                           test_texts)
@@ -165,7 +164,7 @@ def run():
                     pass
             display_text()
             st.divider()
-            st.subheader("Generated summaries (random order)")
+            st.subheader("Generated outputs (random order)")
             col1, col2 = st.columns(2)
             with col1:
                 display_summary("0")

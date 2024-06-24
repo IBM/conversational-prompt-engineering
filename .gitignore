@@ -1,4 +1,7 @@
 # Project only
+conversational_prompt_engineering/_out/
+
+# Project only
 conversational_prompt_engineering/_out*
 
 

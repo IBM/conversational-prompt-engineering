@@ -1,19 +1,23 @@
 import logging
 import os
 import time
-import hashlib
 
 import pandas as pd
 import streamlit as st
+import hashlib
+from genai.schema import ChatRole
 from streamlit_js_eval import streamlit_js_eval
 
+from conversational_prompt_engineering.backend.callback_chat_manager import CallbackChatManager
 from conversational_prompt_engineering.backend.double_chat_manager import DoubleChatManager
 from conversational_prompt_engineering.backend.manager import Manager, Mode
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
-from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_train
+from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
+    create_choose_dataset_component_train
 from st_pages import Page, show_pages, hide_pages
 
-st.set_page_config(layout="wide")
+version = "callback manager v1.0.5"
+st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"})
 
 show_pages(
     [
@@ -27,8 +31,10 @@ def old_reset_chat():
     st.session_state.manager = Manager(st.session_state.mode, st.session_state.key)
     st.session_state.messages = []
 
+
 def reset_chat():
     streamlit_js_eval(js_expressions="parent.window.location.reload()")
+
 
 def new_cycle():
     # 1. create the manager if necessary
@@ -50,10 +56,9 @@ def new_cycle():
     if st.button("Reset chat"):
         streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
-    uploaded_file = create_choose_dataset_component_train(st=st, manager=manager)
-    if uploaded_file:
-        manager.add_user_message("Selected data")
+    create_choose_dataset_component_train(st=st, manager=manager)
 
+    # 4. user input
     if user_msg := st.chat_input("Write your message here"):
         manager.add_user_message(user_msg)
 
@@ -63,13 +68,48 @@ def new_cycle():
             st.write(msg['content'])
 
     # 6. generate and render the agent response
+    msg = manager.generate_agent_message()
+    if msg is not None:
+        with st.chat_message(msg['role']):
+            st.write(msg['content'])
+
+
+
+def callback_cycle():
+    # create the manager if necessary
+    if "manager" not in st.session_state:
+        sha1 = hashlib.sha1()
+        sha1.update(st.session_state.key.encode('utf-8'))
+        st.session_state.conv_id = sha1.hexdigest()[:16]  # deterministic hash of 16 characters
+
+        st.session_state.manager = CallbackChatManager(bam_api_key=st.session_state.key, model=st.session_state.model,
+                                                       conv_id=st.session_state.conv_id)
+        st.session_state.manager.add_welcome_message()
+
+    manager = st.session_state.manager
+
+    # layout reset and upload buttons in 3 columns
+    if st.button("Reset chat"):
+        streamlit_js_eval(js_expressions="parent.window.location.reload()")
+
+    uploaded_file = create_choose_dataset_component_train(st=st, manager=manager)
+    if uploaded_file:
+        manager.add_user_message_only_to_user_chat("Selected data")
+
+    if user_msg := st.chat_input("Write your message here"):
+        manager.add_user_message(user_msg)
+
+    for msg in manager.user_chat[:manager.user_chat_length]:
+        with st.chat_message(msg['role']):
+            st.write(msg['content'])
+
+    # generate and render the agent response
     with st.spinner("Thinking..."):
-        if not uploaded_file:
-            msg = manager.generate_agent_message()
-        else:
-            msg = manager.process_examples(read_user_csv_file(st.session_state["csv_file_train"]), st.session_state[
+        if uploaded_file:
+            manager.process_examples(read_user_csv_file(st.session_state["csv_file_train"]), st.session_state[
                 "selected_dataset"] if "selected_dataset" in st.session_state else "user")
-        if msg is not None:
+        messages = manager.generate_agent_messages()
+        for msg in messages:
             with st.chat_message(msg['role']):
                 st.write(msg['content'])
 
@@ -130,7 +170,7 @@ def old_cycle():
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-st.title("IBM Research Conversational Prompt Engineering")
+st.title(":blue[IBM Research Conversational Prompt Engineering]")
 if 'BAM_APIKEY' in os.environ:
     st.session_state['key'] = os.environ['BAM_APIKEY']
     st.session_state.model = 'llama-3'
@@ -143,23 +183,26 @@ if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
             "This service is intended to help users build an effective prompt, tailored to their specific summarization use case, through a simple chat with an LLM.")
         st.write(
             "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.")
-        st.write("For more information feel free to contact us via slack at [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
+        st.write(
+            "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
         st.write(
             "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
         st.write("To proceed, please provide your BAM API key and select a model.")
         key = st.text_input(label="BAM API key")
-        model = st.radio(label="Select model", options=["llama-3", "mixtral", "granite"],
+        model = st.radio(label="Select model", options=["llama-3", "mixtral"],
                          captions=["llama-3-70B-instruct. Recommended for most use-cases.",
-                                   "mixtral-8x7B-instruct-v01. Recommended for very long documents.",
-                                   "granite-13b-chat-v2. Experimental."])
+                                   "mixtral-8x7B-instruct-v01. Recommended for very long documents."])
         submit = st.form_submit_button()
-        if submit and len(key) > 20:
-            st.session_state.key = key
-            st.session_state.model = model
-            entry_page.empty()
-        elif submit and len(key) <= 20:
-            st.write("BAM key too short")
+        if submit:
+            if len(key) != 0:
+                st.session_state.key = key
+                st.session_state.model = model
+                entry_page.empty()
+            else:
+                st.error(':heavy_exclamation_mark: You cannot proceed without providing your BAM API key')
 
 if 'key' in st.session_state:
-    new_cycle()
+    callback_cycle()
+    # new_cycle()
     # old_cycle()
+

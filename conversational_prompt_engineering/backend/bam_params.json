@@ -15,6 +15,11 @@
       "max_new_tokens": 1024,
       "max_total_tokens": 8192,
       "repetition_penalty": 1.05
+    },
+    "prometheus_7b": {
+        "model_id": "kaist-ai/prometheus-8x7b-v2",
+        "max_new_tokens": 4096,
+        "max_total_tokens": 32768
     }
   },
   "api_endpoint": "https://bam-api.res.ibm.com"

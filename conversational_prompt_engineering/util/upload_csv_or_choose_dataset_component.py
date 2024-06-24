@@ -1,6 +1,7 @@
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.data.dataset_name_to_dir import dataset_name_to_dir
 
+
 def add_download_button(st, split_name):
     #this button should be present during all the session.
     selected_file_dir = dataset_name_to_dir.get(st.session_state["selected_dataset"])[split_name]
@@ -24,7 +25,7 @@ def rander_component(st, default_value_for_droplist, split_name):
 
     with col2:
         if selected_dataset == upload_your_csv:
-            if uploaded_file := st.file_uploader("Upload text examples csv"):
+            if uploaded_file := st.file_uploader("Upload text examples csv (comma separated) file.\n\n Your file should contain a column named \"text\""):
                 st.session_state[f"csv_file_{split_name}"] = uploaded_file
 
 
@@ -34,11 +35,11 @@ def create_choose_dataset_component_train(st, manager):
         rander_component(st, default_value_for_droplist=None, split_name='train')
         if "csv_file_train" in st.session_state:
             uploaded_file = True
+            # manager.process_examples(read_user_csv_file(st.session_state["csv_file_train"]), st.session_state["selected_dataset"] if "selected_dataset" in st.session_state else "user")
     if "selected_dataset" in st.session_state:
         add_download_button(st, 'train')
         st.write(f"Using {st.session_state['selected_dataset']} dataset")
     return uploaded_file
-
 
 
 def create_choose_dataset_component_eval(st):
@@ -49,7 +50,7 @@ def create_choose_dataset_component_eval(st):
     rander_component(st, default_value_for_droplist=selected_index, split_name='eval')
     if "selected_dataset" in st.session_state:
         add_download_button(st, 'eval')
-        st.write(f"Using {st.session_state['selected_dataset']} dataset")
-
     if "csv_file_eval" in st.session_state:
         return read_user_csv_file(st.session_state["csv_file_eval"]).text.tolist()
+
+
