@@ -1,6 +1,7 @@
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.data.dataset_name_to_dir import dataset_name_to_dir
 
+
 def add_download_button(st, split_name):
     #this button should be present during all the session.
     selected_file_dir = dataset_name_to_dir.get(st.session_state["selected_dataset"])[split_name]
@@ -51,3 +52,8 @@ def create_choose_dataset_component_eval(st):
         add_download_button(st, 'eval')
     if "csv_file_eval" in st.session_state:
         return read_user_csv_file(st.session_state["csv_file_eval"]).text.tolist()
+
+
+def add_evaluator_input(st, manager):
+    user_session_name = st.text_input(label="Optional session name", key="eval_input_session_name")
+    return user_session_name

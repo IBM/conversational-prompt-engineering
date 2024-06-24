@@ -13,7 +13,7 @@ from conversational_prompt_engineering.backend.double_chat_manager import Double
 from conversational_prompt_engineering.backend.manager import Manager, Mode
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
-    create_choose_dataset_component_train
+    create_choose_dataset_component_train, add_evaluator_input
 from st_pages import Page, show_pages, hide_pages
 
 version = "callback manager v1.0.3"
@@ -23,6 +23,8 @@ show_pages(
     [
         Page("cpe.py", "Chat", ""),
         Page("pages/evaluation.py", "Evaluate", ""),
+        Page("pages/survey.py", "Survey", ""),
+
     ]
 )
 
@@ -89,9 +91,14 @@ def callback_cycle():
     if st.button("Reset chat"):
         streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
+    add_evaluator_input(st, manager, )
+
+
+
     uploaded_file = create_choose_dataset_component_train(st=st, manager=manager)
     if uploaded_file:
         manager.add_user_message_only_to_user_chat("Selected data")
+
 
     if user_msg := st.chat_input("Write your message here"):
         manager.add_user_message(user_msg)
@@ -202,4 +209,5 @@ if 'key' in st.session_state:
     callback_cycle()
     # new_cycle()
     # old_cycle()
+
 
