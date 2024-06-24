@@ -268,7 +268,7 @@ class CallbackChatManager(ChatManagerBase):
             self.add_system_message(f'Example {example_num}: {output}')
             self.output_discussion_state['model_outputs'][i] = output
 
-        self.add_system_message(self.model_prompts.analyze_result_instruction)
+        self.add_system_message(self.model_prompts.analyze_result_instruction, example_num)
         self.submit_model_chat_and_process_response()
 
     def output_accepted(self, example_num, output):
