@@ -120,7 +120,7 @@ def run():
 
     else:
 
-        baseline_prompt = build_few_shot_prompt(st.session_state.manager.baseline_instruction, [],
+        baseline_prompt = build_few_shot_prompt(st.session_state.manager.baseline_prompt, [],
                                                 st.session_state.manager.bam_client.parameters['model_id'])
         zero_shot_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
                                                  [],
