@@ -182,7 +182,7 @@ if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
     with entry_page.form("my_form"):
         st.write("Welcome to IBM Research Conversational Prompt Engineering (CPE) service.")
         st.write(
-            "This service is intended to help users build an effective prompt, tailored to their specific summarization use case, through a simple chat with an LLM.")
+            "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.")
         st.write(
             "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.")
         st.write(
