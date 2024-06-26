@@ -76,15 +76,14 @@ def run():
         st.write("Evaluation will be open after at least one prompt has been curated in the chat.")
     else:
 
-        baseline_prompt = build_few_shot_prompt(st.session_state.manager.baseline_instruction, [],
-                                                st.session_state.manager.bam_client.parameters['model_id'])
-        zero_shot_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
-                                                 [],
-                                                 st.session_state.manager.bam_client.parameters['model_id'])
+        baseline_prompt = build_few_shot_prompt(st.session_state.manager.baseline_prompt, [],
+                                                st.session_state.manager.target_bam_client.parameters['model_id'])
+        zero_shot_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'], [],
+                                                 st.session_state.manager.target_bam_client.parameters['model_id'])
         few_shot_examples = st.session_state.manager.approved_outputs[:st.session_state.manager.validated_example_idx]
         current_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
                                                few_shot_examples,
-                                               st.session_state.manager.bam_client.parameters['model_id'])
+                                               st.session_state.manager.target_bam_client.parameters['model_id'])
 
         # present instructions
         st.title("IBM Research Conversational Prompt Engineering - Evaluation")
@@ -100,7 +99,7 @@ def run():
             if st.button("Reset evaluation"):
                 reset_evaluation()
 
-            st.write(f"Using model [{st.session_state.manager.bam_client.parameters['model_id']}](https://bam.res.ibm.com/docs/models#{st.session_state.manager.bam_client.parameters['model_id'].replace('/', '-')})")
+            st.write(f"Using model [{st.session_state.manager.target_bam_client.parameters['model_id']}](https://bam.res.ibm.com/docs/models#{st.session_state.manager.target_bam_client.parameters['model_id'].replace('/', '-')})")
 
         test_texts = create_choose_dataset_component_eval(st)
 
@@ -119,7 +118,7 @@ def run():
 
         # get prompts to evaluate
         if 'evaluation' not in st.session_state:
-            st.session_state.evaluation = Evaluation(st.session_state.manager.bam_client)
+            st.session_state.evaluation = Evaluation(st.session_state.manager.target_bam_client)
 
         st.session_state.prompts = [prompt_to_compare, current_prompt]
 
