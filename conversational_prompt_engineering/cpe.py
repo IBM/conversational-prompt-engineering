@@ -83,6 +83,7 @@ def callback_cycle():
         st.session_state.conv_id = sha1.hexdigest()[:16]  # deterministic hash of 16 characters
 
         st.session_state.manager = CallbackChatManager(bam_api_key=st.session_state.key, model=st.session_state.model,
+                                                       target_model=st.session_state.target_model,
                                                        conv_id=st.session_state.conv_id)
         st.session_state.manager.add_welcome_message()
 
@@ -174,6 +175,7 @@ st.title(":blue[IBM Research Conversational Prompt Engineering]")
 if 'BAM_APIKEY' in os.environ:
     st.session_state['key'] = os.environ['BAM_APIKEY']
     st.session_state.model = 'llama-3'
+    st.session_state.target_model = 'llama-3'
 
 if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
     entry_page = st.empty()
@@ -189,14 +191,15 @@ if 'BAM_APIKEY' not in os.environ and "key" not in st.session_state:
             "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
         st.write("To proceed, please provide your BAM API key and select a model.")
         key = st.text_input(label="BAM API key")
-        model = st.radio(label="Select model", options=["llama-3", "mixtral"],
+        model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.", options=["llama-3", "mixtral"],
                          captions=["llama-3-70B-instruct. Recommended for most use-cases.",
                                    "mixtral-8x7B-instruct-v01. Recommended for very long documents."])
         submit = st.form_submit_button()
         if submit:
             if len(key) != 0:
                 st.session_state.key = key
-                st.session_state.model = model
+                st.session_state.model = 'llama-3'
+                st.session_state.target_model = model
                 entry_page.empty()
             else:
                 st.error(':heavy_exclamation_mark: You cannot proceed without providing your BAM API key')

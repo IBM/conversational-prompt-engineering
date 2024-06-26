@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from genai.schema import ChatRole
 
 from conversational_prompt_engineering.backend.chat_manager_util import ChatManagerBase
+from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
 
 
 class ModelPrompts:
@@ -93,8 +94,8 @@ class Llama3Prompts(ModelPrompts):
 
 
 class CallbackChatManager(ChatManagerBase):
-    def __init__(self, bam_api_key, model, conv_id) -> None:
-        super().__init__(bam_api_key, model, conv_id)
+    def __init__(self, bam_api_key, model, conv_id, target_model) -> None:
+        super().__init__(bam_api_key, model, conv_id, target_model)
         self.model_prompts = {
             'mixtral': MixtralPrompts,
             'llama-3': Llama3Prompts,
@@ -259,9 +260,11 @@ class CallbackChatManager(ChatManagerBase):
         futures = {}
         with ThreadPoolExecutor(max_workers=len(self.examples)) as executor:
             for i, example in enumerate(self.examples):
-                tmp_chat = []
-                self._add_msg(tmp_chat, ChatRole.SYSTEM, prompt + '\nText: ' + example + '\nOutput: ')
-                futures[i] = executor.submit(self._get_assistant_response, tmp_chat)
+                prompt_str = build_few_shot_prompt(prompt,
+                                                   [],  # currently doing zero-shot summarization
+                                                   self.summarization_bam_client.parameters['model_id'])
+                prompt_str = prompt_str.format(text=example)
+                futures[i] = executor.submit(self._generate_summary, prompt_str)
 
         self.output_discussion_state = {
             'model_outputs': [None] * len(self.examples),
