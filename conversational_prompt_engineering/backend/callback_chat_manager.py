@@ -38,7 +38,10 @@ class ModelPrompts:
             'self.task_is_defined()': 'call this function when the user has defined the task and it\'s clear to you. You should only use this callback once'
         }
 
-        self.discuss_example_num = 'Discuss with the user the output of Example '
+        self.discuss_example_num = \
+            'Discuss with the user the output of Example EXAMPLE_NUM. ' \
+            'If there already is an accepted output for this example, compare it to the new one. ' \
+            'Analyze the difference between the two outputs, and communicate it to the user.'
 
         self.examples_intro = 'Here are some examples of the input texts provided by the user:'
 
@@ -50,7 +53,7 @@ class ModelPrompts:
             'Before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences. Please take into account the specific characteristics of the data. ' \
             'Your suggested prompt should reflect the user\'s expectations from the task output as expressed during the chat.' \
             'Share the suggested prompt with the user before submitting it.' \
-            'Remember to communicate only via API calls.'\
+            'Remember to communicate only via API calls.' \
             'From this point, don\'t use task_is_defined API'
 
         self.generate_baseline_instruction_task = \
@@ -249,7 +252,7 @@ class CallbackChatManager(ChatManagerBase):
         self.example_num = example_num
         self.calls_queue = []
         self._strip_user_message()
-        discuss_ex = self.model_prompts.discuss_example_num + str(self.example_num)
+        discuss_ex = self.model_prompts.discuss_example_num.replace('EXAMPLE_NUM', str(self.example_num))
         self.add_system_message(discuss_ex)
         self.submit_model_chat_and_process_response()
 
@@ -290,8 +293,15 @@ class CallbackChatManager(ChatManagerBase):
         temp_chat = []
         self._add_msg(temp_chat, ChatRole.SYSTEM,
                       self.model_prompts.analyze_discussion_task.replace('PROMPT', self.prompts[-1]))
-        txt_produced_accepted = zip(self.examples, self.output_discussion_state['model_outputs'], self.outputs)
-        for i, (txt, produced, accepted) in enumerate(txt_produced_accepted):
+
+        txt_produced_accepted = (self.examples, self.output_discussion_state['model_outputs'], self.outputs)
+        if any(data is None for data in txt_produced_accepted) or \
+                any(len(d1) != len(d2) for d1, d2 in zip(txt_produced_accepted, txt_produced_accepted[1:])):
+            err = '; '.join([f'{name}: {None if val is None else len(val)}'
+                             for name, val in zip(['example', 'produced', 'accepted'], txt_produced_accepted)])
+            raise ValueError(err)
+
+        for i, (txt, produced, accepted) in enumerate(zip(*txt_produced_accepted)):
             example_txt = f'Example {i + 1}\nText:{txt}\nModel output:{produced}\nAccepted output:{accepted}'
             self._add_msg(temp_chat, ChatRole.SYSTEM, example_txt)
 
