@@ -38,10 +38,10 @@ class ChatManagerBase:
         bam_params['api_key'] = bam_api_key
         bam_params['api_endpoint'] = params['api_endpoint']
         self.bam_client = BamGenerate(bam_params)
-        summarization_bam_params = params['models'][target_model]
-        summarization_bam_params['api_key'] = bam_api_key
-        summarization_bam_params['api_endpoint'] = params['api_endpoint']
-        self.summarization_bam_client = BamGenerate(summarization_bam_params)
+        target_bam_params = params['models'][target_model]
+        target_bam_params['api_key'] = bam_api_key
+        target_bam_params['api_endpoint'] = params['api_endpoint']
+        self.target_bam_client = BamGenerate(target_bam_params)
         self.conv_id = conv_id
         self.dataset_name = None
         self.state = None
@@ -57,9 +57,9 @@ class ChatManagerBase:
         os.makedirs(chat_dir, exist_ok=True)
         with open(os.path.join(chat_dir, "prompts.json"), "w") as f:
             for p in approved_prompts:
-                p['prompt_with_format'] = build_few_shot_prompt(p['prompt'], [], self.summarization_bam_client.parameters['model_id'])
+                p['prompt_with_format'] = build_few_shot_prompt(p['prompt'], [], self.target_bam_client.parameters['model_id'])
                 p['prompt_with_format_and_few_shots'] = build_few_shot_prompt(p['prompt'], approved_outputs,
-                                                                              self.summarization_bam_client.parameters['model_id'])
+                                                                              self.target_bam_client.parameters['model_id'])
             json.dump(approved_prompts, f)
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
             json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name}, f)
@@ -123,9 +123,9 @@ class ChatManagerBase:
         logging.info(f"Highest processing time: {self.timing_report[-1]}")
         logging.info(f"Lowest processing time: {self.timing_report[0]}")
 
-    def _generate_summary(self, prompt_str):
+    def _generate_output(self, prompt_str):
         start_time = time.time()
-        generated_texts = self.summarization_bam_client.send_messages(prompt_str)
+        generated_texts = self.target_bam_client.send_messages(prompt_str)
         elapsed_time = time.time() - start_time
         timing_dict = {"state": self.state, "context_length": len(prompt_str),
                        "output_length": sum([len(gt) for gt in generated_texts]), "time": elapsed_time}

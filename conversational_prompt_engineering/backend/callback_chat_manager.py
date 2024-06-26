@@ -262,9 +262,9 @@ class CallbackChatManager(ChatManagerBase):
             for i, example in enumerate(self.examples):
                 prompt_str = build_few_shot_prompt(prompt,
                                                    [],  # currently doing zero-shot summarization
-                                                   self.summarization_bam_client.parameters['model_id'])
+                                                   self.target_bam_client.parameters['model_id'])
                 prompt_str = prompt_str.format(text=example)
-                futures[i] = executor.submit(self._generate_summary, prompt_str)
+                futures[i] = executor.submit(self._generate_output, prompt_str)
 
         self.output_discussion_state = {
             'model_outputs': [None] * len(self.examples),
