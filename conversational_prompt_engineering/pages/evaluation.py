@@ -12,11 +12,13 @@ import time
 
 NUM_EXAMPLES = 5
 
-NUM_PROMPTS_TO_COMPARE = 3
 
-RANKING_BUTTON_TITLES = ["Select best", "Select second best", "Third place"]
+dimensions = ["dim1", "dim2", "dim3"]
 
-assert (len(RANKING_BUTTON_TITLES), NUM_PROMPTS_TO_COMPARE)
+prompt_types = ["baseline", "zero_shot", "few_shot"]
+
+work_modes = ["regular", "dummy_prompts"]
+work_mode = 1
 
 def display_text():
     text = st.session_state.generated_data[st.session_state.count]['text']
@@ -38,71 +40,54 @@ def previous_text():
 
 
 def display_summary(side):
-    summary = st.session_state.generated_data[st.session_state.count][side]
+    mixed_to_real = st.session_state.generated_data[st.session_state.count]["mixed_indices"][side]
+    summary = st.session_state.generated_data[st.session_state.count][f"{mixed_to_real}_summary"]
+    st.write(f"Summary {side+1}")
     st.text_area(label=f"output_{side}", value=summary, label_visibility="collapsed", height=200)
 
 
-def display_selected(selection):
-    pass
-    #if st.session_state.generated_data[st.session_state.count]['selected_side'] and \
-    #        st.session_state.generated_data[st.session_state.count]['selected_side'] == selection:
-    #    st.write(":+1:")
-
-
-def select(prompt, side_idx):
-    def set_rank(rank, selected_prompt_index, side_idx):
-        st.session_state.generated_data[st.session_state.count]['ranked_prompts'][selected_prompt_index] = rank
-        st.session_state.generated_data[st.session_state.count]['ranked_sides'][side_idx] = rank
-
-    #prompt index is not the same as the side index because the prompts are shuffled
-    selected_prompt = st.session_state.prompts.index(prompt)
-    # we select either the best (rank 0) or the second best (rank 1)
-    curr_rank = 0 if len(st.session_state.generated_data[st.session_state.count]['ranked_prompts']) == 0 else 1
-    set_rank(curr_rank, selected_prompt, side_idx)
-    if curr_rank == 1:
-        # set the last prompt
-        missing_prompt_idx = [x for x in range(NUM_PROMPTS_TO_COMPARE) if x not in
-                            st.session_state.generated_data[st.session_state.count]['ranked_prompts']]
-        missing_side_idx = [x for x in range(NUM_PROMPTS_TO_COMPARE) if x not in
-                            st.session_state.generated_data[st.session_state.count]['ranked_sides']]
-        assert (len(missing_side_idx) == len(missing_side_idx) == 1)
-        set_rank(2, missing_prompt_idx[0], missing_side_idx[0])
-
-
-
-
-def clear_ranking():
-    st.session_state.generated_data[st.session_state.count]['ranked_prompts'].clear()
-    st.session_state.generated_data[st.session_state.count]['ranked_sides'].clear()
-
-
 def calculate_results():
-    ranked_elements = [d['ranked_prompts'] for d in st.session_state.generated_data if len(d['ranked_prompts']) > 0]
-    # generate a NUM_PROMPTS_TO_COMPARE x NUM_PROMPTS_TO_COMPARE map
-    prompts = {x : {y: 0 for y in range(NUM_PROMPTS_TO_COMPARE)} for x in range(NUM_PROMPTS_TO_COMPARE)}
+    ranked_elements = [d['prompts'] for d in st.session_state.generated_data if len(d['prompts']) > 0]
+    prompts = {p : {} for p in prompt_types}
     for ranked_element in ranked_elements:
-        for prompt_idx in range(len(st.session_state.prompts)):
-            prompts[prompt_idx][ranked_element[prompt_idx]] += 1
+        for dimension, prompt_type in ranked_element.items():
+            prompts[prompt_type][dimension] = prompts[prompt_type].get(dimension, 0) + 1
 
-    return prompts, len(ranked_element)
+    return prompts, len(ranked_elements)
 
 
 def save_results():
     out_path = os.path.join(st.session_state.manager.out_dir, "eval")
     os.makedirs(out_path, exist_ok=True)
     df = pd.DataFrame(st.session_state.generated_data)
-    for i in range(NUM_PROMPTS_TO_COMPARE):
-        df[f"ranked_prompt_{i}"] = df["ranked_prompts"].apply(lambda x: x.get(i, 0))
-        df[f"ranked_sides_{i}"] = df["ranked_sides"].apply(lambda x: x.get(i, 0))
-    df = df.drop(["ranked_sides", "ranked_prompts"], axis=1)
+    for dim in dimensions:
+        for rank in ["Best", "Worst"]:
+            df[f"ranked_prompt_{(dim,rank)}"] = df["prompts"].apply(lambda x: x.get((dim, rank)))
+            df[f"sides_{(dim,rank)}"] = df["sides"].apply(lambda x: x.get((dim, rank)))
+    df = df.drop(["sides", "prompts"], axis=1)
     df.to_csv(os.path.join(out_path, f"eval_results.csv"))
-    with open(os.path.join(out_path, f"prompts.json"), "w") as f:
-        json.dump({str(i): st.session_state.prompts[i] for i in range(len(st.session_state.prompts))}, f)
+    with open(os.path.join(out_path, f"metadata.json"), "w") as f:
+        prompts_dict = {}
+        res_dict = {"dataset": st.session_state["selected_dataset"], "prompts" : prompts_dict}
+        for i in range(len(st.session_state.eval_prompts)):
+            prompts_dict[f"prompt_{i}"] = {"prompt_text": st.session_state.eval_prompts[i], "prompt_type": prompt_types[i]}
+        json.dump(res_dict, f)
 
+def process_user_selection():
+    pass
 
 def reset_evaluation():
     st.session_state.generated_data = []
     st.session_state.evaluate_clicked = False
+
+def validate_annotation():
+    for dim in dimensions:
+        best = st.session_state.generated_data[st.session_state.count]["sides"][(dim, "Best")]
+        worst = st.session_state.generated_data[st.session_state.count]["sides"][(dim, "Worst")]
+        if (best == worst):
+            st.error(f':heavy_exclamation_mark: You cannot select the same summary as best and worst in respect to {dim}')
+            return False
+    return True
 
 
 def run():
@@ -110,10 +95,11 @@ def run():
     if 'manager' in st.session_state:
         num_prompts = len(st.session_state.manager.approved_prompts)
 
-        #TODO lena: remove this before commit!!!!!
-        if num_prompts < 1:
+        if work_mode == 1 and num_prompts < 2:
             st.session_state.manager.prompts = ["output the line: we all live in a yellow submarine", "output the line: the long and winding road"]
             num_prompts = len(st.session_state.manager.approved_prompts)
+            if st.session_state.manager.baseline_prompt == "":
+                st.session_state.manager.baseline_prompt = "summarize the following text"
 
     if num_prompts < 1:
         st.write("Evaluation will be open after at least one prompt has been curated in the chat.")
@@ -126,8 +112,8 @@ def run():
                                                  [],
                                                  st.session_state.manager.bam_client.parameters['model_id'])
         few_shot_examples = st.session_state.manager.approved_outputs[:st.session_state.manager.validated_example_idx]
-        #TODO lena: move back -2 to -1
-        current_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-2]['prompt'],
+
+        current_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1 if work_mode == 0 else -2]['prompt'],
                                                few_shot_examples,
                                                st.session_state.manager.bam_client.parameters['model_id'])
 
@@ -153,19 +139,20 @@ def run():
         if 'evaluation' not in st.session_state:
             st.session_state.evaluation = Evaluation(st.session_state.manager.bam_client)
 
-        st.session_state.prompts = [baseline_prompt, zero_shot_prompt, current_prompt]
+        st.session_state.eval_prompts = [baseline_prompt, zero_shot_prompt, current_prompt]
 
+        assert len(st.session_state.eval_prompts) == len(prompt_types), "number of prompts should be equal to the number of prompt types"
         if 'count' not in st.session_state:
             st.session_state.count = 0
 
         # show prompts
-        prompt_cols = st.columns(NUM_PROMPTS_TO_COMPARE)
+        prompt_cols = st.columns(len(prompt_types))
         prompt_text_area_titles = ["Prompt 1 (Baseline prompt)", "Prompt 2 (CPE zero shot prompt)", "Prompt 3 (CPE few shot prompt)"]
-        assert (len(prompt_text_area_titles) == NUM_PROMPTS_TO_COMPARE)
-        for i in range(NUM_PROMPTS_TO_COMPARE):
+        assert (len(prompt_text_area_titles) == len(prompt_types))
+        for i in range(len(prompt_types)):
             with prompt_cols[i]:
                 st.write(prompt_text_area_titles[i])
-                st.text_area(key=f"prompt_{i+1}", label="text", value=st.session_state.prompts[i], label_visibility="collapsed", height=200)
+                st.text_area(key=f"prompt_{i+1}", label="text", value=st.session_state.eval_prompts[i], label_visibility="collapsed", height=200)
 
 
 
@@ -177,13 +164,13 @@ def run():
         # summarize texts using prompts
         if st.session_state.evaluate_clicked:
             with st.spinner('Generating outputs...'):
-                generated_data_mixed, generated_data_ordered = \
-                    st.session_state.evaluation.summarize(st.session_state.prompts,
+                generated_data = \
+                    st.session_state.evaluation.summarize(st.session_state.eval_prompts, prompt_types,
                                                           test_texts)
-                st.session_state.generated_data = generated_data_mixed
+                st.session_state.generated_data = generated_data
                 for row in st.session_state.generated_data:
-                    row['ranked_sides'] = {}
-                    row['ranked_prompts'] = {}
+                    row['sides']= {}
+                    row['prompts']= {}
 
         # showing texts and summaries to evaluate
         if 'generated_data' in st.session_state and len(st.session_state.generated_data) > 0:
@@ -198,45 +185,51 @@ def run():
             display_text()
             st.divider()
             st.subheader("Generated outputs (random order)")
-            summary_cols_list = st.columns(NUM_PROMPTS_TO_COMPARE)
-            ranked_sides = st.session_state.generated_data[st.session_state.count]['ranked_sides']
-            button_titles = {x : RANKING_BUTTON_TITLES[0] for x in range(NUM_PROMPTS_TO_COMPARE)}
-            button_disabled = {x: False for x in range(NUM_PROMPTS_TO_COMPARE)}
+            st.write("Bellow are presented the compared summaries. Please select the best and worst summary in respect to the different aspects. ")
+            summary_cols_list = st.columns(len(prompt_types))
 
-            # set up ranking buttons
-            num_of_already_ranked = len(ranked_sides)
-            for x in range(NUM_PROMPTS_TO_COMPARE):
-                if x in ranked_sides:
-                    button_disabled[x] = True
-                    button_titles[x] = RANKING_BUTTON_TITLES[ranked_sides[x]] #if it's ranked 0, the button should have the title RANKING_BUTTON_TITLES[0]
-                else:
-                    button_titles[x] = RANKING_BUTTON_TITLES[num_of_already_ranked] #the rest of the buttons should have the first title that wasn't used yet
-
-            for i in range(NUM_PROMPTS_TO_COMPARE):
+            for i in range(len(prompt_types)):
                 with summary_cols_list[i]:
-                    display_summary(f"{i}")
-                    if st.button(button_titles[i], key=f"{i}_summary", on_click=select, disabled = button_disabled[i],
-                                 args=(st.session_state.generated_data[st.session_state.count][f"{i}_prompt"], i, )):
-                        pass
-                    display_selected(f"{i}")
+                    display_summary(i)
 
+            options = ["Best", "Worst"]
+            radio_button_labels = [f"Summary {i+1}" for i in range(len(prompt_types))]
+            for dim in dimensions:
+                st.write(f"{dim}")
+                cols = st.columns(len(options))
+                for col, op in zip(cols, options):
+                    with col:
+                        selected_value = st.radio(
+                                f"{op} summary:",
+                            # add dummy option to make it the default selection
+                                options = radio_button_labels,
+                                horizontal=True, key=f"radio_{dim}_{op}",
+                                index=st.session_state.generated_data[st.session_state.count]['sides'].get((dim,op)),
+                                )
+                        if selected_value:
+                            side_index = radio_button_labels.index(selected_value)
+                            mixed_to_real = st.session_state.generated_data[st.session_state.count]["mixed_indices"][side_index]
+                            selected_prompt = st.session_state.generated_data[st.session_state.count][f"{mixed_to_real}_prompt"]
+                            st.session_state.generated_data[st.session_state.count]['sides'][(dim,op)] = side_index
+                            st.session_state.generated_data[st.session_state.count]['prompts'][(dim,op)] = mixed_to_real
+                st.divider()
 
-            # if all([row['selected_prompt'] for row in st.session_state.generated_data]):
-            st.divider()
-            ranked_elements_num = len(st.session_state.generated_data[st.session_state.count]['ranked_sides'])
-
-            st.button("Clear selection", on_click=clear_ranking, disabled= ranked_elements_num == 0)
+            num_of_answered_questions = len(st.session_state.generated_data[st.session_state.count]['prompts'])
             # enable only after the user ranked the all summaries
-            finish_clicked = st.button("Submit", disabled=ranked_elements_num != NUM_PROMPTS_TO_COMPARE)
+            finish_clicked = st.button(f"Submit annotation for example {st.session_state.count+1}", disabled = num_of_answered_questions != len(dimensions)*len(options))
             if finish_clicked:
-                # showing aggregated results
-                results, num_of_examples = calculate_results()
-                save_results()
-                st.write(f"Compared between {len(st.session_state.prompts)} prompts")
-                for prompt_id in results:
-                    num_of_time_prompt_is_best = results[prompt_id][0]
-                    pct_val = '{0:.2f}'.format(100*num_of_time_prompt_is_best/num_of_examples)
-                    st.write(f"Prompt {int(prompt_id)+1} was chosen {num_of_time_prompt_is_best} {'times' if num_of_time_prompt_is_best != 1 else 'time'} ({pct_val}%)")
+                if validate_annotation():
+                    # showing aggregated results
+                    results, num_of_examples = calculate_results()
+                    st.write(f"Finished annotating {num_of_examples} examples")
+                    save_results()
+                    st.write(f"Compared between {len(st.session_state.eval_prompts)} prompts")
+                    for dim in dimensions:
+                        st.write(f"{dim}:")
+                        for prompt_type in results:
+                            num_of_time_prompt_is_best = results[prompt_type].get((dim, "Best"), 0)
+                            pct_val = '{0:.2f}'.format(100*num_of_time_prompt_is_best/num_of_examples)
+                            st.write(f"{prompt_type} prompt was chosen {num_of_time_prompt_is_best} {'times' if num_of_time_prompt_is_best != 1 else 'time'} ({pct_val}%) ")
 
 
 if __name__ == "__main__":
