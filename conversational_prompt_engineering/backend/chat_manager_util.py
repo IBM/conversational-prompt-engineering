@@ -48,7 +48,7 @@ class ChatManagerBase:
         self.timing_report = []
 
         self.out_dir = f'_out/{self.conv_id}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
-        logging.info(f"output is saved to {self.out_dir}")
+        logging.info(f"output is saved to {os.path.abspath(self.out_dir)}")
 
         os.makedirs(self.out_dir, exist_ok=True)
 
