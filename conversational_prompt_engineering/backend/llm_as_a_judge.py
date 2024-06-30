@@ -102,13 +102,16 @@ class LlmAsAJudge(ChatManagerBase):
             row['llm_judge'] = {}
             instruction_text = prompt.format(text=row["text"])
             # mode "absolute"
-            for idx in range(self.num_summaries):
-                row['llm_judge'].update([(f'{idx}_llm_judge_abs', self._evaluate_prompt_absolute(instruction_text, row[f'{idx}']))])
-            # mode "relative":
-            row['llm_judge'].update([(f'0_2_llm_judge_rel', self._evaluate_prompt_relative(instruction_text, row["0"], row["2"]))])
             row['llm_judge'].update(
-                [(f'0_1_llm_judge_rel', self._evaluate_prompt_relative(instruction_text, row["0"], row["1"]))])
-            row['llm_judge'].update([(f'1_2_llm_judge_rel', self._evaluate_prompt_relative(instruction_text, row["1"], row["2"]))])
+                [(f'baseline_llm_judge_abs', self._evaluate_prompt_absolute(instruction_text, row[f'baseline_summary']))])
+            row['llm_judge'].update(
+                [(f'zero_shot_llm_judge_abs', self._evaluate_prompt_absolute(instruction_text, row[f'zero_shot_summary']))])
+            row['llm_judge'].update(
+                [(f'few_shot_llm_judge_abs', self._evaluate_prompt_absolute(instruction_text, row[f'few_shot_summary']))])
+            # mode "relative":
+            row['llm_judge'].update([(f'BL_FS_llm_judge_rel', self._evaluate_prompt_relative(instruction_text, row["baseline_summary"], row["few_shot_summary"]))])
+            row['llm_judge'].update([(f'BL_ZS_llm_judge_rel', self._evaluate_prompt_relative(instruction_text, row["baseline_summary"], row["zero_shot_summary"]))])
+            row['llm_judge'].update([(f'ZS_FS_llm_judge_rel', self._evaluate_prompt_relative(instruction_text, row["zero_shot_summary"], row["few_shot_summary"]))])
 
 
 if __name__ == "__main__":
@@ -116,16 +119,15 @@ if __name__ == "__main__":
     api_key = os.environ['BAM_APIKEY']
 
     num_summaries_to_evaluate = 3
-    chat_csv_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/a0a8d57d8602e844/27-06-2024 11:41:14/eval"
+    chat_csv_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/a0a8d57d8602e844/30-06-2024 10:56:26/eval"
     chat_csv_file = "eval_results.csv"
 
     llm_judge = LlmAsAJudge(bam_api_key=api_key, model="prometheus_7b",
                             conv_id="llm_as_a_judge_offline", num_summaries=num_summaries_to_evaluate)
 
     df = pd.read_csv(os.path.join(chat_csv_path, chat_csv_file))
-    zero_shot_prompt = "1_prompt"
-    prompt = df[zero_shot_prompt][0]
-    llm_judge.evaluate_prompt(zero_shot_prompt, df)
+    prompt = df["zero_shot_prompt"][0]
+    llm_judge.evaluate_prompt(prompt, df)
 
     out_csv_file = "eval_results_with_llm_judge.csv"
     df.to_csv(os.path.join(chat_csv_path, out_csv_file))

@@ -76,7 +76,7 @@ class ChatManagerBase:
         chat.append({'role': role, 'content': msg})
 
     def _format_chat(self, chat):
-        if 'mixtral' in self.bam_client.parameters['model_id']:
+        if 'mixtral' in self.bam_client.parameters['model_id'] or 'prometheus' in self.bam_client.parameters['model_id']:
             bos_token = '<s>'
             eos_token = '</s>'
             chat_for_mixtral=[]
