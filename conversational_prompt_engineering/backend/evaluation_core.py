@@ -65,7 +65,7 @@ class Evaluation:
             mixed_indices = list(range(len(prompts)))
             mixed_mapping = {}
             for i in range(len(prompts)):
-                row_data_ordered[f"{prompt_types[i]}_prompt"] = prompt
+                row_data_ordered[f"{prompt_types[i]}_prompt"] = prompt[i]
                 row_data_ordered[f"{prompt_types[i]}_summary"] = prompts_responses[i]
                 mixed_mapping[mixed_indices[i]] = prompt_types[i]
             row_data_ordered["mixed_indices"] = mixed_mapping
