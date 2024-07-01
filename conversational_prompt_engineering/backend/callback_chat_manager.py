@@ -197,6 +197,7 @@ class CallbackChatManager(ChatManagerBase):
                 except SyntaxError:
                     self.calls_queue = []
                     self.add_system_message(self.model_prompts.syntax_err_instruction)
+                    self.call_depth -= 1  # don't count syntax errors
                     self.submit_model_chat_and_process_response()
 
         self.call_depth -= 1
