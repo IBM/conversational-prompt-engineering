@@ -15,7 +15,7 @@ import time
 NUM_EXAMPLES = 5
 
 class WorkMode(Enum):
-    REGULER, DUMMY_PROMPT = range(2)
+    REGULAR, DUMMY_PROMPT = range(2)
 
 
 dimensions = ["dim1", "dim2", "dim3"]
@@ -35,7 +35,7 @@ def build_f_sh_prompt():
     few_shot_examples = st.session_state.manager.approved_outputs[:st.session_state.manager.validated_example_idx]
 
     return build_few_shot_prompt(
-        st.session_state.manager.approved_prompts[-1 if work_mode == WorkMode.DUMMY_PROMPT else -2]['prompt'],
+        st.session_state.manager.approved_prompts[-2 if work_mode == WorkMode.DUMMY_PROMPT else -1]['prompt'],
         few_shot_examples,
         st.session_state.manager.bam_client.parameters['model_id'])
 
@@ -43,7 +43,7 @@ prompt_type_metadata = {"baseline": {"title": "Prompt 1 (Baseline prompt)", "bui
                         "zero_shot": {"title": "Prompt 2 (CPE zero shot prompt)", "build_func": build_z_sh_prompt},
                          "few_shot": {"title": "Prompt 3 (CPE few shot prompt)", "build_func": build_f_sh_prompt}}
 
-work_mode = WorkMode.DUMMY_PROMPT
+work_mode = WorkMode.REGULAR
 
 DEBUG_LLM_AS_A_JUDGE = False
 
