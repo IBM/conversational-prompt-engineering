@@ -127,7 +127,11 @@ if __name__ == "__main__":
 
     df = pd.read_csv(os.path.join(chat_csv_path, chat_csv_file))
     prompt = df["zero_shot_prompt"][0]
-    llm_judge.evaluate_prompt(prompt, df)
+    print(f'LLM AS A JUDGE: evaluating zero-shot prompt:\n\n {prompt}')
+
+    generated_data = df.to_dict(orient='records')
+    llm_judge.evaluate_prompt(prompt, generated_data)
 
     out_csv_file = "eval_results_with_llm_judge.csv"
-    df.to_csv(os.path.join(chat_csv_path, out_csv_file))
+    out_df = pd.DataFrame(generated_data)
+    out_df.to_csv(os.path.join(chat_csv_path, out_csv_file))
