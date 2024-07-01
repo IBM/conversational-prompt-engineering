@@ -54,6 +54,11 @@ def create_choose_dataset_component_eval(st):
         return read_user_csv_file(st.session_state["csv_file_eval"]).text.tolist()
 
 
-def add_evaluator_input(st, manager):
-    user_session_name = st.text_input(label="Optional session name", key="eval_input_session_name")
-    return user_session_name
+def add_evaluator_input(st):
+    user_session_name = st.text_input(label="(Optional) name this session", key="eval_input_session_name")
+    provide_your_instruction_label = "(Optional) provide your default instruction here."\
+                    "This instruction will be compared to the prompt you build in this session at the evaluation phase." \
+                    "If you don\'t provide you own instruction, the system will generate a default instruction for your task and use this instruction at the evaluation phase"
+    user_default_prompt = st.text_input(label=provide_your_instruction_label, key="user_instruction")
+    st.session_state.manager.user_session_name = user_session_name
+    st.session_state.manager.user_default_prompt = user_default_prompt

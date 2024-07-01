@@ -115,12 +115,13 @@ class CallbackChatManager(ChatManagerBase):
         self.outputs = None
         self.prompts = []
         self.baseline_prompt = ""
+        self.user_default_prompt = ""
+        self.user_session_name = ""
 
         self.output_discussion_state = None
         self.calls_queue = []
         self.call_depth = 0
 
-        self.user_baseline_model = True
 
     @property
     def approved_prompts(self):
