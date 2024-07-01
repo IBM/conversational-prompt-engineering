@@ -76,13 +76,22 @@ def display_summary(side):
 
 def display_llm_judge(side):
     mixed_to_real = st.session_state.generated_data[st.session_state.count]["mixed_indices"][side]
-    judge = "ABS: " + ",".join(st.session_state.generated_data[st.session_state.count]['llm_judge'][f'{mixed_to_real}_llm_judge_abs']) \
+    judge = "ABS: " + \
+            st.session_state.generated_data[st.session_state.count][f'{mixed_to_real}_llm_judge_abs_result'] \
+            + " Feedback: " + \
+            st.session_state.generated_data[st.session_state.count][f'{mixed_to_real}_llm_judge_abs_feedback'] \
             + "\n\n" + "REL BL_FS: " + \
-            ",".join(st.session_state.generated_data[st.session_state.count]['llm_judge']['BL_FS_llm_judge_rel']) \
+            st.session_state.generated_data[st.session_state.count]['BL_FS_llm_judge_rel_result'] \
+            + " Feedback: " + \
+            st.session_state.generated_data[st.session_state.count]['BL_FS_llm_judge_rel_feedback'] \
             + "\n\n" + "REL BL_ZS: " + \
-            ",".join(st.session_state.generated_data[st.session_state.count]['llm_judge']['BL_ZS_llm_judge_rel']) \
+            st.session_state.generated_data[st.session_state.count]['BL_ZS_llm_judge_rel_result'] \
+            + " Feedback: " + \
+            st.session_state.generated_data[st.session_state.count]['BL_ZS_llm_judge_rel_feedback'] \
             + "\n\n" + "REL ZS_FS: " + \
-            ",".join(st.session_state.generated_data[st.session_state.count]['llm_judge']['ZS_FS_llm_judge_rel'])
+            st.session_state.generated_data[st.session_state.count]['ZS_FS_llm_judge_rel_result'] \
+            + " Feedback: " + \
+            st.session_state.generated_data[st.session_state.count]['ZS_FS_llm_judge_rel_feedback']
 
     st.text_area(label=f"judge_{side}", value=judge, label_visibility="collapsed", height=200)
 

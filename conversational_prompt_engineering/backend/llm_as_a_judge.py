@@ -75,9 +75,10 @@ class LlmAsAJudge(ChatManagerBase):
                 if result.isdigit() and result in ["1", "2", "3", "4", "5"]:
                     return feedback, result
             elif mode == "relative":
+                result = result.split('Response')[-1].strip()
                 if result in ["A", "B"]:
                     return feedback, result
-        return "", "-1"
+        return outputs, "-1"
 
     def _evaluate_prompt_absolute(self, prompt, summary):
         user_content = ABSOLUTE_PROMPT_WO_REF.format(instruction=prompt, response=summary, rubric=HELPFULNESS_RUBRIC)
@@ -98,26 +99,26 @@ class LlmAsAJudge(ChatManagerBase):
 
     def evaluate_prompt(self, prompt, summaries):
         for row in summaries:
-            row['llm_judge'] = {}
             instruction_text = prompt.format(text=row["text"])
             # mode "absolute"
-            row['llm_judge'].update(
-                [(f'baseline_llm_judge_abs', self._evaluate_prompt_absolute(instruction_text, row[f'baseline_summary']))])
-            row['llm_judge'].update(
-                [(f'zero_shot_llm_judge_abs', self._evaluate_prompt_absolute(instruction_text, row[f'zero_shot_summary']))])
-            row['llm_judge'].update(
-                [(f'few_shot_llm_judge_abs', self._evaluate_prompt_absolute(instruction_text, row[f'few_shot_summary']))])
+            for prompt_type in ['baseline', 'zero_shot', 'few_shot']:
+                row[f'{prompt_type}_llm_judge_abs_feedback'], row[f'{prompt_type}_llm_judge_abs_result'] = \
+                    self._evaluate_prompt_absolute(instruction_text, row[f'{prompt_type}_summary'])
+
             # mode "relative":
-            row['llm_judge'].update([(f'BL_FS_llm_judge_rel', self._evaluate_prompt_relative(instruction_text, row["baseline_summary"], row["few_shot_summary"]))])
-            row['llm_judge'].update([(f'BL_ZS_llm_judge_rel', self._evaluate_prompt_relative(instruction_text, row["baseline_summary"], row["zero_shot_summary"]))])
-            row['llm_judge'].update([(f'ZS_FS_llm_judge_rel', self._evaluate_prompt_relative(instruction_text, row["zero_shot_summary"], row["few_shot_summary"]))])
+            row['BL_FS_llm_judge_rel_feedback'], row['BL_FS_llm_judge_rel_result'] = \
+                self._evaluate_prompt_relative(instruction_text, row["baseline_summary"], row["few_shot_summary"])
+            row['BL_ZS_llm_judge_rel_feedback'], row['BL_ZS_llm_judge_rel_result'] = \
+                self._evaluate_prompt_relative(instruction_text, row["baseline_summary"], row["zero_shot_summary"])
+            row['ZS_FS_llm_judge_rel_feedback'], row['ZS_FS_llm_judge_rel_result'] = \
+                self._evaluate_prompt_relative(instruction_text, row["zero_shot_summary"], row["few_shot_summary"])
 
 
 if __name__ == "__main__":
 
     api_key = os.environ['BAM_APIKEY']
 
-    chat_csv_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/a0a8d57d8602e844/30-06-2024 10:56:26/eval"
+    chat_csv_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/a0a8d57d8602e844/01-07-2024 13:56:26/eval"
     chat_csv_file = "eval_results.csv"
 
     llm_judge = LlmAsAJudge(bam_api_key=api_key, model="prometheus_7b",
