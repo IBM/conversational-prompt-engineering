@@ -11,6 +11,7 @@ from genai.schema import ChatRole
 from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt, LLAMA_END_OF_MESSAGE, \
     _get_llama_header, LLAMA_START_OF_INPUT
 from conversational_prompt_engineering.util.bam import BamGenerate
+from conversational_prompt_engineering.util.watsonx import WatsonXGenerate
 
 
 def extract_delimited_text(txt, delims):
@@ -29,19 +30,28 @@ def extract_delimited_text(txt, delims):
 
 
 class ChatManagerBase:
-    def __init__(self, bam_api_key, model, conv_id, target_model) -> None:
+    def __init__(self, credentials, model, conv_id, target_model, api) -> None:
         with open("backend/bam_params.json", "r") as f:
             params = json.load(f)
         logging.info(f"selected {model}")
         logging.info(f"conv id: {conv_id}")
-        bam_params = params['models'][model]
-        bam_params['api_key'] = bam_api_key
-        bam_params['api_endpoint'] = params['api_endpoint']
-        self.bam_client = BamGenerate(bam_params)
-        target_bam_params = params['models'][target_model]
-        target_bam_params['api_key'] = bam_api_key
-        target_bam_params['api_endpoint'] = params['api_endpoint']
-        self.target_bam_client = BamGenerate(target_bam_params)
+
+        def create_mode_param(model_name):
+            model_params = {x: y for x,y in params['models'][model_name].items()}
+            model_params.update({'api_key' if x == 'key' else x:y for x,y in credentials.items()})
+            model_params['api_endpoint'] = params['api_endpoint']
+            return model_params
+
+        main_model_params = create_mode_param(model)
+        target_model_params = create_mode_param(target_model)
+
+        if api == "watsonx":
+            generator = WatsonXGenerate
+        else:
+            generator = BamGenerate
+
+        self.bam_client = generator(main_model_params)
+        self.target_bam_client = generator(target_model_params)
         self.conv_id = conv_id
         self.dataset_name = None
         self.state = None
@@ -71,7 +81,7 @@ class ChatManagerBase:
         df.to_csv(os.path.join(chat_dir, f"{file_name.split('.')[0]}.csv"), index=False)
         with open(os.path.join(chat_dir, file_name), "w") as html_out:
             content = "\n".join(
-                [f"<p><b>{x['role'].upper()}: </b>{x['content']}</p>".replace("\n", "<br>") for x in chat])
+                [f"<p><b>{x['role'].upper()}: </b>{x['content']} {'' if 'example_num' not in x else '[example_num: ' + str(x['example_num']) + ']'}</p>".replace("\n", "<br>") for x in chat] )
             header = "<h1>IBM Research Conversational Prompt Engineering</h1>"
             html_template = f'<!DOCTYPE html><html>\n<head>\n<title>CPE</title>\n</head>\n<body style="font-size:20px;">{header}\n{content}\n</body>\n</html>'
             html_out.write(html_template)

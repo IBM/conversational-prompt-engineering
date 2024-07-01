@@ -5,3 +5,6 @@ ibm-generative-ai==2.3.0
 tqdm
 python-calamine
 chardet
+ibm_watsonx_ai==1.0.9
+
+

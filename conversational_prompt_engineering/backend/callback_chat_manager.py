@@ -10,11 +10,11 @@ from conversational_prompt_engineering.backend.prompt_building_util import build
 class ModelPrompts:
     def __init__(self) -> None:
         self.task_instruction = \
-            'You and I (system) will work together to build a prompt for the task of the user via a chat with the user.' \
-            'This prompt will be fed to a model dedicated to perform the user\'s task.' \
-            'Our aim is to build a prompt that when fed to the model, produce outputs that are aligned with the user\'s expectations.' \
+            'You and I (system) will work together to build a prompt for the task of the user via a chat with the user. ' \
+            'This prompt will be fed to a model dedicated to perform the user\'s task. ' \
+            'Our aim is to build a prompt that when fed to the model, produce outputs that are aligned with the user\'s expectations. ' \
             'Thus, the prompt should reflect the specific requirements and preferences of the user ' \
-            'from the output as expressed in the chat.' \
+            'from the output as expressed in the chat. ' \
             'You will interact with the user to gather information regarding their preferences and needs. ' \
             'I will send the prompts you suggest to the dedicated model to generate outputs, and pass them back to you, ' \
             'so that you could discuss them with the user and get feedback. ' \
@@ -24,55 +24,55 @@ class ModelPrompts:
         self.api_instruction = \
             'You should communicate with the user and system ONLY via python API described below, and not via direct messages. ' \
             'The input parameters to API functions are strings. Enclose them in double quotes, and escape all double quotes inside these strings to avoid syntax errors. ' \
-            'Note that the user is not aware of the API, so don\'t not tell the user which API you are going to call.\n' \
+            'Note that the user is not aware of the API, so don\'t not tell the user which API you are going to call.\n ' \
             'Format ALL your answers python code calling one of the following functions:'
 
         self.api = {
-            'self.submit_message_to_user(message)': 'call this function to submit your message to the user. Use markdown to mark the prompts and the outputs.',
-            'self.submit_prompt(prompt)': 'call this function to inform the system that you have a new suggestion for the prompt. Use it only with the prompts approved by the user.',
-            'self.switch_to_example(example_num)': 'call this function before you start discussing with the user an output of a specific example, and pass the example number as parameter.',
-            'self.show_original_text(example_num)': 'call this function when the user asks to show the original text of an example, and pass the example number as parameter',
-            'self.output_accepted(example_num, output)': 'call this function every time the user accepts an output. Pass the example number and the output text as parameters.',
-            'self.end_outputs_discussion()': 'call this function after all the outputs have been discussed with the user and all NUM_EXAMPLES outputs were accepted by the user.',
-            'self.conversation_end()': 'call this function when the user wants to end the conversation.',
-            'self.task_is_defined()': 'call this function when the user has defined the task and it\'s clear to you. You should only use this callback once'
+            'self.submit_message_to_user(message)': 'call this function to submit your message to the user. Use markdown to mark the prompts and the outputs. ',
+            'self.submit_prompt(prompt)': 'call this function to inform the system that you have a new suggestion for the prompt. Use it only with the prompts approved by the user. ',
+            'self.switch_to_example(example_num)': 'call this function before you start discussing with the user an output of a specific example, and pass the example number as parameter. ',
+            'self.show_original_text(example_num)': 'call this function when the user asks to show the original text of an example, and pass the example number as parameter. ',
+            'self.output_accepted(example_num, output)': 'call this function every time the user accepts an output. Pass the example number and the output text as parameters. ',
+            'self.end_outputs_discussion()': 'call this function after all the outputs have been discussed with the user and all NUM_EXAMPLES outputs were accepted by the user. ',
+            'self.conversation_end()': 'call this function when the user wants to end the conversation. ',
+            'self.task_is_defined()': 'call this function when the user has defined the task and it\'s clear to you. You should only use this callback once. '
         }
 
         self.discuss_example_num = \
             'Discuss with the user the output of Example EXAMPLE_NUM. ' \
             'If there already is an accepted output for this example, compare it to the new one. ' \
-            'Analyze the difference between the two outputs, and communicate it to the user.'
+            'Analyze the difference between the two outputs, and communicate it to the user. '
 
-        self.examples_intro = 'Here are some examples of the input texts provided by the user:'
+        self.examples_intro = 'Here are some examples of the input texts provided by the user: '
 
         self.task_definition_instruction = \
             'Start with asking the user which task they would like to perform on the texts. ' \
-            'Once the task is clear to you, call task_is_defined API.'
+            'Once the task is clear to you, call task_is_defined API. '
 
         self.analyze_examples = \
             'Before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences. Please take into account the specific characteristics of the data. ' \
-            'Your suggested prompt should reflect the user\'s expectations from the task output as expressed during the chat.' \
-            'Share the suggested prompt with the user before submitting it.' \
-            'Remember to communicate only via API calls.' \
-            'From this point, don\'t use task_is_defined API'
+            'Your suggested prompt should reflect the user\'s expectations from the task output as expressed during the chat. ' \
+            'Share the suggested prompt with the user before submitting it. ' \
+            'Remember to communicate only via API calls. ' \
+            'From this point, don\'t use task_is_defined API. '
 
         self.generate_baseline_instruction_task = \
-            'After the user has provided the task description and the examples, generate a general prompt for this task'
+            'After the user has provided the task description and the examples, generate a general prompt for this task. '
 
         self.result_intro = 'Based on the suggested prompt, the model has produced the following outputs for the user input examples:'
 
         self.analyze_result_instruction = \
             'For each of NUM_EXAMPLES examples show the model output to the user and discuss it with them, one example at a time. ' \
-            'Note that the user has not seen these outputs yet, when presenting an output show its full text.\n' \
-            'The discussion should result in an output accepted by the user.\n' \
-            'When the user asks to show the original text of an example, call show_original_text API passing the example number.\n' \
+            'Note that the user has not seen these outputs yet, when presenting an output show its full text.\n ' \
+            'The discussion should result in an output accepted by the user.\n ' \
+            'When the user asks to show the original text of an example, call show_original_text API passing the example number.\n ' \
             'When the user accepts an output (directly or indirectly), call output_accepted API passing the example number and the output text. ' \
-            'when the user asks to update the prompt, share the prompt with him.\n' \
-            'Continue your conversation with the user after they accept the output.\n' \
-            'Remember to communicate only via API calls.'
+            'When the user asks to update the prompt, share the prompt with him.\n ' \
+            'Continue your conversation with the user after they accept the output.\n ' \
+            'Remember to communicate only via API calls. '
 
-        self.syntax_err_instruction = 'The last API call produced a syntax error. Return the same call with fixed error.'
-        self.api_only_instruction = 'Please communicate only via API calls defined above. Do not use plain text or non-existing API in the response.'
+        self.syntax_err_instruction = 'The last API call produced a syntax error. Return the same call with fixed error. '
+        self.api_only_instruction = 'Please communicate only via API calls defined above. Do not use plain text or non-existing API in the response. '
 
         self.analyze_discussion_task = \
             'You need to decide whether the outputs generated by the model from the following prompt ' \
@@ -98,8 +98,8 @@ class Llama3Prompts(ModelPrompts):
 
 
 class CallbackChatManager(ChatManagerBase):
-    def __init__(self, bam_api_key, model, conv_id, target_model) -> None:
-        super().__init__(bam_api_key, model, conv_id, target_model)
+    def __init__(self, credentials, model, conv_id, target_model, api) -> None:
+        super().__init__(credentials, model, conv_id, target_model, api)
         self.model_prompts = {
             'mixtral': MixtralPrompts,
             'llama-3': Llama3Prompts,
