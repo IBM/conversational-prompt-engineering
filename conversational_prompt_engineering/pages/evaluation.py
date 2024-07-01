@@ -178,7 +178,7 @@ def run():
 
         if "llm_judge" not in st.session_state and DEBUG_LLM_AS_A_JUDGE:
             st.session_state.llm_judge = LlmAsAJudge(bam_api_key=st.session_state.key, model="prometheus_7b",
-                                                     conv_id=st.session_state.conv_id, num_summaries=len(prompt_types))
+                                                     conv_id=st.session_state.conv_id)
 
         assert len(st.session_state.eval_prompts) == len(prompt_types), "number of prompts should be equal to the number of prompt types"
         if 'count' not in st.session_state:

@@ -59,11 +59,10 @@ An instruction (might include an Input inside it), a response to evaluate, and a
 
 
 class LlmAsAJudge(ChatManagerBase):
-    def __init__(self, bam_api_key, model, conv_id, num_summaries) -> None:
+    def __init__(self, bam_api_key, model, conv_id) -> None:
         super().__init__(bam_api_key, model, conv_id)
 
         self.model_chat = []
-        self.num_summaries = num_summaries
 
     def _get_assistant_response(self, chat=None, max_new_tokens=None):
         return super()._get_assistant_response(chat or self.model_chat, max_new_tokens)
@@ -118,12 +117,11 @@ if __name__ == "__main__":
 
     api_key = os.environ['BAM_APIKEY']
 
-    num_summaries_to_evaluate = 3
     chat_csv_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/a0a8d57d8602e844/30-06-2024 10:56:26/eval"
     chat_csv_file = "eval_results.csv"
 
     llm_judge = LlmAsAJudge(bam_api_key=api_key, model="prometheus_7b",
-                            conv_id="llm_as_a_judge_offline", num_summaries=num_summaries_to_evaluate)
+                            conv_id="llm_as_a_judge_offline")
 
     df = pd.read_csv(os.path.join(chat_csv_path, chat_csv_file))
     prompt = df["zero_shot_prompt"][0]
