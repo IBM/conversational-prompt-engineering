@@ -13,7 +13,6 @@ from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
 from ibm_watsonx_ai.foundation_models import ModelInference
 from ibm_watsonx_ai.foundation_models.utils.enums import ModelTypes
 
-from tqdm import tqdm
 
 # make sure you have a .env file under genai root with
 # GENAI_KEY=<your-genai-key>
@@ -27,26 +26,25 @@ class HumanRole(Enum):
 class WatsonXGenerate:
     def __init__(self, params):
         self.parameters = params
-        self.API_ENDPOINT = "https://us-south.ml.cloud.ibm.com"
+        self.api_endpoint = params["api_endpoint"]
         self.project_id = params["project_id"]
         self.api_key = params["api_key"]
-        self.MAX_NEW_TOKENS = 1
 
         credentials = {
-            "url": self.API_ENDPOINT,
+            "url": self.api_endpoint,
             "apikey": self.api_key
         }
         self.client = APIClient(credentials)
         self.client.set.default_project(self.project_id)
 
         self.generate_params = {
-                    GenParams.MAX_NEW_TOKENS: 2048,
+                    GenParams.MAX_NEW_TOKENS: self.parameters['max_new_tokens'],
                     GenParams.DECODING_METHOD: 'greedy',
                     GenParams.MIN_NEW_TOKENS: 1,
-                    GenParams.TRUNCATE_INPUT_TOKENS: 8196
+                    GenParams.TRUNCATE_INPUT_TOKENS: self.parameters['max_total_tokens'],
+                    GenParams.REPETITION_PENALTY : self.parameters['repetition_penalty'] if 'repetition_penalty' in self.parameters else 1
                 }
-
-        self.model_id =  ModelTypes.LLAMA_3_70B_INSTRUCT
+        self.model_id =  self.parameters['model_id']
 
 
     def _get_moded(self, max_new_tokens=None):

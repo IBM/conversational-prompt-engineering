@@ -31,24 +31,24 @@ def extract_delimited_text(txt, delims):
 
 class ChatManagerBase:
     def __init__(self, credentials, model, conv_id, target_model, api) -> None:
-        with open("backend/bam_params.json", "r") as f:
+        with open("backend/model_params.json", "r") as f:
             params = json.load(f)
         logging.info(f"selected {model}")
         logging.info(f"conv id: {conv_id}")
 
-        def create_mode_param(model_name):
+        def create_mode_param(model_name, api):
             model_params = {x: y for x,y in params['models'][model_name].items()}
             model_params.update({'api_key' if x == 'key' else x:y for x,y in credentials.items()})
-            model_params['api_endpoint'] = params['api_endpoint']
+            model_params['api_endpoint'] = params[f'{api}_api_endpoint']
             return model_params
-
-        main_model_params = create_mode_param(model)
-        target_model_params = create_mode_param(target_model)
 
         if api == "watsonx":
             generator = WatsonXGenerate
         else:
             generator = BamGenerate
+
+        main_model_params = create_mode_param(model, api)
+        target_model_params = create_mode_param(target_model, api)
 
         self.bam_client = generator(main_model_params)
         self.target_bam_client = generator(target_model_params)

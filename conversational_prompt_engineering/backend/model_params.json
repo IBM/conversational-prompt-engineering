@@ -22,5 +22,7 @@
         "max_total_tokens": 32768
     }
   },
-  "api_endpoint": "https://bam-api.res.ibm.com"
+  "bam_api_endpoint": "https://bam-api.res.ibm.com",
+  "watsonx_api_endpoint": "https://us-south.ml.cloud.ibm.com"
+
 }
