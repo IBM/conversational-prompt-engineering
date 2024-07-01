@@ -5,6 +5,7 @@ from collections import Counter
 import streamlit as st
 import pandas as pd
 
+from enum import Enum
 from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_eval
@@ -12,13 +13,36 @@ import time
 
 NUM_EXAMPLES = 5
 
+class WorkMode(Enum):
+    REGULER, DUMMY_PROMPT = range(2)
+
 
 dimensions = ["dim1", "dim2", "dim3"]
 
 prompt_types = ["baseline", "zero_shot", "few_shot"]
 
-work_modes = ["regular", "dummy_prompts"]
-work_mode = 1
+def build_baseline_prompt():
+    return build_few_shot_prompt(st.session_state.manager.baseline_prompt, [],
+                          st.session_state.manager.bam_client.parameters['model_id'])
+
+def build_z_sh_prompt():
+    return build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
+                                                 [],
+                                                 st.session_state.manager.bam_client.parameters['model_id'])
+
+def build_f_sh_prompt():
+    few_shot_examples = st.session_state.manager.approved_outputs[:st.session_state.manager.validated_example_idx]
+
+    return build_few_shot_prompt(
+        st.session_state.manager.approved_prompts[-1 if work_mode == WorkMode.DUMMY_PROMPT else -2]['prompt'],
+        few_shot_examples,
+        st.session_state.manager.bam_client.parameters['model_id'])
+
+prompt_type_metadata = {"baseline": {"title": "Prompt 1 (Baseline prompt)", "build_func": build_baseline_prompt},
+                        "zero_shot": {"title": "Prompt 2 (CPE zero shot prompt)", "build_func": build_z_sh_prompt},
+                         "few_shot": {"title": "Prompt 3 (CPE few shot prompt)", "build_func": build_f_sh_prompt}}
+
+work_mode = WorkMode.DUMMY_PROMPT
 
 def display_text():
     text = st.session_state.generated_data[st.session_state.count]['text']
@@ -95,7 +119,7 @@ def run():
     if 'manager' in st.session_state:
         num_prompts = len(st.session_state.manager.approved_prompts)
 
-        if work_mode == 1 and num_prompts < 2:
+        if work_mode == WorkMode.DUMMY_PROMPT and num_prompts < 2:
             st.session_state.manager.prompts = ["output the line: we all live in a yellow submarine", "output the line: the long and winding road"]
             num_prompts = len(st.session_state.manager.approved_prompts)
             if st.session_state.manager.baseline_prompt == "":
@@ -105,17 +129,11 @@ def run():
         st.write("Evaluation will be open after at least one prompt has been curated in the chat.")
 
     else:
+        st.session_state.eval_prompts = []
+        for prompt_type in prompt_types:
+            st.session_state.eval_prompts.append(prompt_type_metadata[prompt_type]["build_func"]())
 
-        baseline_prompt = build_few_shot_prompt(st.session_state.manager.baseline_prompt, [],
-                                                st.session_state.manager.bam_client.parameters['model_id'])
-        zero_shot_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
-                                                 [],
-                                                 st.session_state.manager.bam_client.parameters['model_id'])
-        few_shot_examples = st.session_state.manager.approved_outputs[:st.session_state.manager.validated_example_idx]
 
-        current_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1 if work_mode == 0 else -2]['prompt'],
-                                               few_shot_examples,
-                                               st.session_state.manager.bam_client.parameters['model_id'])
 
         # present instructions
         st.title("IBM Research Conversational Prompt Engineering - Evaluation")
@@ -139,7 +157,6 @@ def run():
         if 'evaluation' not in st.session_state:
             st.session_state.evaluation = Evaluation(st.session_state.manager.bam_client)
 
-        st.session_state.eval_prompts = [baseline_prompt, zero_shot_prompt, current_prompt]
 
         assert len(st.session_state.eval_prompts) == len(prompt_types), "number of prompts should be equal to the number of prompt types"
         if 'count' not in st.session_state:
@@ -147,13 +164,10 @@ def run():
 
         # show prompts
         prompt_cols = st.columns(len(prompt_types))
-        prompt_text_area_titles = ["Prompt 1 (Baseline prompt)", "Prompt 2 (CPE zero shot prompt)", "Prompt 3 (CPE few shot prompt)"]
-        assert (len(prompt_text_area_titles) == len(prompt_types))
         for i in range(len(prompt_types)):
             with prompt_cols[i]:
-                st.write(prompt_text_area_titles[i])
+                st.write(prompt_type_metadata.get(prompt_types[i])["title"])
                 st.text_area(key=f"prompt_{i+1}", label="text", value=st.session_state.eval_prompts[i], label_visibility="collapsed", height=200)
-
 
 
         # show summarize button
