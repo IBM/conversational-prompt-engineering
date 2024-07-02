@@ -1,4 +1,6 @@
+import json
 import logging
+import os.path
 from concurrent.futures import ThreadPoolExecutor
 
 from genai.schema import ChatRole
@@ -335,6 +337,7 @@ class CallbackChatManager(ChatManagerBase):
         self.submit_model_chat_and_process_response()
 
     def conversation_end(self):
+        self._save_chat_result()
         self.add_system_message(self.model_prompts.conversation_end_instruction)
         self.submit_model_chat_and_process_response()
 
@@ -369,3 +372,18 @@ class CallbackChatManager(ChatManagerBase):
         self.enable_upload_file = False
         examples = df['text'].tolist()[:3]
         self.init_chat(examples)
+
+    @property
+    def result_json_file(self):
+        return os.path.join(self.out_dir, 'chat_result.json')
+
+    def _save_chat_result(self):
+        data = {
+            'examples': self.examples,
+            'accepted_outputs': self.outputs,
+            'prompts': self.prompts,
+            'baseline_prompt': self.baseline_prompt,
+            'target_model': self.target_bam_client.parameters['model_id']
+        }
+        with open(self.result_json_file, 'w') as f:
+            json.dump(data, f)

@@ -118,6 +118,15 @@ def callback_cycle():
             with st.chat_message(msg['role']):
                 st.write(msg['content'])
 
+    if os.path.exists(manager.result_json_file):
+        with open(manager.result_json_file) as file:
+            btn = st.download_button(
+                label="Download chat result",
+                data=file,
+                file_name=f'chat_result_{st.session_state["selected_dataset"]}.json',
+                mime="text/json"
+            )
+
 
 def old_cycle():
     def show_and_call(prompt, show_message=True):
@@ -200,6 +209,8 @@ if 'credentials' not in st.session_state or 'key' not in st.session_state['crede
             st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
             st.session_state.API = APIName.Watsonx
             st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
+        else:
+            st.session_state.API = APIName.BAM  # default setting
 
         st.session_state.model = 'llama-3'
         st.session_state.target_model = 'llama-3'
@@ -217,13 +228,13 @@ if 'credentials' not in st.session_state or 'key' not in st.session_state['crede
             "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
         st.write("To proceed, please provide your BAM or WatsonX credentials and select a model.")
 
-        st.session_state.API = APIName.BAM # default setting
-
         def set_credentials():
             st.session_state.API = APIName.Watsonx if api == "Watsonx" else APIName.BAM
             if st.session_state.API == APIName.Watsonx:
-                st.text_input(label="Watsonx API key", key="watsonx_api_key", disabled=False)
-                st.text_input(label="project ID", key="project_id", disabled=False)
+                key_val = st.session_state.credentials.get('key', None)
+                st.text_input(label="Watsonx API key", key="watsonx_api_key", disabled=False, value=key_val)
+                proj_id_val = st.session_state.credentials.get('project_id', None)
+                st.text_input(label="project ID", key="project_id", disabled=False, value=proj_id_val)
             else:
                 st.text_input(label="BAM API key", key="bam_api_key", disabled=False)
 
@@ -232,7 +243,7 @@ if 'credentials' not in st.session_state or 'key' not in st.session_state['crede
             # add dummy option to make it the default selection
             options=["BAM", "Watsonx"],
             horizontal=True, key=f"bam_watsonx_radio",
-            index=0)
+            index=0 if st.session_state.API == APIName.BAM else 1)
 
         set_credentials()
 
