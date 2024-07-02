@@ -19,7 +19,6 @@ def save_survey(free_text):
 
 
 def run():
-
     radio_button_options = [1, 2, 3, 4, 5]
     st.write("Please rate your agreement with the following statements (1 – Strongly disagree, 5 – Strongly agree)")
     for i, q in enumerate(questions):
