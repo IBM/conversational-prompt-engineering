@@ -39,9 +39,11 @@ class ModelPrompts:
         }
 
         self.discuss_example_num = \
-            'Discuss with the user the output of Example EXAMPLE_NUM. ' \
-            'If there already is an accepted output for this example, compare it to the new one. ' \
-            'Analyze the difference between the two outputs, and communicate it to the user. '
+            'Start with presenting to the user the full text of last model output for Example EXAMPLE_NUM to the user. ' \
+            'Format the message so that the model output would be clearly distinct from the rest of the message. ' \
+            'Discuss the presented output. If there already is an accepted output for this example, include the difference analysis into the discussion. ' \
+            'The discussion should take as long as necessary and result in an output accepted by the user. ' \
+            'Continue your conversation with the user after they accept the output.\n '
 
         self.examples_intro = 'Here are some examples of the input texts provided by the user: '
 
@@ -63,12 +65,9 @@ class ModelPrompts:
 
         self.analyze_result_instruction = \
             'For each of NUM_EXAMPLES examples show the model output to the user and discuss it with them, one example at a time. ' \
-            'Note that the user has not seen these outputs yet, when presenting an output show its full text.\n ' \
-            'The discussion should result in an output accepted by the user.\n ' \
             'When the user asks to show the original text of an example, call show_original_text API passing the example number.\n ' \
             'When the user accepts an output (directly or indirectly), call output_accepted API passing the example number and the output text. ' \
             'When the user asks to update the prompt, share the prompt with him.\n ' \
-            'Continue your conversation with the user after they accept the output.\n ' \
             'Remember to communicate only via API calls. '
 
         self.syntax_err_instruction = 'The last API call produced a syntax error. Return the same call with fixed error. '
@@ -164,7 +163,7 @@ class CallbackChatManager(ChatManagerBase):
     @property
     def _filtered_model_chat(self):
         return [msg for msg in self.model_chat
-                if self.example_num is None or msg.get('example_num', self.example_num) == self.example_num]
+                if self.example_num is None or (msg.get('example_num', None) or self.example_num) == self.example_num]
 
     def submit_model_chat_and_process_response(self):
         max_call_depth = 3
@@ -176,7 +175,7 @@ class CallbackChatManager(ChatManagerBase):
         execute_calls = len(self.calls_queue) == 0
         if len(self.model_chat) > self.model_chat_length:
             resp = self._get_assistant_response(self._filtered_model_chat)
-            self._add_msg(self.model_chat, ChatRole.ASSISTANT, resp)
+            self._add_msg(self.model_chat, ChatRole.ASSISTANT, resp, example_num=self.example_num)
             if resp.startswith('```python\n'):
                 resp = resp[len('```python\n'): -len('\n```')]
             self.model_chat_length = len(self.model_chat)
@@ -264,11 +263,14 @@ class CallbackChatManager(ChatManagerBase):
 
     def switch_to_example(self, example_num):
         example_num = int(example_num)
+        if example_num == self.example_num:
+            return
+
         self.example_num = example_num
         self.calls_queue = []
         self._strip_user_message()
         discuss_ex = self.model_prompts.discuss_example_num.replace('EXAMPLE_NUM', str(self.example_num))
-        self.add_system_message(discuss_ex)
+        self.add_system_message(discuss_ex, example_num=example_num)
         self.submit_model_chat_and_process_response()
 
     def submit_prompt(self, prompt):
@@ -316,6 +318,7 @@ class CallbackChatManager(ChatManagerBase):
     def output_accepted(self, example_num, output):
         example_idx = int(example_num) - 1
         self.outputs[example_idx] = output
+        self.model_chat[-1]['example_num'] = None
 
     def end_outputs_discussion(self):
         self.calls_queue = []
