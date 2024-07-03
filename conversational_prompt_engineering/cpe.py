@@ -205,6 +205,7 @@ if "BAM_APIKEY" in os.environ:
     st.session_state.API = APIName.BAM
     st.session_state.credentials["key"] = os.environ["BAM_APIKEY"]
 elif "WATSONX_APIKEY" in os.environ:
+    st.session_state.credentials = {}
     st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
     st.session_state.API = APIName.Watsonx
     st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
@@ -217,7 +218,8 @@ st.session_state.target_model = 'llama-3'
 
 if 'credentials' not in st.session_state or 'key' not in st.session_state['credentials']:
 
-
+        if 'credentials' not in st.session_state:
+            st.session_state["credentials"] = {}
         entry_page = st.empty()
     #with entry_page.form("my_form"):
         st.write("Welcome to IBM Research Conversational Prompt Engineering (CPE) service.")
