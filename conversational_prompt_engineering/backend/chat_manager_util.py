@@ -10,6 +10,8 @@ from genai.schema import ChatRole
 
 from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt, LLAMA_END_OF_MESSAGE, \
     _get_llama_header, LLAMA_START_OF_INPUT
+from conversational_prompt_engineering.backend.output_dir_mapping import output_dir_hash_to_name
+
 from conversational_prompt_engineering.util.bam import BamGenerate
 from conversational_prompt_engineering.util.watsonx import WatsonXGenerate
 
@@ -57,10 +59,14 @@ class ChatManagerBase:
         self.state = None
         self.timing_report = []
 
-        self.out_dir = f'_out/{self.conv_id}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
+        self.set_output_dir()
         logging.info(f"output is saved to {os.path.abspath(self.out_dir)}")
 
         os.makedirs(self.out_dir, exist_ok=True)
+
+    def set_output_dir(self):
+        out_folder = output_dir_hash_to_name.get(self.conv_id, self.conv_id) #default is self.conv_id
+        self.out_dir = f'_out/{out_folder}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
 
     def save_prompts_and_config(self, approved_prompts, approved_outputs):
         chat_dir = os.path.join(self.out_dir, "chat")

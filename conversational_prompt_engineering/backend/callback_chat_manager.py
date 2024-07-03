@@ -133,13 +133,11 @@ class CallbackChatManager(ChatManagerBase):
         self.examples = None
         self.outputs = None
         self.prompts = []
-        self.baseline_prompt = ""
+        self.baseline_prompts = {}
 
         self.output_discussion_state = None
         self.calls_queue = []
         self.call_depth = 0
-
-        self.user_baseline_model = True
 
     @property
     def approved_prompts(self):
@@ -246,14 +244,14 @@ class CallbackChatManager(ChatManagerBase):
 
     def task_is_defined(self):
         # open side chat with model
-        assert self.baseline_prompt == "", "second callback to task_is_defined!"
+        assert self.baseline_prompts["model_baseline_prompt"] == "", "second callback to task_is_defined!"
         self.calls_queue = []
 
         tmp_chat = self.model_chat[:]
         self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.generate_baseline_instruction_task)
         resp = self._get_assistant_response(tmp_chat)
-        self.baseline_prompt = resp[:-2].replace("self.submit_prompt(\"", "")
-        logging.info(f"baseline prompt is {self.baseline_prompt}")
+        self.baseline_prompts["model_baseline_prompt"] = resp[:-2].replace("self.submit_prompt(\"", "")
+        logging.info(f"baseline prompt is {self.baseline_prompts['model_baseline_prompt']}")
         self.add_system_message(self.model_prompts.analyze_examples)
         self.submit_model_chat_and_process_response()
 
@@ -382,7 +380,7 @@ class CallbackChatManager(ChatManagerBase):
             'examples': self.examples,
             'accepted_outputs': self.outputs,
             'prompts': self.prompts,
-            'baseline_prompt': self.baseline_prompt,
+            'baseline_prompts': self.baseline_prompts,
             'target_model': self.target_bam_client.parameters['model_id']
         }
         with open(self.result_json_file, 'w') as f:
