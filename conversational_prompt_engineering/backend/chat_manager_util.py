@@ -10,6 +10,8 @@ from genai.schema import ChatRole
 
 from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt, LLAMA_END_OF_MESSAGE, \
     _get_llama_header, LLAMA_START_OF_INPUT
+from conversational_prompt_engineering.backend.output_dir_mapping import output_dir_hash_to_name
+
 from conversational_prompt_engineering.util.bam import BamGenerate
 from conversational_prompt_engineering.util.watsonx import WatsonXGenerate
 
@@ -31,24 +33,24 @@ def extract_delimited_text(txt, delims):
 
 class ChatManagerBase:
     def __init__(self, credentials, model, conv_id, target_model, api) -> None:
-        with open("backend/bam_params.json", "r") as f:
+        with open("backend/model_params.json", "r") as f:
             params = json.load(f)
         logging.info(f"selected {model}")
         logging.info(f"conv id: {conv_id}")
 
-        def create_mode_param(model_name):
+        def create_mode_param(model_name, api):
             model_params = {x: y for x,y in params['models'][model_name].items()}
             model_params.update({'api_key' if x == 'key' else x:y for x,y in credentials.items()})
-            model_params['api_endpoint'] = params['api_endpoint']
+            model_params['api_endpoint'] = params[f'{api}_api_endpoint']
             return model_params
-
-        main_model_params = create_mode_param(model)
-        target_model_params = create_mode_param(target_model)
 
         if api == "watsonx":
             generator = WatsonXGenerate
         else:
             generator = BamGenerate
+
+        main_model_params = create_mode_param(model, api)
+        target_model_params = create_mode_param(target_model, api)
 
         self.bam_client = generator(main_model_params)
         self.target_bam_client = generator(target_model_params)
@@ -57,10 +59,14 @@ class ChatManagerBase:
         self.state = None
         self.timing_report = []
 
-        self.out_dir = f'_out/{self.conv_id}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
+        self.set_output_dir()
         logging.info(f"output is saved to {os.path.abspath(self.out_dir)}")
 
         os.makedirs(self.out_dir, exist_ok=True)
+
+    def set_output_dir(self):
+        out_folder = output_dir_hash_to_name.get(self.conv_id, self.conv_id) #default is self.conv_id
+        self.out_dir = f'_out/{out_folder}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
 
     def save_prompts_and_config(self, approved_prompts, approved_outputs):
         chat_dir = os.path.join(self.out_dir, "chat")
@@ -73,7 +79,7 @@ class ChatManagerBase:
             json.dump(approved_prompts, f)
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
             config = {"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name,
-                       "baseline_prompt": self.baseline_prompt, "user_default_prompt": self.user_default_prompt,
+                       "baseline_prompts": self.baseline_prompts,
                       "session_name": self.user_session_name}
             json.dump(config, f)
 

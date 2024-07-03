@@ -5,6 +5,7 @@ import time
 import pandas as pd
 import streamlit as st
 import hashlib
+from enum import Enum
 from genai.schema import ChatRole
 from streamlit_js_eval import streamlit_js_eval
 
@@ -27,6 +28,9 @@ show_pages(
 
     ]
 )
+
+class APIName(Enum):
+    BAM, Watsonx = "bam", "watsonx"
 
 
 def old_reset_chat():
@@ -86,7 +90,7 @@ def callback_cycle():
 
         st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials, model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
-                                                       conv_id=st.session_state.conv_id, api = st.session_state.API)
+                                                       conv_id=st.session_state.conv_id, api = st.session_state.API.value)
         st.session_state.manager.add_welcome_message()
 
     manager = st.session_state.manager
@@ -120,6 +124,15 @@ def callback_cycle():
         for msg in messages:
             with st.chat_message(msg['role']):
                 st.write(msg['content'])
+
+    if os.path.exists(manager.result_json_file):
+        with open(manager.result_json_file) as file:
+            btn = st.download_button(
+                label="Download chat result",
+                data=file,
+                file_name=f'chat_result_{st.session_state["selected_dataset"]}.json',
+                mime="text/json"
+            )
 
 
 def old_cycle():
@@ -175,6 +188,20 @@ def old_cycle():
         if prompt := st.chat_input("What is up?"):
             show_and_call(prompt)
 
+def submit_button_clicked():
+    creds_are_ok = True
+    if st.session_state.API == APIName.BAM and st.session_state.bam_api_key != "":
+        st.session_state.credentials = {'key': st.session_state.bam_api_key}
+    elif st.session_state.API == APIName.Watsonx and st.session_state.watsonx_api_key != "" and st.session_state.project_id != "":
+        st.session_state.credentials = {'key': st.session_state.watsonx_api_key, 'project_id': st.session_state.project_id}
+    else:
+        creds_are_ok = False
+    if creds_are_ok:
+        st.session_state.model = 'llama-3'
+        st.session_state.target_model = model
+    else:
+        st.error(':heavy_exclamation_mark: Please provide your credentials')
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -182,19 +209,24 @@ st.title(":blue[IBM Research Conversational Prompt Engineering]")
 
 if "BAM_APIKEY" in os.environ:
     st.session_state.credentials = {}
-    st.session_state.API = "bam"
+    st.session_state.API = APIName.BAM
     st.session_state.credentials["key"] = os.environ["BAM_APIKEY"]
 elif "WATSONX_APIKEY" in os.environ:
     st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
-    st.session_state.API = "watsonx"
+    st.session_state.API = APIName.Watsonx
     st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
+else:
+    st.session_state.API = APIName.BAM  # default setting
 
+#default setting
 st.session_state.model = 'llama-3'
 st.session_state.target_model = 'llama-3'
 
-if 'credentials' not in st.session_state or 'key' not in st.session_state.credentials:
-    entry_page = st.empty()
-    with entry_page.form("my_form"):
+if 'credentials' not in st.session_state or 'key' not in st.session_state['credentials']:
+
+
+        entry_page = st.empty()
+    #with entry_page.form("my_form"):
         st.write("Welcome to IBM Research Conversational Prompt Engineering (CPE) service.")
         st.write(
             "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.")
@@ -204,23 +236,34 @@ if 'credentials' not in st.session_state or 'key' not in st.session_state.creden
             "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
         st.write(
             "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
-        st.write("To proceed, please provide your BAM API key and select a model.")
-        key = st.text_input(label="BAM API key")
-        st.session_state.API = "bam"
+        st.write("To proceed, please provide your BAM or WatsonX credentials and select a model.")
+
+        def set_credentials():
+            st.session_state.API = APIName.Watsonx if api == "Watsonx" else APIName.BAM
+            if st.session_state.API == APIName.Watsonx:
+                key_val = st.session_state.credentials.get('key', None)
+                st.text_input(label="Watsonx API key", key="watsonx_api_key", disabled=False, value=key_val)
+                proj_id_val = st.session_state.credentials.get('project_id', None)
+                st.text_input(label="project ID", key="project_id", disabled=False, value=proj_id_val)
+            else:
+                st.text_input(label="BAM API key", key="bam_api_key", disabled=False)
+
+        api = st.radio(
+            "",
+            # add dummy option to make it the default selection
+            options=["BAM", "Watsonx"],
+            horizontal=True, key=f"bam_watsonx_radio",
+            index=0 if st.session_state.API == APIName.BAM else 1)
+
+        set_credentials()
+
         model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.", options=["llama-3", "mixtral"],
                          captions=["llama-3-70B-instruct. Recommended for most use-cases.",
                                    "mixtral-8x7B-instruct-v01. Recommended for very long documents."])
-        submit = st.form_submit_button()
-        if submit:
-            if len(key) != 0:
-                st.session_state.credentials = {'key': key}
-                st.session_state.model = 'llama-3'
-                st.session_state.target_model = model
-                entry_page.empty()
-            else:
-                st.error(':heavy_exclamation_mark: You cannot proceed without providing your BAM API key')
 
-if 'credentials' in st.session_state and 'key' in st.session_state['credentials']:
+        st.button("Submit", on_click=submit_button_clicked)
+
+else:
     callback_cycle()
     # new_cycle()
     # old_cycle()

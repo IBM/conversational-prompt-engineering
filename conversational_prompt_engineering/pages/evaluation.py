@@ -23,7 +23,7 @@ dimensions = ["dim1", "dim2", "dim3"]
 prompt_types = ["baseline", "zero_shot", "few_shot"]
 
 def build_baseline_prompt():
-    return build_few_shot_prompt(st.session_state.manager.baseline_prompt, [],
+    return build_few_shot_prompt(st.session_state.manager.baseline_prompts["user_baseline_prompt"], [],
                           st.session_state.manager.target_bam_client.parameters['model_id'])
 
 def build_z_sh_prompt():
