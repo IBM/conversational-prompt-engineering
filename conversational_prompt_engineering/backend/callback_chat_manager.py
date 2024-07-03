@@ -244,7 +244,6 @@ class CallbackChatManager(ChatManagerBase):
 
     def task_is_defined(self):
         # open side chat with model
-        assert self.baseline_prompts["model_baseline_prompt"] == "", "second callback to task_is_defined!"
         self.calls_queue = []
 
         tmp_chat = self.model_chat[:]

@@ -78,7 +78,8 @@ class ChatManagerBase:
                                                                               self.target_bam_client.parameters['model_id'])
             json.dump(approved_prompts, f)
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
-            json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name}, f)
+            json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name,
+                       "baseline_prompts": self.baseline_prompts}, f)
 
     def save_chat_html(self, chat, file_name):
         chat_dir = os.path.join(self.out_dir, "chat")
