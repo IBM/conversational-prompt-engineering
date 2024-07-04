@@ -191,7 +191,7 @@ def old_cycle():
         if prompt := st.chat_input("What is up?"):
             show_and_call(prompt)
 
-def submit_button_clicked():
+def submit_button_clicked(target_model):
     creds_are_ok = True
     if st.session_state.API == APIName.BAM and st.session_state.bam_api_key != "":
         st.session_state.credentials = {'key': st.session_state.bam_api_key}
@@ -201,7 +201,7 @@ def submit_button_clicked():
         creds_are_ok = False
     if creds_are_ok:
         st.session_state.model = 'llama-3'
-        st.session_state.target_model = model
+        st.session_state.target_model = target_model
     else:
         st.error(':heavy_exclamation_mark: Please provide your credentials')
 
@@ -264,12 +264,12 @@ if 'credentials' not in st.session_state or 'key' not in st.session_state['crede
             st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
         set_credentials()
 
-        model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.", options=["llama-3", "mixtral", "granite"],
+        target_model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.", options=["llama-3", "mixtral", "granite"],
                          captions=["llama-3-70B-instruct. Recommended for most use-cases.",
                                    "mixtral-8x7B-instruct-v01. Recommended for very long documents.",
                                    "granite-13b-chat-v2"])
 
-        st.button("Submit", on_click=submit_button_clicked)
+        st.button("Submit", on_click=submit_button_clicked, args=[target_model])
 
 else:
     callback_cycle()
