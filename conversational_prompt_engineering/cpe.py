@@ -220,7 +220,8 @@ elif "WATSONX_APIKEY" in os.environ:
     st.session_state.API = APIName.Watsonx
     st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
 else:
-    st.session_state.API = APIName.BAM  # default setting
+    if not hasattr(st.session_state, 'API'):
+        st.session_state.API = APIName.BAM  # default setting
 
 #default setting
 st.session_state.model = 'llama-3'
@@ -259,12 +260,14 @@ if 'credentials' not in st.session_state or 'key' not in st.session_state['crede
             options=["BAM", "Watsonx"],
             horizontal=True, key=f"bam_watsonx_radio",
             index=0 if st.session_state.API == APIName.BAM else 1)
-
+        if api:
+            st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
         set_credentials()
 
-        model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.", options=["llama-3", "mixtral"],
+        model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.", options=["llama-3", "mixtral", "granite"],
                          captions=["llama-3-70B-instruct. Recommended for most use-cases.",
-                                   "mixtral-8x7B-instruct-v01. Recommended for very long documents."])
+                                   "mixtral-8x7B-instruct-v01. Recommended for very long documents.",
+                                   "granite-13b-chat-v2"])
 
         st.button("Submit", on_click=submit_button_clicked)
 

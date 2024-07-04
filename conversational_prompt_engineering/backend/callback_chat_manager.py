@@ -135,6 +135,7 @@ class CallbackChatManager(ChatManagerBase):
         self.outputs = None
         self.prompts = []
         self.baseline_prompts = {}
+        self.prompt_conv_end = False
 
         self.output_discussion_state = None
         self.calls_queue = []
@@ -341,6 +342,7 @@ class CallbackChatManager(ChatManagerBase):
         self.submit_model_chat_and_process_response()
 
     def conversation_end(self):
+        self.prompt_conv_end = True
         self._save_chat_result()
         self.add_system_message(self.model_prompts.conversation_end_instruction)
         self.submit_model_chat_and_process_response()
@@ -387,7 +389,11 @@ class CallbackChatManager(ChatManagerBase):
             'accepted_outputs': self.outputs,
             'prompts': self.prompts,
             'baseline_prompts': self.baseline_prompts,
-            'target_model': self.target_bam_client.parameters['model_id']
+            'target_model': self.target_bam_client.parameters['model_id'],
+            'dataset_name': self.dataset_name
         }
         with open(self.result_json_file, 'w') as f:
             json.dump(data, f)
+        if self.prompt_conv_end:
+            with open(os.path.join(self.out_dir, "prompt_conv_end.Done"), "w"):
+                pass
