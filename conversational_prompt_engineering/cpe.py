@@ -89,7 +89,6 @@ def callback_cycle():
         st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials, model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
                                                        conv_id=st.session_state.conv_id, api = st.session_state.API.value)
-        st.session_state.manager.add_welcome_message()
 
     manager = st.session_state.manager
 
@@ -97,7 +96,18 @@ def callback_cycle():
     if st.button("Reset chat"):
         streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
+    static_welcome_msg = \
+        "Hello! I'm an IBM prompt building assistant. In the following session we will work together through a natural conversation, to build an effective instruction – a.k.a. prompt – personalized for your task and data."
+
+    with st.chat_message(ChatRole.ASSISTANT):
+        st.write(static_welcome_msg)
+
     uploaded_file = create_choose_dataset_component_train(st=st, manager=manager)
+
+    static_upload_data_msg = "To begin, please upload your data, or select a dataset from our datasets catalog above."
+    with st.chat_message(ChatRole.ASSISTANT):
+        st.write(static_upload_data_msg)
+
     if uploaded_file:
         manager.add_user_message_only_to_user_chat("Selected data")
 
