@@ -46,7 +46,7 @@ def new_cycle():
     if "manager" not in st.session_state:
         sha1 = hashlib.sha1()
         sha1.update(st.session_state.key.encode('utf-8'))
-        st.session_state.conv_id = sha1.hexdigest()[:16] # deterministic hash of 16 characters
+        st.session_state.conv_id = sha1.hexdigest()[:16]  # deterministic hash of 16 characters
         st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key, model=st.session_state.model,
                                                      conv_id=st.session_state.conv_id)
     manager = st.session_state.manager
@@ -79,7 +79,6 @@ def new_cycle():
             st.write(msg['content'])
 
 
-
 def callback_cycle():
     # create the manager if necessary
     if "manager" not in st.session_state:
@@ -87,10 +86,10 @@ def callback_cycle():
         sha1.update(st.session_state.credentials["key"].encode('utf-8'))
         st.session_state.conv_id = sha1.hexdigest()[:16]  # deterministic hash of 16 characters
 
-        st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials, model=st.session_state.model,
+        st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials,
+                                                       model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
-                                                       conv_id=st.session_state.conv_id, api = st.session_state.API.value)
-        st.session_state.manager.add_welcome_message()
+                                                       conv_id=st.session_state.conv_id, api=st.session_state.API.value)
 
     manager = st.session_state.manager
 
@@ -184,12 +183,14 @@ def old_cycle():
         if prompt := st.chat_input("What is up?"):
             show_and_call(prompt)
 
+
 def submit_button_clicked():
     creds_are_ok = True
     if st.session_state.API == APIName.BAM and st.session_state.bam_api_key != "":
         st.session_state.credentials = {'key': st.session_state.bam_api_key}
     elif st.session_state.API == APIName.Watsonx and st.session_state.watsonx_api_key != "" and st.session_state.project_id != "":
-        st.session_state.credentials = {'key': st.session_state.watsonx_api_key, 'project_id': st.session_state.project_id}
+        st.session_state.credentials = {'key': st.session_state.watsonx_api_key,
+                                        'project_id': st.session_state.project_id}
     else:
         creds_are_ok = False
     if creds_are_ok:
@@ -215,54 +216,56 @@ elif "WATSONX_APIKEY" in os.environ:
 else:
     st.session_state.API = APIName.BAM  # default setting
 
-#default setting
+# default setting
 st.session_state.model = 'llama-3'
 st.session_state.target_model = 'llama-3'
 
 if 'credentials' not in st.session_state or 'key' not in st.session_state['credentials']:
 
-        if 'credentials' not in st.session_state:
-            st.session_state["credentials"] = {}
-        entry_page = st.empty()
-    #with entry_page.form("my_form"):
-        st.write("Welcome to IBM Research Conversational Prompt Engineering (CPE) service.")
-        st.write(
-            "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.")
-        st.write(
-            "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.")
-        st.write(
-            "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
-        st.write(
-            "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
-        st.write("To proceed, please provide your BAM or WatsonX credentials and select a model.")
+    if 'credentials' not in st.session_state:
+        st.session_state["credentials"] = {}
+    entry_page = st.empty()
+    # with entry_page.form("my_form"):
+    st.write("Welcome to IBM Research Conversational Prompt Engineering (CPE) service.")
+    st.write(
+        "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.")
+    st.write(
+        "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.")
+    st.write(
+        "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
+    st.write(
+        "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
+    st.write("To proceed, please provide your BAM or WatsonX credentials and select a model.")
 
-        def set_credentials():
-            st.session_state.API = APIName.Watsonx if api == "Watsonx" else APIName.BAM
-            if st.session_state.API == APIName.Watsonx:
-                key_val = st.session_state.credentials.get('key', None)
-                st.text_input(label="Watsonx API key", key="watsonx_api_key", disabled=False, value=key_val)
-                proj_id_val = st.session_state.credentials.get('project_id', None)
-                st.text_input(label="project ID", key="project_id", disabled=False, value=proj_id_val)
-            else:
-                st.text_input(label="BAM API key", key="bam_api_key", disabled=False)
 
-        api = st.radio(
-            "",
-            # add dummy option to make it the default selection
-            options=["BAM", "Watsonx"],
-            horizontal=True, key=f"bam_watsonx_radio",
-            index=0 if st.session_state.API == APIName.BAM else 1)
+    def set_credentials():
+        st.session_state.API = APIName.Watsonx if api == "Watsonx" else APIName.BAM
+        if st.session_state.API == APIName.Watsonx:
+            key_val = st.session_state.credentials.get('key', None)
+            st.text_input(label="Watsonx API key", key="watsonx_api_key", disabled=False, value=key_val)
+            proj_id_val = st.session_state.credentials.get('project_id', None)
+            st.text_input(label="project ID", key="project_id", disabled=False, value=proj_id_val)
+        else:
+            st.text_input(label="BAM API key", key="bam_api_key", disabled=False)
 
-        set_credentials()
 
-        model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.", options=["llama-3", "mixtral"],
-                         captions=["llama-3-70B-instruct. Recommended for most use-cases.",
-                                   "mixtral-8x7B-instruct-v01. Recommended for very long documents."])
+    api = st.radio(
+        "",
+        # add dummy option to make it the default selection
+        options=["BAM", "Watsonx"],
+        horizontal=True, key=f"bam_watsonx_radio",
+        index=0 if st.session_state.API == APIName.BAM else 1)
 
-        st.button("Submit", on_click=submit_button_clicked)
+    set_credentials()
+
+    model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.",
+                     options=["llama-3", "mixtral"],
+                     captions=["llama-3-70B-instruct. Recommended for most use-cases.",
+                               "mixtral-8x7B-instruct-v01. Recommended for very long documents."])
+
+    st.button("Submit", on_click=submit_button_clicked)
 
 else:
     callback_cycle()
     # new_cycle()
     # old_cycle()
-
