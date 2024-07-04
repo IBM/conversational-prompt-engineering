@@ -76,7 +76,7 @@ def run():
         st.write("Evaluation will be open after at least one prompt has been curated in the chat.")
     else:
 
-        baseline_prompt = build_few_shot_prompt(st.session_state.manager.baseline_prompt, [],
+        baseline_prompt = build_few_shot_prompt(st.session_state.manager.baseline_prompts["model_baseline_prompt"], [],
                                                 st.session_state.manager.target_bam_client.parameters['model_id'])
         zero_shot_prompt = build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'], [],
                                                  st.session_state.manager.target_bam_client.parameters['model_id'])
