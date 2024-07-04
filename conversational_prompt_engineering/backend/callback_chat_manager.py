@@ -8,7 +8,6 @@ from genai.schema import ChatRole
 from conversational_prompt_engineering.backend.chat_manager_util import ChatManagerBase
 from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
 
-
 class ModelPrompts:
     def __init__(self) -> None:
         self.task_instruction = \
@@ -212,12 +211,6 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(self.user_chat, ChatRole.USER, message)
         self.user_chat_length = len(self.user_chat)  # user message is rendered by cpe
 
-    def add_welcome_message(self):
-        static_assistant_hello_msg = [
-            "Hello! I'm an IBM prompt building assistant. In the following session we will work together through a natural conversation, to build an effective instruction – a.k.a. prompt – personalized for your task and data.",
-            "\nTo begin, please upload your data, or select a dataset from our datasets catalog above."]
-
-        self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg="\n".join(static_assistant_hello_msg))
 
     def generate_agent_messages(self):
         self.submit_model_chat_and_process_response()

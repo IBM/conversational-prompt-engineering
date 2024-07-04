@@ -56,7 +56,7 @@ def create_choose_dataset_component_eval(st):
 
 def add_evaluator_input(st):
     user_session_name = st.text_input(label="(Optional) name this session", key="eval_input_session_name")
-    provide_your_instruction_label = "(Optional) You can override baseline instruction for summarization."\
+    provide_your_instruction_label = "(Optional) You can override baseline instruction for summarization. "\
                     "This instruction will be compared to the prompt you build in this session at the evaluation phase."
     user_default_prompt = st.text_input(label=provide_your_instruction_label, value="Summarize this text", key="user_instruction")
     st.session_state.manager.user_session_name = user_session_name

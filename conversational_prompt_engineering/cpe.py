@@ -29,6 +29,10 @@ show_pages(
     ]
 )
 
+
+MUST_HAVE_UPLOADED_DATA_TO_START = True
+USE_ONLY_LLAMA = True
+
 class APIName(Enum):
     BAM, Watsonx = "bam", "watsonx"
 
@@ -91,7 +95,6 @@ def callback_cycle():
         st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials, model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
                                                        conv_id=st.session_state.conv_id, api = st.session_state.API.value)
-        st.session_state.manager.add_welcome_message()
 
     manager = st.session_state.manager
 
@@ -99,40 +102,49 @@ def callback_cycle():
     if st.button("Reset chat"):
         streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
+    static_welcome_msg = \
+        "Hello! I'm an IBM prompt building assistant. In the following session we will work together through a natural conversation, to build an effective instruction – a.k.a. prompt – personalized for your task and data."
+
+    with st.chat_message(ChatRole.ASSISTANT):
+        st.write(static_welcome_msg)
+
     add_evaluator_input(st)
-
-
 
     uploaded_file = create_choose_dataset_component_train(st=st, manager=manager)
     if uploaded_file:
         manager.add_user_message_only_to_user_chat("Selected data")
 
+    static_upload_data_msg = "To begin, please upload your data, or select a dataset from our datasets catalog above."
+    with st.chat_message(ChatRole.ASSISTANT):
+        st.write(static_upload_data_msg)
 
-    if user_msg := st.chat_input("Write your message here"):
-        manager.add_user_message(user_msg)
+    dataset_is_selected = "selected_dataset" in st.session_state or "csv_file_train" in st.session_state
+    if not MUST_HAVE_UPLOADED_DATA_TO_START or dataset_is_selected:
+        if user_msg := st.chat_input("Write your message here"):
+            manager.add_user_message(user_msg)
 
-    for msg in manager.user_chat[:manager.user_chat_length]:
-        with st.chat_message(msg['role']):
-            st.write(msg['content'])
-
-    # generate and render the agent response
-    with st.spinner("Thinking..."):
-        if uploaded_file:
-            manager.process_examples(read_user_csv_file(st.session_state["csv_file_train"]), st.session_state[
-                "selected_dataset"] if "selected_dataset" in st.session_state else "user")
-        messages = manager.generate_agent_messages()
-        for msg in messages:
+        for msg in manager.user_chat[:manager.user_chat_length]:
             with st.chat_message(msg['role']):
                 st.write(msg['content'])
 
-    if os.path.exists(manager.result_json_file):
-        with open(manager.result_json_file) as file:
-            btn = st.download_button(
-                label="Download chat result",
-                data=file,
-                file_name=f'chat_result_{st.session_state["selected_dataset"]}.json',
-                mime="text/json"
-            )
+        # generate and render the agent response
+        with st.spinner("Thinking..."):
+            if uploaded_file:
+                manager.process_examples(read_user_csv_file(st.session_state["csv_file_train"]), st.session_state[
+                    "selected_dataset"] if "selected_dataset" in st.session_state else "user")
+            messages = manager.generate_agent_messages()
+            for msg in messages:
+                with st.chat_message(msg['role']):
+                    st.write(msg['content'])
+
+        if os.path.exists(manager.result_json_file):
+            with open(manager.result_json_file) as file:
+                btn = st.download_button(
+                    label="Download chat result",
+                    data=file,
+                    file_name=f'chat_result_{st.session_state["selected_dataset"]}.json',
+                    mime="text/json"
+                )
 
 
 def old_cycle():
@@ -207,6 +219,33 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 st.title(":blue[IBM Research Conversational Prompt Engineering]")
 
+eval_instructions = \
+    "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n\n" \
+    "This service is intended to help users build an effective prompt, personalized to their specific summarization use case, through a simple chat with an LLM.\n\n" \
+    f"The *prompts* built by CPE are comprised of two parts: an instruction, describing to the LLM in natural language how to generate the summaries; and up to 3 text-summary pairs, exemplifying how summaries should look like.\n\n" \
+    "To use and evaluate CPE, proceed according to the following steps:\n\n" \
+    "1.	After submitting your API key (see below), we will ask you to select a summarization dataset from our catalog. " \
+    "Please select the dataset that is most related to your daily work, or if none exists, select the dataset which interests you most. \n\n" \
+    "2.	Dedicate a few moments to consider your preferences for generating a summary. " \
+    "It may be helpful to download the dataset and go over a few text inputs in order to obtain a better understanding of the task. \n\n" \
+    "3.	If you have an instruction you are already working with, you can share it in the top of the page when asked. \n\n" \
+    "4.	Follow the chat with the system. \n\n" \
+    "5.	Once the system notifies you that the final prompt is ready, please click on the Survey tab to answer a few short questions about your interaction.\n\n" \
+    "6.	Finally, click on the Evaluate tab. In this stage we ask you to compare between summaries generated by 3 prompts: " \
+    "one comprised of a generic summarization instruction, and two built with the CPE system, with and without text-summary examples. \n\n" \
+    "Stages 1-4 typically takes around 15 minutes. Please complete these stages in a single session without interruption, if possible.\n\n" \
+    "Generating the summaries for stage 5 could take several minutes, so this stage can be done at a later time.\n\n" \
+    "Do not include PII or confidential information in your responses, nor in the data you share.\n\n" \
+    "To start, choose whether to interact over BAM or watsonx.\n\n" \
+    "To obtain a BAM API key: navigate to [BAM](https://bam.res.ibm.com), login with your w3 id on the top-right side, and then copy the key from the box titled “Documentation”.\n\n" \
+    "To obtain a watsonx API key and project id please follow these steps:\n\n" \
+    "•	To create an API key, please see [documentation](https://cloud.ibm.com/docs/account?topic=account-userapikey&interface=ui).\n\n" \
+    "•	To find your project id, select the project from the [project list](https://dataplatform.cloud.ibm.com/projects/?context=wx), and then take the project id from Manage->General->Details.\n\n" \
+    "Thank you for your time!"
+
+
+
+
 if "BAM_APIKEY" in os.environ:
     st.session_state.credentials = {}
     st.session_state.API = APIName.BAM
@@ -229,17 +268,7 @@ if 'credentials' not in st.session_state or 'key' not in st.session_state['crede
             st.session_state["credentials"] = {}
         entry_page = st.empty()
     #with entry_page.form("my_form"):
-        st.write("Welcome to IBM Research Conversational Prompt Engineering (CPE) service.")
-        st.write(
-            "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.")
-        st.write(
-            "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.")
-        st.write(
-            "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
-        st.write(
-            "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
-        st.write("To proceed, please provide your BAM or WatsonX credentials and select a model.")
-
+        st.write(eval_instructions)
         def set_credentials():
             st.session_state.API = APIName.Watsonx if api == "Watsonx" else APIName.BAM
             if st.session_state.API == APIName.Watsonx:
@@ -258,8 +287,10 @@ if 'credentials' not in st.session_state or 'key' not in st.session_state['crede
             index=0 if st.session_state.API == APIName.BAM else 1)
 
         set_credentials()
-
-        model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.", options=["llama-3", "mixtral"],
+        if USE_ONLY_LLAMA:
+            model = 'llama-3'
+        else:
+            model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.", options=["llama-3", "mixtral"],
                          captions=["llama-3-70B-instruct. Recommended for most use-cases.",
                                    "mixtral-8x7B-instruct-v01. Recommended for very long documents."])
 
