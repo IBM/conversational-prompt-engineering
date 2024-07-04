@@ -27,6 +27,7 @@ show_pages(
     ]
 )
 
+
 class APIName(Enum):
     BAM, Watsonx = "bam", "watsonx"
 
@@ -89,6 +90,7 @@ def callback_cycle():
         st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials, model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
                                                        conv_id=st.session_state.conv_id, api = st.session_state.API.value)
+        st.session_state.manager.add_welcome_message()
 
     manager = st.session_state.manager
 
@@ -127,15 +129,6 @@ def callback_cycle():
         for msg in messages:
             with st.chat_message(msg['role']):
                 st.write(msg['content'])
-
-    if os.path.exists(manager.result_json_file):
-        with open(manager.result_json_file) as file:
-            btn = st.download_button(
-                label="Download chat result",
-                data=file,
-                file_name=f'chat_result_{st.session_state["selected_dataset"]}.json',
-                mime="text/json"
-            )
 
 
 def old_cycle():
