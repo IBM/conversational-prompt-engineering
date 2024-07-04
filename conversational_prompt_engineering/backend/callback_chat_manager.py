@@ -285,7 +285,6 @@ class CallbackChatManager(ChatManagerBase):
 
     def submit_prompt(self, prompt):
         prev_discussion_cot = (self.output_discussion_state or {}).get('outputs_discussion_CoT', None)
-
         self.calls_queue = []
         self.prompts.append(prompt)
 
@@ -309,7 +308,7 @@ class CallbackChatManager(ChatManagerBase):
             self.add_system_message(f'Example {example_num}: {output}', example_num)
             self.output_discussion_state['model_outputs'][i] = output
 
-        if len(self.prompts) > 1:
+        if len(self.prompts) > 1 and prev_discussion_cot is not None:
             tmp_chat = []
             self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.analyze_new_prompt_task)
             self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.analyze_new_prompt_old_discussion)
