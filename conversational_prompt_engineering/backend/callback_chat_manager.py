@@ -34,18 +34,11 @@ class ModelPrompts:
             'self.submit_prompt(prompt)': 'call this function to inform the system that you have a new suggestion for the prompt. Use it only with the prompts approved by the user. ',
             'self.switch_to_example(example_num)': 'call this function before you start discussing with the user an output of a specific example, and pass the example number as parameter. ',
             'self.show_original_text(example_num)': 'call this function when the user asks to show the original text of an example, and pass the example number as parameter. ',
-            'self.output_accepted(example_num, output)': 'call this function every time the user accepts an output. Pass the example number and the output text as parameters. ',
+            'self.output_accepted(example_num, output)': 'call this function every time the user unequivocally accepts an output. Pass the example number and the output text as parameters. ',
             'self.end_outputs_discussion()': 'call this function after all the outputs have been discussed with the user and all NUM_EXAMPLES outputs were accepted by the user. ',
             'self.conversation_end()': 'call this function when the user wants to end the conversation. ',
             'self.task_is_defined()': 'call this function when the user has defined the task and it\'s clear to you. You should only use this callback once. '
         }
-
-        self.discuss_example_num = \
-            'Start with presenting to the user the full text of last model output for Example EXAMPLE_NUM to the user. ' \
-            'Format the message so that the model output would be clearly distinct from the rest of the message. ' \
-            'Discuss the presented output. If there already is an accepted output for this example, include the difference analysis into the discussion. ' \
-            'The discussion should take as long as necessary and result in an output accepted by the user. ' \
-            'Continue your conversation with the user after they accept the output.\n '
 
         self.examples_intro = 'Here are some examples of the input texts provided by the user: '
 
@@ -68,9 +61,17 @@ class ModelPrompts:
         self.analyze_result_instruction = \
             'For each of NUM_EXAMPLES examples show the model output to the user and discuss it with them, one example at a time. ' \
             'When the user asks to show the original text of an example, call show_original_text API passing the example number.\n ' \
-            'When the user accepts an output (directly or indirectly), call output_accepted API passing the example number and the output text. ' \
-            'When the user asks to update the prompt, share the prompt with him.\n ' \
-            'Remember to communicate only via API calls. '
+            'The discussion should take as long as necessary and result in an output accepted by the user in clear way, ' \
+            'with no doubts, conditions or modifications. ' \
+            'When the output is accepted, call output_accepted API passing the example number and the output text.\n' \
+            'After discussing all NUM_EXAMPLES call end_outputs_discussion API.\n' \
+            'When the user asks to update the prompt, show the updated prompt to them. ' \
+            'Remember to communicate only via API calls.'
+
+        self.discuss_example_num = \
+            'Present the full text of last model output for Example EXAMPLE_NUM to the user. ' \
+            'Separate with empty lines the model output from the rest of message. ' \
+            'Discuss the presented output. Include the system conclusion for this example (if exists) into the discussion. '
 
         self.syntax_err_instruction = 'The last API call produced a syntax error. Return the same call with fixed error. '
         self.api_only_instruction = 'Please communicate only via API calls defined above. Do not use plain text or non-existing API in the response. '
@@ -138,6 +139,7 @@ class CallbackChatManager(ChatManagerBase):
         self.output_discussion_state = None
         self.calls_queue = []
         self.call_depth = 0
+        self.cot_count = 1
 
     @property
     def approved_prompts(self):
@@ -179,10 +181,19 @@ class CallbackChatManager(ChatManagerBase):
             if resp.startswith('```python\n'):
                 resp = resp[len('```python\n'): -len('\n```')]
             self.model_chat_length = len(self.model_chat)
-            api_indices = sorted([resp.index(name) for name in self.api_names if name in resp])
-            api_calls = [resp[begin: end].strip().replace('\n', '\\n')
-                         for begin, end in zip(api_indices, api_indices[1:] + [len(resp)])]
-            if len(api_indices) == 0 or api_indices[0] > 2:
+
+            api_calls = []
+            beg = 0
+            while beg < len(resp) - 1:
+                api_indices = sorted([resp[beg:].index(name) + beg for name in self.api_names if name in resp[beg:]])
+                if len(api_indices) == 0:
+                    break
+                beg = api_indices[0]
+                end = api_indices[1] if len(api_indices) > 1 else len(resp)
+                api_calls.append(resp[beg:end].strip().replace('\n', '\\n'))
+                beg = end
+
+            if len(api_calls) == 0:
                 self.add_system_message(self.model_prompts.api_only_instruction)
                 self.submit_model_chat_and_process_response()
             else:
@@ -267,7 +278,6 @@ class CallbackChatManager(ChatManagerBase):
 
     def submit_prompt(self, prompt):
         prev_discussion_cot = (self.output_discussion_state or {}).get('outputs_discussion_CoT', None)
-
         self.calls_queue = []
         self.prompts.append(prompt)
 
@@ -291,7 +301,7 @@ class CallbackChatManager(ChatManagerBase):
             self.add_system_message(f'Example {example_num}: {output}', example_num)
             self.output_discussion_state['model_outputs'][i] = output
 
-        if len(self.prompts) > 1:
+        if len(self.prompts) > 1 and prev_discussion_cot is not None:
             tmp_chat = []
             self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.analyze_new_prompt_task)
             self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.analyze_new_prompt_old_discussion)
@@ -300,6 +310,8 @@ class CallbackChatManager(ChatManagerBase):
             tmp_chat += self.model_chat[-len(self.examples):]
             self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.analyze_new_prompt_conclusion)
             response = self._get_assistant_response(tmp_chat)
+            self.save_chat_html(tmp_chat + [{'role': ChatRole.ASSISTANT, 'content': response}], f'CoT_{self.cot_count}.html')
+            self.cot_count += 1
             self.add_system_message(response)
 
         self.add_system_message(
@@ -318,8 +330,10 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(temp_chat, ChatRole.SYSTEM, self.model_prompts.analyze_discussion_task)
         self._add_msg(temp_chat, ChatRole.SYSTEM, f'Prompt: "{self.prompts[-1]}"')
         temp_chat += self.user_chat[self.output_discussion_state['user_chat_begin']:]
-
         recommendations = self._get_assistant_response(temp_chat)
+        self.save_chat_html(temp_chat + [{'role': ChatRole.ASSISTANT, 'content': recommendations}], f'CoT_{self.cot_count}.html')
+        self.cot_count += 1
+
         self._add_msg(temp_chat, ChatRole.SYSTEM, recommendations)
         self.output_discussion_state['outputs_discussion_CoT'] = temp_chat
 
