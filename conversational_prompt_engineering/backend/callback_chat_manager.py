@@ -54,7 +54,7 @@ class ModelPrompts:
             'From this point, don\'t use task_is_defined API. '
 
         self.generate_baseline_instruction_task = \
-            'After the user has provided the task description and the examples, generate a general prompt for this task. '
+            'Generate a general prompt for this task and submit it via submit_prompt API. '
 
         self.result_intro = 'Based on the suggested prompt, the model has produced the following outputs for the user input examples:'
 
@@ -139,7 +139,6 @@ class CallbackChatManager(ChatManagerBase):
 
         self.output_discussion_state = None
         self.calls_queue = []
-        self.call_depth = 0
         self.cot_count = 1
 
     @property
@@ -169,21 +168,33 @@ class CallbackChatManager(ChatManagerBase):
                 if self.example_num is None or (msg.get('example_num', None) or self.example_num) == self.example_num]
 
     def submit_model_chat_and_process_response(self):
-        max_call_depth = 3
-        if self.call_depth >= max_call_depth:
-            return
-        else:
-            self.call_depth += 1
-
-        execute_calls = len(self.calls_queue) == 0
-        if len(self.model_chat) > self.model_chat_length:
+        while len(self.model_chat) > self.model_chat_length:
+            self._save_chat_transcripts()
             resp = self._get_assistant_response(self._filtered_model_chat)
-            self._add_msg(self.model_chat, ChatRole.ASSISTANT, resp, example_num=self.example_num)
+            self.model_chat_length = len(self.model_chat)
+            self.calls_queue += self._parse_model_response(resp)
+
+            while len(self.calls_queue) > 0:
+                call = self.calls_queue.pop(0)
+                self._add_msg(self.model_chat, ChatRole.ASSISTANT, call, example_num=self.example_num)
+                self.model_chat_length += 1
+                self._execute_api_call(call)
+                self._save_chat_transcripts()
+
+    def _save_chat_transcripts(self):
+        self.save_chat_html(self.user_chat, "user_chat.html")
+        self.save_chat_html(self.model_chat, "model_chat.html")
+        if self.example_num is not None:
+            self.save_chat_html(self._filtered_model_chat, f'model_chat_example_{self.example_num}.html')
+
+    def _parse_model_response(self, resp, max_attempts=2):
+        err = ''
+        for num_attempt in range(max_attempts):
             if resp.startswith('```python\n'):
                 resp = resp[len('```python\n'): -len('\n```')]
-            self.model_chat_length = len(self.model_chat)
 
             api_calls = []
+            spans = []
             beg = 0
             while beg < len(resp) - 1:
                 api_indices = sorted([resp[beg:].index(name) + beg for name in self.api_names if name in resp[beg:]])
@@ -191,27 +202,40 @@ class CallbackChatManager(ChatManagerBase):
                     break
                 beg = api_indices[0]
                 end = api_indices[1] if len(api_indices) > 1 else len(resp)
+                spans.append((beg, end))
                 api_calls.append(resp[beg:end].strip().replace('\n', '\\n'))
                 beg = end
 
-            if len(api_calls) == 0:
-                self.add_system_message(self.model_prompts.api_only_instruction)
-                self.submit_model_chat_and_process_response()
-            else:
-                self.calls_queue += api_calls
+            leftovers = resp
+            if len(spans) > 0:
+                leftovers = ''.join([resp[prev[1]: cur[0]] for prev, cur in zip([(0, 0)] + spans, spans)])
+            is_valid = len(api_calls) > 0 and len(leftovers.strip()) == 0
 
-        if execute_calls:
-            while len(self.calls_queue) > 0:
-                call = self.calls_queue.pop(0)
-                try:
-                    exec(call)
-                except SyntaxError:
-                    self.calls_queue = []
-                    self.add_system_message(self.model_prompts.syntax_err_instruction)
-                    self.call_depth -= 1  # don't count syntax errors
-                    self.submit_model_chat_and_process_response()
+            if is_valid:
+                return api_calls
 
-        self.call_depth -= 1
+            err += f'\nattempt {num_attempt + 1}: {resp}'
+            tmp_chat = self._filtered_model_chat
+            self._add_msg(tmp_chat, ChatRole.ASSISTANT, resp)
+            self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.api_only_instruction)
+            resp = self._get_assistant_response(tmp_chat)
+
+        raise ValueError('Invalid model response' + err)
+
+    def _execute_api_call(self, call, max_attempts=2):
+        err = ''
+        for num_attempt in range(max_attempts):
+            try:
+                exec(call)
+                return
+            except SyntaxError:
+                err += f'\nattempt {num_attempt + 1}: {call}'
+                tmp_chat = self._filtered_model_chat
+                self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.syntax_err_instruction)
+                resp = self._get_assistant_response(tmp_chat)
+                call = self._parse_model_response(resp)[0]
+
+        raise ValueError('Invalid call syntax' + err)
 
     def add_user_message(self, message):
         self._add_msg(self.user_chat, ChatRole.USER, message)
@@ -231,10 +255,6 @@ class CallbackChatManager(ChatManagerBase):
                     agent_messages.append(msg)
             self.user_chat_length = len(self.user_chat)
 
-        self.save_chat_html(self.user_chat, "user_chat.html")
-        self.save_chat_html(self.model_chat, "model_chat.html")
-        if self.example_num is not None:
-            self.save_chat_html(self._filtered_model_chat, f'model_chat_example_{self.example_num}.html')
         if self.outputs:
             self.save_prompts_and_config(self.approved_prompts, self.approved_outputs)
         return agent_messages
@@ -249,21 +269,15 @@ class CallbackChatManager(ChatManagerBase):
 
     def task_is_defined(self):
         # open side chat with model
-        self.calls_queue = []
-
         tmp_chat = self.model_chat[:]
         self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.generate_baseline_instruction_task)
         resp = self._get_assistant_response(tmp_chat)
-        self.baseline_prompts["model_baseline_prompt"] = resp[:-2].replace("self.submit_prompt(\"", "")
+        submit_prmpt_call = self._parse_model_response(resp)[0]
+        self.baseline_prompts["model_baseline_prompt"] = submit_prmpt_call[:-2].replace("self.submit_prompt(\"", "")
         logging.info(f"baseline prompt is {self.baseline_prompts['model_baseline_prompt']}")
-        self.add_system_message(self.model_prompts.analyze_examples)
-        self.submit_model_chat_and_process_response()
 
-    def _strip_user_message(self):
-        last_msg = self.model_chat[-1]
-        submit_message_to_user = 'self.submit_message_to_user'
-        if submit_message_to_user in last_msg['content']:
-            last_msg['content'] = last_msg['content'][:last_msg['content'].index(submit_message_to_user)]
+        self.calls_queue = []
+        self.add_system_message(self.model_prompts.analyze_examples)
 
     def switch_to_example(self, example_num):
         example_num = int(example_num)
@@ -271,11 +285,9 @@ class CallbackChatManager(ChatManagerBase):
             return
 
         self.example_num = example_num
-        self.calls_queue = []
-        self._strip_user_message()
         discuss_ex = self.model_prompts.discuss_example_num.replace('EXAMPLE_NUM', str(self.example_num))
+        self.calls_queue = []
         self.add_system_message(discuss_ex, example_num=example_num)
-        self.submit_model_chat_and_process_response()
 
     def submit_prompt(self, prompt):
         prev_discussion_cot = (self.output_discussion_state or {}).get('outputs_discussion_CoT', None)
@@ -311,14 +323,13 @@ class CallbackChatManager(ChatManagerBase):
             tmp_chat += self.model_chat[-len(self.examples):]
             self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.analyze_new_prompt_conclusion)
             response = self._get_assistant_response(tmp_chat)
-            self.save_chat_html(tmp_chat + [{'role': ChatRole.ASSISTANT, 'content': response}], f'CoT_{self.cot_count}.html')
+            self.save_chat_html(tmp_chat + [{'role': ChatRole.ASSISTANT, 'content': response}],
+                                f'CoT_{self.cot_count}.html')
             self.cot_count += 1
             self.add_system_message(response)
 
         self.add_system_message(
             self.model_prompts.analyze_result_instruction.replace('NUM_EXAMPLES', str(len(self.examples))))
-
-        self.submit_model_chat_and_process_response()
 
     def output_accepted(self, example_num, output):
         example_idx = int(example_num) - 1
@@ -332,20 +343,19 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(temp_chat, ChatRole.SYSTEM, f'Prompt: "{self.prompts[-1]}"')
         temp_chat += self.user_chat[self.output_discussion_state['user_chat_begin']:]
         recommendations = self._get_assistant_response(temp_chat)
-        self.save_chat_html(temp_chat + [{'role': ChatRole.ASSISTANT, 'content': recommendations}], f'CoT_{self.cot_count}.html')
+        self.save_chat_html(temp_chat + [{'role': ChatRole.ASSISTANT, 'content': recommendations}],
+                            f'CoT_{self.cot_count}.html')
         self.cot_count += 1
 
         self._add_msg(temp_chat, ChatRole.SYSTEM, recommendations)
         self.output_discussion_state['outputs_discussion_CoT'] = temp_chat
 
         self.add_system_message(recommendations + '\n' + self.model_prompts.analyze_discussion_continue)
-        self.submit_model_chat_and_process_response()
 
     def conversation_end(self):
         self.prompt_conv_end = True
         self._save_chat_result()
         self.add_system_message(self.model_prompts.conversation_end_instruction)
-        self.submit_model_chat_and_process_response()
 
     def set_instructions(self, task_instruction, api_instruction, function2description):
         self.api_names = [key[:key.index('(')] for key in function2description.keys()]
