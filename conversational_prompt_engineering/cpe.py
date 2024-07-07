@@ -27,6 +27,7 @@ show_pages(
     ]
 )
 
+
 class APIName(Enum):
     BAM, Watsonx = "bam", "watsonx"
 
@@ -45,7 +46,7 @@ def new_cycle():
     if "manager" not in st.session_state:
         sha1 = hashlib.sha1()
         sha1.update(st.session_state.key.encode('utf-8'))
-        st.session_state.conv_id = sha1.hexdigest()[:16] # deterministic hash of 16 characters
+        st.session_state.conv_id = sha1.hexdigest()[:16]  # deterministic hash of 16 characters
         st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key, model=st.session_state.model,
                                                      conv_id=st.session_state.conv_id)
     manager = st.session_state.manager
@@ -78,7 +79,6 @@ def new_cycle():
             st.write(msg['content'])
 
 
-
 def callback_cycle():
     # create the manager if necessary
     if "manager" not in st.session_state:
@@ -86,9 +86,10 @@ def callback_cycle():
         sha1.update(st.session_state.credentials["key"].encode('utf-8'))
         st.session_state.conv_id = sha1.hexdigest()[:16]  # deterministic hash of 16 characters
 
-        st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials, model=st.session_state.model,
+        st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials,
+                                                       model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
-                                                       conv_id=st.session_state.conv_id, api = st.session_state.API.value,
+                                                       conv_id=st.session_state.conv_id, api=st.session_state.API.value,
                                                        email_address=st.session_state.email_address)
 
     manager = st.session_state.manager
@@ -128,15 +129,6 @@ def callback_cycle():
         for msg in messages:
             with st.chat_message(msg['role']):
                 st.write(msg['content'])
-
-    if os.path.exists(manager.result_json_file):
-        with open(manager.result_json_file) as file:
-            btn = st.download_button(
-                label="Download chat result",
-                data=file,
-                file_name=f'chat_result_{st.session_state["selected_dataset"]}.json',
-                mime="text/json"
-            )
 
 
 def old_cycle():
@@ -192,15 +184,17 @@ def old_cycle():
         if prompt := st.chat_input("What is up?"):
             show_and_call(prompt)
 
+
 def submit_button_clicked(target_model):
-    #verify credentials
+    # verify credentials
     creds_are_ok = True
     st.session_state.cred_error = ""
     st.session_state.email_error = ""
     if st.session_state.API == APIName.BAM and st.session_state.bam_api_key != "":
         st.session_state.credentials = {'key': st.session_state.bam_api_key}
     elif st.session_state.API == APIName.Watsonx and st.session_state.watsonx_api_key != "" and st.session_state.project_id != "":
-        st.session_state.credentials = {'key': st.session_state.watsonx_api_key, 'project_id': st.session_state.project_id}
+        st.session_state.credentials = {'key': st.session_state.watsonx_api_key,
+                                        'project_id': st.session_state.project_id}
     else:
         creds_are_ok = False
     if creds_are_ok:
@@ -209,8 +203,8 @@ def submit_button_clicked(target_model):
     else:
         st.session_state.cred_error = ':heavy_exclamation_mark: Please provide your credentials'
 
-    #verify email:
-    if verify_email(st.session_state.email_address_input): #check text area
+    # verify email:
+    if verify_email(st.session_state.email_address_input):  # check text area
         st.session_state.email_address = st.session_state.email_address_input
     else:
         st.session_state.email_error = ':heavy_exclamation_mark: Please provide your email address'
@@ -218,7 +212,6 @@ def submit_button_clicked(target_model):
 
 def verify_email(email_address):
     return "@" in email_address and "ibm" in email_address and email_address.index("@") != 0
-
 
 
 def load_environment_variables():
@@ -249,16 +242,15 @@ def init_set_up_page():
         if hasattr(st.session_state, "cred_error") and st.session_state.cred_error != "":
             st.error(st.session_state.cred_error)
 
-
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     st.title(":blue[IBM Research Conversational Prompt Engineering]")
 
-    #default setting
+    # default setting
     st.session_state.model = 'llama-3'
     st.session_state.target_model = 'llama-3'
 
-    if "API" not in st.session_state: # set default API to Watsonx
+    if "API" not in st.session_state:  # set default API to Watsonx
         st.session_state.API = APIName.Watsonx
     if 'credentials' not in st.session_state:
         st.session_state["credentials"] = {}
@@ -267,7 +259,7 @@ def init_set_up_page():
 
     credentials_are_set = 'credentials' in st.session_state and 'key' in st.session_state['credentials']
     email_is_set = hasattr(st.session_state, "email_address")
-    OK_to_proceed_to_chat =  credentials_are_set and email_is_set
+    OK_to_proceed_to_chat = credentials_are_set and email_is_set
 
     if OK_to_proceed_to_chat:
         return True
@@ -275,7 +267,7 @@ def init_set_up_page():
     else:
         # credentials:
         st.empty()
-        #with entry_page.form("my_form"):
+        # with entry_page.form("my_form"):
         st.write("Welcome to IBM Research Conversational Prompt Engineering (CPE) service.")
         st.write(
             "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.")
@@ -287,9 +279,6 @@ def init_set_up_page():
             "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
         st.write("To proceed, please provide your BAM or WatsonX credentials and select a model.")
 
-
-
-
         api = st.radio(
             "",
             # add dummy option to make it the default selection
@@ -300,14 +289,15 @@ def init_set_up_page():
             st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
         set_credentials()
 
-        target_model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.",
-                                options=["llama-3", "mixtral", "granite"],
-                                key="target_model_radio",
-                                captions=["llama-3-70B-instruct. Recommended for most use-cases.",
-                                       "mixtral-8x7B-instruct-v01. Recommended for very long documents.",
-                                       "granite-13b-chat-v2"])
+        target_model = st.radio(
+            label="Select the target model. The prompt that you will build will be formatted for this model.",
+            options=["llama-3", "mixtral", "granite"],
+            key="target_model_radio",
+            captions=["llama-3-70B-instruct. Recommended for most use-cases.",
+                      "mixtral-8x7B-instruct-v01. Recommended for very long documents.",
+                      "granite-13b-chat-v2"])
 
-        st.text_input(label = "Organization email address", key="email_address_input")
+        st.text_input(label="Organization email address", key="email_address_input")
         if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
             st.error(st.session_state.email_error)
 
