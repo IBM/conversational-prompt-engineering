@@ -338,8 +338,11 @@ class CallbackChatManager(ChatManagerBase):
         example_idx = int(example_num) - 1
         self.outputs[example_idx] = output
         self.model_chat[-1]['example_num'] = None
-        if len(self.calls_queue) == 0 and example_idx < len(self.examples) - 1:
-            self.calls_queue.append(f'self.switch_to_example({example_idx + 2})')
+        if len(self.calls_queue) == 0:
+            if example_idx < len(self.examples) - 1:
+                self.calls_queue.append(f'self.switch_to_example({example_idx + 2})')
+            else:
+                self.calls_queue.append('self.end_outputs_discussion()')
 
     def end_outputs_discussion(self):
         self.calls_queue = []
