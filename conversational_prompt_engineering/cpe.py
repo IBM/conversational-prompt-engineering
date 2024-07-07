@@ -88,7 +88,8 @@ def callback_cycle():
 
         st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials, model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
-                                                       conv_id=st.session_state.conv_id, api = st.session_state.API.value)
+                                                       conv_id=st.session_state.conv_id, api = st.session_state.API.value,
+                                                       email_address=st.session_state.email_address)
 
     manager = st.session_state.manager
 
@@ -192,7 +193,10 @@ def old_cycle():
             show_and_call(prompt)
 
 def submit_button_clicked(target_model):
+    #verify credentials
     creds_are_ok = True
+    st.session_state.cred_error = ""
+    st.session_state.email_error = ""
     if st.session_state.API == APIName.BAM and st.session_state.bam_api_key != "":
         st.session_state.credentials = {'key': st.session_state.bam_api_key}
     elif st.session_state.API == APIName.Watsonx and st.session_state.watsonx_api_key != "" and st.session_state.project_id != "":
@@ -203,36 +207,75 @@ def submit_button_clicked(target_model):
         st.session_state.model = 'llama-3'
         st.session_state.target_model = target_model
     else:
-        st.error(':heavy_exclamation_mark: Please provide your credentials')
+        st.session_state.cred_error = ':heavy_exclamation_mark: Please provide your credentials'
+
+    #verify email:
+    if verify_email(st.session_state.email_address_input): #check text area
+        st.session_state.email_address = st.session_state.email_address_input
+    else:
+        st.session_state.email_error = ':heavy_exclamation_mark: Please provide your email address'
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+def verify_email(email_address):
+    return "@" in email_address and "ibm" in email_address and email_address.index("@") != 0
 
-st.title(":blue[IBM Research Conversational Prompt Engineering]")
 
-if "BAM_APIKEY" in os.environ:
-    st.session_state.credentials = {}
-    st.session_state.API = APIName.BAM
-    st.session_state.credentials["key"] = os.environ["BAM_APIKEY"]
-elif "WATSONX_APIKEY" in os.environ:
-    st.session_state.credentials = {}
-    st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
-    st.session_state.API = APIName.Watsonx
-    st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
-else:
-    if not hasattr(st.session_state, 'API'):
-        st.session_state.API = APIName.BAM  # default setting
 
-#default setting
-st.session_state.model = 'llama-3'
-st.session_state.target_model = 'llama-3'
+def load_environment_variables():
+    if "BAM_APIKEY" in os.environ:
+        st.session_state.credentials = {}
+        st.session_state.API = APIName.BAM
+        st.session_state.credentials["key"] = os.environ["BAM_APIKEY"]
+    elif "WATSONX_APIKEY" in os.environ:
+        st.session_state.credentials = {}
+        st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
+        st.session_state.API = APIName.Watsonx
+        st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
 
-if 'credentials' not in st.session_state or 'key' not in st.session_state['credentials']:
+    if "IBM_EMAIL" in os.environ and verify_email(os.environ["IBM_EMAIL"]):
+        st.session_state.email_address = os.environ["IBM_EMAIL"]
 
-        if 'credentials' not in st.session_state:
-            st.session_state["credentials"] = {}
-        entry_page = st.empty()
-    #with entry_page.form("my_form"):
+
+def init_set_up_page():
+    def set_credentials():
+        st.session_state.API = APIName.Watsonx if api == "Watsonx" else APIName.BAM
+        if st.session_state.API == APIName.Watsonx:
+            key_val = st.session_state.credentials.get('key', "")
+            st.text_input(label="Watsonx API key", key="watsonx_api_key", disabled=False, value=key_val)
+            proj_id_val = st.session_state.credentials.get('project_id', "")
+            st.text_input(label="project ID", key="project_id", disabled=False, value=proj_id_val)
+        else:
+            st.text_input(label="BAM API key", key="bam_api_key", disabled=False)
+        if hasattr(st.session_state, "cred_error") and st.session_state.cred_error != "":
+            st.error(st.session_state.cred_error)
+
+
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+    st.title(":blue[IBM Research Conversational Prompt Engineering]")
+
+    #default setting
+    st.session_state.model = 'llama-3'
+    st.session_state.target_model = 'llama-3'
+
+    if "API" not in st.session_state: # set default API to Watsonx
+        st.session_state.API = APIName.Watsonx
+    if 'credentials' not in st.session_state:
+        st.session_state["credentials"] = {}
+
+    load_environment_variables()
+
+    credentials_are_set = 'credentials' in st.session_state and 'key' in st.session_state['credentials']
+    email_is_set = hasattr(st.session_state, "email_address")
+    OK_to_proceed_to_chat =  credentials_are_set and email_is_set
+
+    if OK_to_proceed_to_chat:
+        return True
+
+    else:
+        # credentials:
+        st.empty()
+        #with entry_page.form("my_form"):
         st.write("Welcome to IBM Research Conversational Prompt Engineering (CPE) service.")
         st.write(
             "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.")
@@ -244,15 +287,8 @@ if 'credentials' not in st.session_state or 'key' not in st.session_state['crede
             "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
         st.write("To proceed, please provide your BAM or WatsonX credentials and select a model.")
 
-        def set_credentials():
-            st.session_state.API = APIName.Watsonx if api == "Watsonx" else APIName.BAM
-            if st.session_state.API == APIName.Watsonx:
-                key_val = st.session_state.credentials.get('key', None)
-                st.text_input(label="Watsonx API key", key="watsonx_api_key", disabled=False, value=key_val)
-                proj_id_val = st.session_state.credentials.get('project_id', None)
-                st.text_input(label="project ID", key="project_id", disabled=False, value=proj_id_val)
-            else:
-                st.text_input(label="BAM API key", key="bam_api_key", disabled=False)
+
+
 
         api = st.radio(
             "",
@@ -264,15 +300,22 @@ if 'credentials' not in st.session_state or 'key' not in st.session_state['crede
             st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
         set_credentials()
 
-        target_model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.", options=["llama-3", "mixtral", "granite"],
-                         captions=["llama-3-70B-instruct. Recommended for most use-cases.",
-                                   "mixtral-8x7B-instruct-v01. Recommended for very long documents.",
-                                   "granite-13b-chat-v2"])
+        target_model = st.radio(label="Select the target model. The prompt that you will build will be formatted for this model.",
+                                options=["llama-3", "mixtral", "granite"],
+                                key="target_model_radio",
+                                captions=["llama-3-70B-instruct. Recommended for most use-cases.",
+                                       "mixtral-8x7B-instruct-v01. Recommended for very long documents.",
+                                       "granite-13b-chat-v2"])
+
+        st.text_input(label = "Organization email address", key="email_address_input")
+        if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
+            st.error(st.session_state.email_error)
 
         st.button("Submit", on_click=submit_button_clicked, args=[target_model])
+        return False
 
-else:
-    callback_cycle()
-    # new_cycle()
-    # old_cycle()
 
+if __name__ == "__main__":
+    set_up_is_done = init_set_up_page()
+    if set_up_is_done:
+        callback_cycle()
