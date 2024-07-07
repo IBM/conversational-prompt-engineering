@@ -64,7 +64,7 @@ class ModelPrompts:
             'The discussion should take as long as necessary and result in an output accepted by the user in clear way, ' \
             'with no doubts, conditions or modifications. ' \
             'When the output is accepted, call output_accepted API passing the example number and the output text. ' \
-            'After calling output_accepted you should call either switch_to_example API to move to the next example, ' \
+            'After calling output_accepted call either switch_to_example API to move to the next example, ' \
             'or end_outputs_discussion API if all NUM_EXAMPLES have been accepted.\n' \
             'When the user asks to update the prompt, show the updated prompt to them. ' \
             'Remember to communicate only via API calls.'
@@ -72,8 +72,7 @@ class ModelPrompts:
         self.discuss_example_num = \
             'Present the model output for Example EXAMPLE_NUM to the user. Apply to the generated output the user comments from above. ' \
             'Separate with empty lines the model output from the rest of message. ' \
-            'Discuss the presented output. Include the system conclusion for this example (if exists) into the discussion.\n' \
-            'After the discussion remember to call either switch_to_example or end_outputs_discussion'
+            'Discuss the presented output. Include the system conclusion for this example (if exists) into the discussion.' \
 
         self.syntax_err_instruction = 'The last API call produced a syntax error. Return the same call with fixed error. '
         self.api_only_instruction = 'Please communicate only via API calls defined above. Do not use plain text or non-existing API in the response. '
@@ -339,6 +338,8 @@ class CallbackChatManager(ChatManagerBase):
         example_idx = int(example_num) - 1
         self.outputs[example_idx] = output
         self.model_chat[-1]['example_num'] = None
+        if len(self.calls_queue) == 0 and example_idx < len(self.examples) - 1:
+            self.calls_queue.append(f'self.switch_to_example({example_idx + 2})')
 
     def end_outputs_discussion(self):
         self.calls_queue = []
