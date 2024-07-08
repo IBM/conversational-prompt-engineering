@@ -196,21 +196,22 @@ class CallbackChatManager(ChatManagerBase):
             if resp.startswith('```python\n'):
                 resp = resp[len('```python\n'): -len('\n```')]
 
+            len_resp = len(resp)
             api_indices = sorted(list({
                 from_idx + resp[from_idx:].index(name) for name in self.api_names
-                for from_idx in range(0, len(resp), len(name)) if name in resp[from_idx:]
+                for from_idx in range(0, len_resp, len(name)) if name in resp[from_idx:]
             }))
             api_calls = []
             spans = []
             if len(api_indices) > 0:
-                for beg, end in zip(api_indices, api_indices[1:] + [len(resp)]):
+                for beg, end in zip(api_indices, api_indices[1:] + [len_resp]):
                     last_close_bracket = beg + (resp[beg: end].rfind(')') if ')' in resp[beg: end] else 0) + 1
                     spans.append((beg, last_close_bracket))
-                    api_calls.append(resp[beg:end].strip().replace('\n', '\\n'))
+                    api_calls.append(resp[beg:last_close_bracket].strip().replace('\n', '\\n'))
 
             leftovers = resp
             if len(spans) > 0:
-                leftovers = ''.join([resp[prev[1]: cur[0]] for prev, cur in zip([(0, 0)] + spans, spans)])
+                leftovers = ''.join([resp[prev[1]: cur[0]] for prev, cur in zip([(0, 0)] + spans, spans + [(len_resp, len_resp)])])
             is_valid = len(api_calls) > 0 and len(leftovers.strip()) == 0
 
             if is_valid:
