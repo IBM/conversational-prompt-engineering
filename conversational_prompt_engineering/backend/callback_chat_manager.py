@@ -67,7 +67,8 @@ class ModelPrompts:
             'When the output is accepted, call output_accepted API passing the example number and the output text. ' \
             'After calling output_accepted call either switch_to_example API to move to the next example, ' \
             'or end_outputs_discussion API if all NUM_EXAMPLES have been accepted.\n' \
-            'When the user asks to update the prompt, show the updated prompt to them. ' \
+            'Assume that the user comments relay to the output. ' \
+            'Only when the user explicitly says that he wants to update the prompt and not the output, show the updated prompt to them.\n' \
             'Remember to communicate only via API calls.'
 
         self.discuss_example_num = \
