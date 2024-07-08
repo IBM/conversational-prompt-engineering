@@ -76,3 +76,14 @@ def build_few_shot_prompt_llama(prompt, texts_and_summaries):
         prompt += _get_llama_header(ChatRole.USER) + "\n\nNow, please generate a desired output to the following text.\n\n"
     prompt += "Text: {text}\n\n" + LLAMA_END_OF_MESSAGE + _get_llama_header(ChatRole.ASSISTANT) + summary_prefix
     return prompt
+
+
+def remove_tags_from_zero_shot_prompt(prompt, model_type):
+    if model_type == "llama-3":
+        return prompt.replace("<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n", "").replace(
+            "<|eot_id|><|start_header_id|>assistant<|end_header_id|>", "")
+    elif model_type == "mixtral":
+        return prompt.replace("[INST] ", ""). replace("[\INST]", "")
+    elif model_type == "granite":
+        print("Granite prompt is not cleaned up")
+        return prompt
