@@ -200,7 +200,7 @@ if __name__ == "__main__":
 
     api = "bam"  # select the API "bam"/"watsonx"
     target_model = "llama-3"  # select the model that generates the summaries
-    evaluation_mode = "test_csv" #"chat_res"  # select the evaluation mode "chat_res"/"test_csv"
+    evaluation_mode = "chat_res"  # select the evaluation mode "chat_res"/"test_csv"
     dataset_name = "multiwoz"  # select the dataset name to evaluate (when evaluation mode is "test_csv")
     dataset_split = "test.csv" # select the dataset split to evaluate (when evaluation mode is "test_csv")
     chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Orith_BAM/07-07-2024 13:10:27"
