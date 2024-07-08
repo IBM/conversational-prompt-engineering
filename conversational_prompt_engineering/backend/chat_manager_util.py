@@ -32,7 +32,7 @@ def extract_delimited_text(txt, delims):
 
 
 class ChatManagerBase:
-    def __init__(self, credentials, model, conv_id, target_model, api) -> None:
+    def __init__(self, credentials, model, conv_id, target_model, api, email_address) -> None:
         with open("backend/model_params.json", "r") as f:
             params = json.load(f)
         logging.info(f"selected {model}")
@@ -58,6 +58,7 @@ class ChatManagerBase:
         self.dataset_name = None
         self.state = None
         self.timing_report = []
+        self.email_address = email_address
 
         self.set_output_dir()
         logging.info(f"output is saved to {os.path.abspath(self.out_dir)}")
@@ -65,7 +66,7 @@ class ChatManagerBase:
         os.makedirs(self.out_dir, exist_ok=True)
 
     def set_output_dir(self):
-        out_folder = output_dir_hash_to_name.get(self.conv_id, self.conv_id) #default is self.conv_id
+        out_folder = self.email_address.split("@")[0] #default is self.conv_id
         self.out_dir = f'_out/{out_folder}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
 
     def save_prompts_and_config(self, approved_prompts, approved_outputs):

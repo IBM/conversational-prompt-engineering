@@ -73,5 +73,5 @@ class WatsonXGenerate:
                 else:
                     logging.error("ERROR Got API response exception", e)
         sys.tracebacklimit = 0
-        raise Exception("There is an error connecting to BAM. Either check your API key or try again in a few minutes.")
+        raise Exception("There is an error connecting to WatsonX. Either check your API key or try again in a few minutes.")
 
