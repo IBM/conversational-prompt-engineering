@@ -12,13 +12,15 @@ from conversational_prompt_engineering.backend.llm_as_a_judge import LlmAsAJudge
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_eval
 import time
 
-NUM_EXAMPLES = 5
+MIN_NUM_EXAMPLES_TO_UPLOAD = 5
+MIN_EXAMPLE_TO_EVALUATE = 3
 
 class WorkMode(Enum):
     REGULAR, DUMMY_PROMPT = range(2)
 
+work_mode = WorkMode.REGULAR
 
-dimensions = ["dim1", "dim2", "dim3"]
+dimensions = ["dim1"]
 
 prompt_types = ["baseline", "zero_shot", "few_shot"]
 
@@ -43,7 +45,7 @@ prompt_type_metadata = {"baseline": {"title": "Prompt 1 (Baseline prompt)", "bui
                         "zero_shot": {"title": "Prompt 2 (CPE zero shot prompt)", "build_func": build_z_sh_prompt},
                          "few_shot": {"title": "Prompt 3 (CPE few shot prompt)", "build_func": build_f_sh_prompt}}
 
-work_mode = WorkMode.REGULAR
+
 
 DEBUG_LLM_AS_A_JUDGE = False
 
@@ -68,14 +70,14 @@ def previous_text():
 
 
 def display_summary(side):
-    mixed_to_real = st.session_state.generated_data[st.session_state.count]["mixed_indices"][side]
+    mixed_to_real = st.session_state.generated_data[st.session_state.count]["mixed_indices_mapping_to_prompt_type"][side]
     summary = st.session_state.generated_data[st.session_state.count][f"{mixed_to_real}_summary"]
     st.write(f"Summary {side+1}")
     st.text_area(label=f"output_{side}", value=summary, label_visibility="collapsed", height=200)
 
 
 def display_llm_judge(side):
-    mixed_to_real = st.session_state.generated_data[st.session_state.count]["mixed_indices"][side]
+    mixed_to_real = st.session_state.generated_data[st.session_state.count]["mixed_indices_mapping_to_prompt_type"][side]
     judge = "ABS: " + \
             st.session_state.generated_data[st.session_state.count][f'{mixed_to_real}_llm_judge_abs_result'] \
             + " Feedback: " + \
@@ -142,14 +144,15 @@ def validate_annotation():
 
 def run():
     num_prompts = 0
+
     if 'manager' in st.session_state:
         num_prompts = len(st.session_state.manager.approved_prompts)
 
         if work_mode == WorkMode.DUMMY_PROMPT and num_prompts < 2:
             st.session_state.manager.prompts = ["output the line: we all live in a yellow submarine", "output the line: the long and winding road"]
             num_prompts = len(st.session_state.manager.approved_prompts)
-            if st.session_state.manager.baseline_prompt == "":
-                st.session_state.manager.baseline_prompt = "summarize the following text"
+            if "model_baseline_prompt" not in st.session_state.manager.baseline_prompts:
+                st.session_state.manager.baseline_prompts["model_baseline_prompt"] = "summarize the following text"
 
     if num_prompts < 1:
         st.write("Evaluation will be open after at least one prompt has been curated in the chat.")
@@ -164,7 +167,7 @@ def run():
         # present instructions
         st.title("IBM Research Conversational Prompt Engineering - Evaluation")
         with st.expander("Instructions (click to expand)"):
-            st.markdown(f"1) In case you built the prompt using your own data rather than a datasets from our catalog, you should upload a csv file with the evaluation examples. {NUM_EXAMPLES} examples are chosen at random for evaluation.")
+            st.markdown(f"1) In case you built the prompt using your own data rather than a datasets from our catalog, you should upload a csv file with the evaluation examples. {MIN_NUM_EXAMPLES_TO_UPLOAD} examples are chosen at random for evaluation.")
             st.markdown("2) Below you can see the prompts that were curated during your chat and will be used for evaluation.")
             st.markdown(f"3) Next, click on ***Generate output***. Each prompt will be used to generate an output for each of the examples.")
             st.markdown("4) After the outputs are generated, select the best output for each text. The order of the outputs is mixed for each example.")
@@ -221,16 +224,20 @@ def run():
                     row['sides'] = {}
                     row['prompts'] = {}
 
+        def add_next_buttons(s):
+            col1, col2, col3, col4, col5 = st.columns([1]*5)
+            with col1:
+                if st.button("⏮️ Previous", on_click=previous_text, key=f"prev_{s}"):
+                    pass
+            with col2:
+                if st.button("Next ⏭️", on_click=next_text, key=f"next_{s}"):
+                    pass
+
+
         # showing texts and summaries to evaluate
         if 'generated_data' in st.session_state and len(st.session_state.generated_data) > 0:
             st.header(f"Text {st.session_state.count+1}/{len(st.session_state.generated_data)}", divider="gray")
-            col1, col2, col3, col4, col5 = st.columns([1]*5)
-            with col1:
-                if st.button("⏮️ Previous", on_click=previous_text):
-                    pass
-            with col2:
-                if st.button("Next ⏭️", on_click=next_text):
-                    pass
+            add_next_buttons("above_summaries")
             display_text()
             st.divider()
             st.subheader("Generated outputs (random order)")
@@ -242,7 +249,7 @@ def run():
                     display_summary(i)
                     if "llm_judge" in st.session_state:
                         display_llm_judge(i)
-
+            add_next_buttons("bellow_summaries")
             options = ["Best", "Worst"]
             radio_button_labels = [f"Summary {i+1}" for i in range(len(prompt_types))]
             for dim in dimensions:
@@ -254,34 +261,34 @@ def run():
                                 f"{op} summary:",
                             # add dummy option to make it the default selection
                                 options = radio_button_labels,
-                                horizontal=True, key=f"radio_{dim}_{op}",
-                                index=st.session_state.generated_data[st.session_state.count]['sides'].get((dim,op)),
+                                horizontal=True, key=f"radio_{st.session_state.count}_{dim}_{op}",
+                                index=st.session_state.generated_data[st.session_state.count]['sides'].get((dim,op))
                                 )
                         if selected_value:
                             side_index = radio_button_labels.index(selected_value)
-                            mixed_to_real = st.session_state.generated_data[st.session_state.count]["mixed_indices"][side_index]
-                            selected_prompt = st.session_state.generated_data[st.session_state.count][f"{mixed_to_real}_prompt"]
+                            real_prompt_type = st.session_state.generated_data[st.session_state.count]["mixed_indices_mapping_to_prompt_type"][side_index]
+                            selected_prompt = st.session_state.generated_data[st.session_state.count][f"{real_prompt_type}_prompt"]
                             st.session_state.generated_data[st.session_state.count]['sides'][(dim,op)] = side_index
-                            st.session_state.generated_data[st.session_state.count]['prompts'][(dim,op)] = mixed_to_real
+                            st.session_state.generated_data[st.session_state.count]['prompts'][(dim,op)] = real_prompt_type
                 st.divider()
 
-            num_of_answered_questions = len(st.session_state.generated_data[st.session_state.count]['prompts'])
-            # enable only after the user ranked the all summaries
-            finish_clicked = st.button(f"Submit annotation for example {st.session_state.count+1}", disabled = num_of_answered_questions != len(dimensions)*len(options))
+            num_of_fully_annotated_items = len([x["prompts"] for x in st.session_state.generated_data if len(x["prompts"]) == len(dimensions)*len(options)])
+            st.write(f"Annotation for {num_of_fully_annotated_items} out of {len(st.session_state.generated_data)} is completed")
+            finish_clicked = st.button(f"Submit", disabled = num_of_fully_annotated_items < MIN_EXAMPLE_TO_EVALUATE)
             if finish_clicked:
                 if validate_annotation():
                     # showing aggregated results
                     results, num_of_examples = calculate_results()
-                    st.write(f"Finished annotating {num_of_examples} examples")
+                    st.write(f"Submitted annotations for {num_of_examples} examples")
                     save_results()
-                    st.write(f"Compared between {len(st.session_state.eval_prompts)} prompts")
-                    for dim in dimensions:
-                        st.write(f"{dim}:")
-                        for prompt_type in results:
-                            num_of_time_prompt_is_best = results[prompt_type].get((dim, "Best"), 0)
-                            pct_val = '{0:.2f}'.format(100*num_of_time_prompt_is_best/num_of_examples)
-                            st.write(f"{prompt_type} prompt was chosen {num_of_time_prompt_is_best} {'times' if num_of_time_prompt_is_best != 1 else 'time'} ({pct_val}%) ")
-
+                    #st.write(f"Compared between {len(st.session_state.eval_prompts)} prompts")
+                    #for dim in dimensions:
+                    #    st.write(f"{dim}:")
+                    #    for prompt_type in results:
+                    #        num_of_time_prompt_is_best = results[prompt_type].get((dim, "Best"), 0)
+                    #        pct_val = '{0:.2f}'.format(100*num_of_time_prompt_is_best/num_of_examples)
+                    #        st.write(f"{prompt_type} prompt was chosen {num_of_time_prompt_is_best} {'times' if num_of_time_prompt_is_best != 1 else 'time'} ({pct_val}%) ")
+                    st.write("Your annotation is saved. Thank you for contributing to the CPE project!")
 
 if __name__ == "__main__":
     run()

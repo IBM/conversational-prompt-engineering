@@ -81,7 +81,7 @@ class ChatManagerBase:
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
             config = {"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name,
                        "baseline_prompts": self.baseline_prompts,
-                      "session_name": self.user_session_name}
+                      }
             json.dump(config, f)
 
     def save_chat_html(self, chat, file_name):

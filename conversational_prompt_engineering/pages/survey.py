@@ -2,11 +2,11 @@ import streamlit as st
 import os
 import pandas as pd
 
-
-questions = ["1.	I’m satisfied with the final prompt, it met my requirements. ",
+prompt_from_chat = st.session_state.manager.prompts[-1] if st.session_state.manager.prompts else "no-prompt"
+questions = [f"1.	I’m satisfied with the final prompt **{prompt_from_chat}**, it met my requirements. ",
              "2.	The system helped me think through how the summaries should look like and what criteria to consider when building the prompt",
              "3.	I felt the system was pleasant and responsive throughout the interaction.",
-             "4.	I’m statisfied with the time it took to come up with the final prompt"
+             "4.	I’m satisfied with the time it took to come up with the final prompt"
              ]
 answers = [None]* len(questions)
 
@@ -27,7 +27,7 @@ def run():
             # add dummy option to make it the default selection
             options=radio_button_options,
             horizontal=True, key=f"summary_radio_{i}",
-            index=None if answers[i] is None else answers[i]-1,
+            index=None
         )
         if selected_value:
             answers[i] = selected_value
@@ -41,4 +41,7 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    if False: #if not hasattr(st.session_state.manager, "prompt_conv_end") or not st.session_state.manager.prompt_conv_end:
+        st.write("Evaluation will be open after at least one prompt has been curated in the chat.")
+    else:
+        run()
