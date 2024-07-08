@@ -207,7 +207,7 @@ class CallbackChatManager(ChatManagerBase):
                 for beg, end in zip(api_indices, api_indices[1:] + [len_resp]):
                     last_close_bracket = beg + (resp[beg: end].rfind(')') if ')' in resp[beg: end] else 0) + 1
                     spans.append((beg, last_close_bracket))
-                    api_calls.append(resp[beg:last_close_bracket].strip().replace('\n', '\\n'))
+                    api_calls.append(resp[beg:last_close_bracket].strip().replace('\n', '\\n').replace('\\n', '  \\n'))
 
             leftovers = resp
             if len(spans) > 0:
