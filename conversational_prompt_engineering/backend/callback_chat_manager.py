@@ -193,18 +193,16 @@ class CallbackChatManager(ChatManagerBase):
             if resp.startswith('```python\n'):
                 resp = resp[len('```python\n'): -len('\n```')]
 
+            api_indices = sorted(list({
+                from_idx + resp[from_idx:].index(name) for name in self.api_names
+                for from_idx in range(0, len(resp), len(name)) if name in resp[from_idx:]
+            }))
             api_calls = []
             spans = []
-            beg = 0
-            while beg < len(resp) - 1:
-                api_indices = sorted([resp[beg:].index(name) + beg for name in self.api_names if name in resp[beg:]])
-                if len(api_indices) == 0:
-                    break
-                beg = api_indices[0]
-                end = api_indices[1] if len(api_indices) > 1 else len(resp)
-                spans.append((beg, end))
-                api_calls.append(resp[beg:end].strip().replace('\n', '\\n'))
-                beg = end
+            if len(api_indices) > 0:
+                for beg, end in zip(api_indices, api_indices[1:] + [len(resp)]):
+                    spans.append((beg, end))
+                    api_calls.append(resp[beg:end].strip().replace('\n', '\\n'))
 
             leftovers = resp
             if len(spans) > 0:
