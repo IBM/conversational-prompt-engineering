@@ -71,8 +71,8 @@ class ModelPrompts:
             'Remember to communicate only via API calls.'
 
         self.discuss_example_num = \
-            'Apply the user comments from above to the model output for Example EXAMPLE_NUM, and present the result to the user.' \
-            'Indicate the example number, and separate between the output and your text with empty lines. ' \
+            'Apply the user comments from above to the model output for Example EXAMPLE_NUM, and present the result to the user. ' \
+            'Indicate the example (number), and separate between the output and your text with empty lines. ' \
             'Discuss the presented output taking into account the system conclusion for this example if exists.' \
 
         self.syntax_err_instruction = 'The last API call produced a syntax error. Return the same call with fixed error. '
