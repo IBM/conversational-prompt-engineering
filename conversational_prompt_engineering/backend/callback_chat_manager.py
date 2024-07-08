@@ -102,7 +102,7 @@ class ModelPrompts:
         self.analyze_new_prompt_new_outputs = '\nProduced outputs:\n'
 
         self.conversation_end_instruction = \
-            'Present the user the final prompt and end the conversation. Do not call conversation_end API anymore.'
+            'Present to the user the final prompt in a nice format, and end the conversation. Do not call conversation_end API anymore.'
 
 
 class MixtralPrompts(ModelPrompts):
