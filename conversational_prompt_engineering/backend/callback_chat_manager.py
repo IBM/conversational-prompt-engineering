@@ -408,7 +408,9 @@ class CallbackChatManager(ChatManagerBase):
             'prompts': self.prompts,
             'baseline_prompts': self.baseline_prompts,
             'target_model': self.target_bam_client.parameters['model_id'],
-            'dataset_name': self.dataset_name
+            'dataset_name': self.dataset_name,
+            'sent_words_count': self.bam_client.sent_words_count,
+            'received_words_count': self.bam_client.received_words_count
         }
         with open(self.result_json_file, 'w') as f:
             json.dump(data, f)

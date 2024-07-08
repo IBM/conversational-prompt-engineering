@@ -190,13 +190,15 @@ def submit_button_clicked(target_model):
     creds_are_ok = True
     st.session_state.cred_error = ""
     st.session_state.email_error = ""
-    if st.session_state.API == APIName.BAM and st.session_state.bam_api_key != "":
-        st.session_state.credentials = {'key': st.session_state.bam_api_key}
-    elif st.session_state.API == APIName.Watsonx and st.session_state.watsonx_api_key != "" and st.session_state.project_id != "":
-        st.session_state.credentials = {'key': st.session_state.watsonx_api_key,
-                                        'project_id': st.session_state.project_id}
-    else:
-        creds_are_ok = False
+    creds_are_ok = "key" in st.session_state.credentials
+    if not creds_are_ok:
+        if st.session_state.API == APIName.BAM and st.session_state.bam_api_key != "":
+            st.session_state.credentials = {'key': st.session_state.bam_api_key}
+        elif st.session_state.API == APIName.Watsonx and st.session_state.watsonx_api_key != "" and st.session_state.project_id != "":
+            st.session_state.credentials = {'key': st.session_state.watsonx_api_key,
+                                            'project_id': st.session_state.project_id}
+        else:
+            creds_are_ok = False
     if creds_are_ok:
         st.session_state.model = 'llama-3'
         st.session_state.target_model = target_model
@@ -248,7 +250,8 @@ def init_set_up_page():
 
     # default setting
     st.session_state.model = 'llama-3'
-    st.session_state.target_model = 'llama-3'
+    if not hasattr(st.session_state, "target_model"):
+        st.session_state.target_model = 'llama-3'
 
     if "API" not in st.session_state:  # set default API to Watsonx
         st.session_state.API = APIName.Watsonx
@@ -276,26 +279,28 @@ def init_set_up_page():
         st.write(
             "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
         st.write(
-            "This assistant system uses BAM to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
-        st.write("To proceed, please provide your BAM or WatsonX credentials and select a model.")
+            "This assistant system uses Watsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
+        #st.write("To proceed, please provide your BAM or WatsonX credentials and select a model.")
 
-        api = st.radio(
-            "",
-            # add dummy option to make it the default selection
-            options=["BAM", "Watsonx"],
-            horizontal=True, key=f"bam_watsonx_radio",
-            index=0 if st.session_state.API == APIName.BAM else 1)
-        if api:
-            st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
-        set_credentials()
+        if not credentials_are_set:
+            api = st.radio(
+                "",
+                # add dummy option to make it the default selection
+                options=["BAM", "Watsonx"],
+                horizontal=True, key=f"bam_watsonx_radio",
+                index=0 if st.session_state.API == APIName.BAM else 1)
+            if api:
+                st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
+
+            set_credentials()
 
         target_model = st.radio(
             label="Select the target model. The prompt that you will build will be formatted for this model.",
             options=["llama-3", "mixtral", "granite"],
             key="target_model_radio",
-            captions=["llama-3-70B-instruct. Recommended for most use-cases.",
-                      "mixtral-8x7B-instruct-v01. Recommended for very long documents.",
-                      "granite-13b-chat-v2"])
+            captions=["llama-3-70B-instruct",
+                      "mixtral-8x7B-instruct-v01",
+                      "granite-13b-chat-v2 (Beta version)"])
 
         st.text_input(label="Organization email address", key="email_address_input")
         if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
