@@ -286,9 +286,6 @@ class CallbackChatManager(ChatManagerBase):
         self.model_chat[-1]['example_num'] = None
 
         example_num = int(example_num)
-        if example_num == self.example_num:
-            return
-
         self.example_num = example_num
         discuss_ex = self.model_prompts.discuss_example_num.replace('EXAMPLE_NUM', str(self.example_num))
         self.calls_queue = []
