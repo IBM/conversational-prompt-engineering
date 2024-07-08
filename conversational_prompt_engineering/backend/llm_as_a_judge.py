@@ -4,7 +4,7 @@ import json
 
 from genai.schema import ChatRole
 from conversational_prompt_engineering.backend.chat_manager_util import ChatManagerBase
-from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
+from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt, remove_tags_from_zero_shot_prompt
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from concurrent.futures import ThreadPoolExecutor
 
@@ -63,8 +63,8 @@ An instruction (might include an Input inside it), a response to evaluate, and a
 
 
 class LlmAsAJudge(ChatManagerBase):
-    def __init__(self, credentials, model, conv_id, target_model, api) -> None:
-        super().__init__(credentials, model, conv_id, target_model, api)
+    def __init__(self, credentials, model, conv_id, target_model, api, email_address) -> None:
+        super().__init__(credentials, model, conv_id, target_model, api, email_address)
 
         self.model_chat = []
 
@@ -135,12 +135,12 @@ class LlmAsAJudge(ChatManagerBase):
                 row['ZS_FS_llm_judge_rel_feedback'], row['ZS_FS_llm_judge_rel_result'] = \
                     self._evaluate_prompt_relative(instruction_text, row["zero_shot_summary"], row["few_shot_summary"])
 
-    def chat_results_evaluation(self, chat_out_path, chat_csv_file, eval_out_dir):
+    def chat_results_evaluation(self, chat_out_path, chat_csv_file, eval_out_dir, target_model):
         df = pd.read_csv(os.path.join(chat_out_path, chat_csv_file))
         print(f'LLM AS A JUDGE: input file: {chat_csv_file}')
 
         # select the prompt for llm-as-a-judge evaluation
-        prompt_to_evaluate = df["zero_shot_prompt"][0]
+        prompt_to_evaluate = remove_tags_from_zero_shot_prompt(df["zero_shot_prompt"][0], target_model)
         print(f'LLM AS A JUDGE: evaluating zero-shot prompt:\n\n {prompt_to_evaluate}')
 
         # call to LLM-as-a-judge
@@ -154,14 +154,15 @@ class LlmAsAJudge(ChatManagerBase):
         out_df = pd.DataFrame(generated_data)
         out_df.to_csv(os.path.join(eval_out_dir, out_csv_file))
 
-    def offline_evaluation(self, chat_out_path, chat_json_file, test_file, eval_out_dir, max_samples_to_evaluate=10):
+    def offline_evaluation(self, chat_out_path, chat_json_file, test_file, eval_out_dir, target_model, max_samples_to_evaluate=10):
         # load the information - and extract relevant info
         with open(os.path.join(chat_out_path, chat_json_file), "r") as f:
             params = json.load(f)
 
         # select the prompt fpr llm-as-a-judge evaluation
         # use the CPE zero-shot prompt
-        prompt_to_evaluate = params['prompts'][-1]
+        prompt_str = build_few_shot_prompt(params['prompts'][-1], [], self.target_bam_client.parameters['model_id'])
+        prompt_to_evaluate = remove_tags_from_zero_shot_prompt(prompt_str, target_model)
         print(f'LLM AS A JUDGE: evaluating the CPE zero-shot prompt:\n\n {prompt_to_evaluate}')
 
         # upload the test data
@@ -200,13 +201,19 @@ if __name__ == "__main__":
 
     api = "bam"  # select the API "bam"/"watsonx"
     target_model = "llama-3"  # select the model that generates the summaries
-    evaluation_mode = "chat_res"  # select the evaluation mode "chat_res"/"test_csv"
+    evaluation_mode = "test_csv" #"chat_res"  # select the evaluation mode "chat_res"/"test_csv"
     dataset_name = "multiwoz"  # select the dataset name to evaluate (when evaluation mode is "test_csv")
-    dataset_split = "test.csv" # select the dataset split to evaluate (when evaluation mode is "test_csv")
+    dataset_split = "test.csv"  # select the dataset split to evaluate (when evaluation mode is "test_csv")
     chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Orith_BAM/07-07-2024 13:10:27"
 
-    eval_out_dir = os.path.join(chat_out_path, "llm_judge")
+    chat_res_json_file = "chat_result.json"
+
+    print(f'LLM AS A JUDGE: dataset is {dataset_name}')
+    print(f'LLM AS A JUDGE: target_model is {target_model}')
+
+    eval_out_dir = os.path.join(chat_out_path, f"llm_judge/{target_model}")
     os.makedirs(eval_out_dir, exist_ok=True)
+    print(f'LLM AS A JUDGE: output directory: {eval_out_dir}')
 
     if evaluation_mode == "chat_res":
         # Evaluate chat results
@@ -214,7 +221,6 @@ if __name__ == "__main__":
     elif evaluation_mode == "test_csv":
         # Evaluate csv test data with chat prompts
         test_data_file = f"data/{dataset_name}/{dataset_split}"
-        chat_res_json_file = "chat_result.json"
     else:
         print(f"Wrong evaluation mode {evaluation_mode}")
         exit()
@@ -228,13 +234,13 @@ if __name__ == "__main__":
         credentials = {}
 
     llm_judge = LlmAsAJudge(credentials=credentials, model="prometheus_7b",
-                            conv_id="llm_as_a_judge_offline", target_model=target_model, api=api)
+                            conv_id="llm_as_a_judge_offline", target_model=target_model, api=api, email_address=os.environ["IBM_EMAIL"])
 
     if evaluation_mode == "chat_res":
         # Evaluate chat results
-        llm_judge.chat_results_evaluation(chat_out_path, chat_eval_csv_file, eval_out_dir)
+        llm_judge.chat_results_evaluation(chat_out_path, chat_eval_csv_file, eval_out_dir, target_model)
     elif evaluation_mode == "test_csv":
         # Evaluate full test with chat prompts
-        llm_judge.offline_evaluation(chat_out_path, chat_res_json_file, test_data_file, eval_out_dir)
+        llm_judge.offline_evaluation(chat_out_path, chat_res_json_file, test_data_file, eval_out_dir, target_model)
     else:
         pass
