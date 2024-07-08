@@ -1,8 +1,12 @@
 import os
 import pandas as pd
+import json
 
 from genai.schema import ChatRole
 from conversational_prompt_engineering.backend.chat_manager_util import ChatManagerBase
+from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
+from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
+from concurrent.futures import ThreadPoolExecutor
 
 ## Prompts definitions are taken from: https://github.com/prometheus-eval/prometheus-eval/blob/main/libs/prometheus-eval/prometheus_eval/prompts.py
 
@@ -59,8 +63,8 @@ An instruction (might include an Input inside it), a response to evaluate, and a
 
 
 class LlmAsAJudge(ChatManagerBase):
-    def __init__(self, bam_api_key, model, conv_id) -> None:
-        super().__init__(bam_api_key, model, conv_id)
+    def __init__(self, credentials, model, conv_id, target_model, api) -> None:
+        super().__init__(credentials, model, conv_id, target_model, api)
 
         self.model_chat = []
 
@@ -80,6 +84,20 @@ class LlmAsAJudge(ChatManagerBase):
                     return feedback, result
         return outputs, "-1"
 
+    def _generate_texts_output(self, prompt, texts, few_shot_examples=[]):
+        prompt_str = build_few_shot_prompt(prompt,
+                                           few_shot_examples,
+                                           self.target_bam_client.parameters['model_id'])
+        futures = {}
+        with ThreadPoolExecutor(max_workers=len(texts)) as executor:
+            for i, example in enumerate(texts):
+                prompt_text = prompt_str.format(text=example)
+                futures[i] = executor.submit(self._generate_output, prompt_text)
+        outputs = []
+        for _, f in futures.items():
+            outputs.append(f.result())
+        return prompt_str, outputs
+
     def _evaluate_prompt_absolute(self, prompt, summary):
         user_content = ABSOLUTE_PROMPT_WO_REF.format(instruction=prompt, response=summary, rubric=HELPFULNESS_RUBRIC)
         self.model_chat = [{'role': ChatRole.SYSTEM, 'content': ABS_SYSTEM_PROMPT},
@@ -97,40 +115,126 @@ class LlmAsAJudge(ChatManagerBase):
         res = self._parse_output(resp, "relative")
         return res
 
-    def evaluate_prompt(self, prompt, summaries):
+    def evaluate_prompt(self, prompt, summaries, summary_prompt_types, score_relative=True):
+        idx = 0
         for row in summaries:
+            idx += 1
+            print(f'evaluate sample {idx}...')
             instruction_text = prompt.format(text=row["text"])
             # mode "absolute"
-            for prompt_type in ['baseline', 'zero_shot', 'few_shot']:
+            for prompt_type in summary_prompt_types:
                 row[f'{prompt_type}_llm_judge_abs_feedback'], row[f'{prompt_type}_llm_judge_abs_result'] = \
                     self._evaluate_prompt_absolute(instruction_text, row[f'{prompt_type}_summary'])
 
             # mode "relative":
-            row['BL_FS_llm_judge_rel_feedback'], row['BL_FS_llm_judge_rel_result'] = \
-                self._evaluate_prompt_relative(instruction_text, row["baseline_summary"], row["few_shot_summary"])
-            row['BL_ZS_llm_judge_rel_feedback'], row['BL_ZS_llm_judge_rel_result'] = \
-                self._evaluate_prompt_relative(instruction_text, row["baseline_summary"], row["zero_shot_summary"])
-            row['ZS_FS_llm_judge_rel_feedback'], row['ZS_FS_llm_judge_rel_result'] = \
-                self._evaluate_prompt_relative(instruction_text, row["zero_shot_summary"], row["few_shot_summary"])
+            if score_relative:
+                row['BL_FS_llm_judge_rel_feedback'], row['BL_FS_llm_judge_rel_result'] = \
+                    self._evaluate_prompt_relative(instruction_text, row["baseline_summary"], row["few_shot_summary"])
+                row['BL_ZS_llm_judge_rel_feedback'], row['BL_ZS_llm_judge_rel_result'] = \
+                    self._evaluate_prompt_relative(instruction_text, row["baseline_summary"], row["zero_shot_summary"])
+                row['ZS_FS_llm_judge_rel_feedback'], row['ZS_FS_llm_judge_rel_result'] = \
+                    self._evaluate_prompt_relative(instruction_text, row["zero_shot_summary"], row["few_shot_summary"])
+
+    def chat_results_evaluation(self, chat_out_path, chat_csv_file, eval_out_dir):
+        df = pd.read_csv(os.path.join(chat_out_path, chat_csv_file))
+        print(f'LLM AS A JUDGE: input file: {chat_csv_file}')
+
+        # select the prompt for llm-as-a-judge evaluation
+        prompt_to_evaluate = df["zero_shot_prompt"][0]
+        print(f'LLM AS A JUDGE: evaluating zero-shot prompt:\n\n {prompt_to_evaluate}')
+
+        # call to LLM-as-a-judge
+        summary_prompt_types = ['baseline', 'zero_shot', 'few_shot']
+        generated_data = df.to_dict(orient='records')
+        self.evaluate_prompt(prompt_to_evaluate, generated_data, summary_prompt_types)
+
+        assert chat_csv_file.endswith(".csv")
+        out_csv_file = f"{chat_csv_file.split('/')[-1].split('.')[0]}.llm_judge_evaluation.csv"
+        print(f'LLM AS A JUDGE: output file: {out_csv_file}')
+        out_df = pd.DataFrame(generated_data)
+        out_df.to_csv(os.path.join(eval_out_dir, out_csv_file))
+
+    def offline_evaluation(self, chat_out_path, chat_json_file, test_file, eval_out_dir, max_samples_to_evaluate=10):
+        # load the information - and extract relevant info
+        with open(os.path.join(chat_out_path, chat_json_file), "r") as f:
+            params = json.load(f)
+
+        # select the prompt fpr llm-as-a-judge evaluation
+        # use the CPE zero-shot prompt
+        prompt_to_evaluate = params['prompts'][-1]
+        print(f'LLM AS A JUDGE: evaluating the CPE zero-shot prompt:\n\n {prompt_to_evaluate}')
+
+        # upload the test data
+        eval_texts = read_user_csv_file(test_file).text.tolist()
+        print(f'num of test samples {len(eval_texts)}')
+        eval_texts = eval_texts[:max_samples_to_evaluate]
+        print(f'num of test samples to evaluate {len(eval_texts)}')
+
+        # generate summaries
+        summary_prompt_types = ['baseline', 'zero_shot', 'few_shot']
+        generated_data = []
+        for i in range(len(eval_texts)):
+            generated_data.append({})
+        for prompt_type in summary_prompt_types:
+            few_shot_examples = []
+            if prompt_type == 'few_shot':
+                for t, s in zip(params["examples"], params['accepted_outputs']):
+                    if s is not None:
+                        few_shot_examples.append({'text': t, 'summary': s})
+
+            p = params['baseline_prompts']['model_baseline_prompt'] if prompt_type == 'baseline' else prompt_to_evaluate
+            prompt_str, eval_outputs = self._generate_texts_output(p, eval_texts, few_shot_examples)
+            for i, (t, s) in enumerate(zip(eval_texts, eval_outputs)):
+                generated_data[i].update({f"{prompt_type}_prompt": prompt_str, "text": t, f"{prompt_type}_summary": s})
+
+        # call to LLM-as-a-judge
+        self.evaluate_prompt(prompt_to_evaluate, generated_data, summary_prompt_types)
+
+        out_df = pd.DataFrame(generated_data)
+        out_csv_file = f"{test_file.split('/')[-1].split('.')[0]}.llm_judge_evaluation.csv"
+        print(f'LLM AS A JUDGE: output file: {out_csv_file}')
+        out_df.to_csv(os.path.join(eval_out_dir, out_csv_file))
 
 
 if __name__ == "__main__":
 
-    api_key = os.environ['BAM_APIKEY']
+    api = "bam"  # select the API "bam"/"watsonx"
+    target_model = "llama-3"  # select the model that generates the summaries
+    evaluation_mode = "test_csv" #"chat_res"  # select the evaluation mode "chat_res"/"test_csv"
+    dataset_name = "multiwoz"  # select the dataset name to evaluate (when evaluation mode is "test_csv")
+    dataset_split = "test.csv" # select the dataset split to evaluate (when evaluation mode is "test_csv")
+    chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Orith_BAM/07-07-2024 13:10:27"
 
-    chat_csv_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/a0a8d57d8602e844/01-07-2024 13:56:26/eval"
-    chat_csv_file = "eval_results.csv"
+    eval_out_dir = os.path.join(chat_out_path, "llm_judge")
+    os.makedirs(eval_out_dir, exist_ok=True)
 
-    llm_judge = LlmAsAJudge(bam_api_key=api_key, model="prometheus_7b",
-                            conv_id="llm_as_a_judge_offline")
+    if evaluation_mode == "chat_res":
+        # Evaluate chat results
+        chat_eval_csv_file = "eval/eval_results.csv"
+    elif evaluation_mode == "test_csv":
+        # Evaluate csv test data with chat prompts
+        test_data_file = f"data/{dataset_name}/{dataset_split}"
+        chat_res_json_file = "chat_result.json"
+    else:
+        print(f"Wrong evaluation mode {evaluation_mode}")
+        exit()
 
-    df = pd.read_csv(os.path.join(chat_csv_path, chat_csv_file))
-    prompt = df["zero_shot_prompt"][0]
-    print(f'LLM AS A JUDGE: evaluating zero-shot prompt:\n\n {prompt}')
+    # Credentials for API
+    if api == "bam":
+        credentials = {"key": os.environ["BAM_APIKEY"]}
+    elif api == "watsonx":
+        credentials = {"key": os.environ["WATSONX_APIKEY"], "project_id": os.environ["PROJECT_ID"]}
+    else:
+        credentials = {}
 
-    generated_data = df.to_dict(orient='records')
-    llm_judge.evaluate_prompt(prompt, generated_data)
+    llm_judge = LlmAsAJudge(credentials=credentials, model="prometheus_7b",
+                            conv_id="llm_as_a_judge_offline", target_model=target_model, api=api)
 
-    out_csv_file = "eval_results_with_llm_judge.csv"
-    out_df = pd.DataFrame(generated_data)
-    out_df.to_csv(os.path.join(chat_csv_path, out_csv_file))
+    if evaluation_mode == "chat_res":
+        # Evaluate chat results
+        llm_judge.chat_results_evaluation(chat_out_path, chat_eval_csv_file, eval_out_dir)
+    elif evaluation_mode == "test_csv":
+        # Evaluate full test with chat prompts
+        llm_judge.offline_evaluation(chat_out_path, chat_res_json_file, test_data_file, eval_out_dir)
+    else:
+        pass
