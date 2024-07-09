@@ -17,7 +17,7 @@ from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_compone
     create_choose_dataset_component_train
 from st_pages import Page, show_pages, hide_pages
 
-version = "callback manager v1.0.5"
+version = "callback manager v1.0.6"
 st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"})
 
 show_pages(
@@ -226,7 +226,7 @@ def load_environment_variables():
         st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
         st.session_state.API = APIName.Watsonx
         st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
-
+        logging.info(f"credentials from environment variables: {st.session_state.credentials}")
     if "IBM_EMAIL" in os.environ and verify_email(os.environ["IBM_EMAIL"]):
         st.session_state.email_address = os.environ["IBM_EMAIL"]
 
