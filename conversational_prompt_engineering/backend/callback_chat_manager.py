@@ -76,7 +76,7 @@ class ModelPrompts:
             'Indicate the example (number), and separate between the output and your text with empty lines. ' \
             'Discuss the presented output taking into account the system conclusion for this example if exists.' \
 
-        self.syntax_err_instruction = 'The last API call produced a syntax error. Try again. '
+        self.syntax_err_instruction = 'The last API call produced a syntax error. Check escaping double quotes. Try again.'
         self.api_only_instruction = \
             'Your last response is invalid because it contains some plain text or non-existing API. ' \
             'All the communications should be done as API calls. Try again.'
