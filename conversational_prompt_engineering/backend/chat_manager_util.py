@@ -37,6 +37,7 @@ class ChatManagerBase:
             params = json.load(f)
         logging.info(f"selected {model}")
         logging.info(f"conv id: {conv_id}")
+        logging.info(f"credentials from environment variables: {credentials}")
 
         def create_mode_param(model_name, api):
             model_params = {x: y for x,y in params['models'][model_name].items()}
