@@ -25,7 +25,7 @@ class ModelPrompts:
 
         self.api_instruction = \
             'You should communicate with the user and system ONLY via python API described below, and not via direct messages. ' \
-            'The input parameters to API functions are strings. Enclose them in double quotes, and escape all double quotes inside these strings to avoid syntax errors. ' \
+            'The input parameters to API functions should be string literals using double quotes. Remember to escape double-quote characters inside the parameter values.\n' \
             'Note that the user is not aware of the API, so don\'t not tell the user which API you are going to call.\n ' \
             'Format ALL your answers python code calling one of the following functions:'
 
@@ -76,7 +76,7 @@ class ModelPrompts:
             'Indicate the example (number), and separate between the output and your text with empty lines. ' \
             'Discuss the presented output taking into account the system conclusion for this example if exists.' \
 
-        self.syntax_err_instruction = 'The last API call produced a syntax error. Return the same call with fixed error. '
+        self.syntax_err_instruction = 'The last API call produced a syntax error. Try again. '
         self.api_only_instruction = \
             'Your last response is invalid because it contains some plain text or non-existing API. ' \
             'All the communications should be done as API calls. Try again.'
