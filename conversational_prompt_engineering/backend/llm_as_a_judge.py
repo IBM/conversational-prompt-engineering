@@ -76,6 +76,16 @@ def get_model_id(model_name):
     return None
 
 
+def get_all_pairs(l, add_reversed_pairs=True):
+    pairs = [(l[i], l[j]) for i in range(len(l)) for j in range(i + 1, len(l))]
+    res = []
+    for a,b in pairs:
+        res.append((a,b))
+        if add_reversed_pairs:
+            res.append((b, a))
+    return res
+
+
 class LlmAsAJudge(ChatManagerBase):
     def __init__(self, credentials, model, conv_id, target_model, api, email_address) -> None:
         super().__init__(credentials, model, conv_id, target_model, api, email_address)
@@ -142,17 +152,14 @@ class LlmAsAJudge(ChatManagerBase):
 
             # mode "relative":
             if score_relative:
-                row['BL_FS_llm_judge_rel_feedback'], row['BL_FS_llm_judge_rel_result'] = \
-                    self._evaluate_prompt_relative(instruction_text, row["baseline_summary"], row["few_shot_summary"],
-                                                   {'A': 'baseline', 'B': 'few_shot'})
-                row['BL_ZS_llm_judge_rel_feedback'], row['BL_ZS_llm_judge_rel_result'] = \
-                    self._evaluate_prompt_relative(instruction_text, row["baseline_summary"], row["zero_shot_summary"],
-                                                   {'A': 'baseline', 'B': 'zero_shot'})
-                row['ZS_FS_llm_judge_rel_feedback'], row['ZS_FS_llm_judge_rel_result'] = \
-                    self._evaluate_prompt_relative(instruction_text, row["zero_shot_summary"], row["few_shot_summary"],
-                                                   {'A': 'zero_shot', 'B': 'few_shot'})
+                for summary_a, summary_b in get_all_pairs(summary_prompt_types):
+                    pair_name = f'<{summary_a}>-<{summary_b}>'
+                    row[f'{pair_name}_llm_judge_rel_feedback'], row[f'{pair_name}_llm_judge_rel_result'] = \
+                        self._evaluate_prompt_relative(instruction_text, row[f"{summary_a}_summary"],
+                                                       row[f"{summary_b}_summary"],
+                                                       {'A': f'{summary_a}', 'B': f'{summary_b}'})
 
-    def chat_results_evaluation(self, chat_csv_file, eval_out_dir, target_model):
+    def chat_results_evaluation(self, chat_csv_file, eval_out_dir, target_model, summary_prompt_types):
         df = pd.read_csv(chat_csv_file)
         print(f'LLM AS A JUDGE: input file: {chat_csv_file}')
         print(f'num of test samples {len(df)}')
@@ -162,7 +169,6 @@ class LlmAsAJudge(ChatManagerBase):
         print(f'LLM AS A JUDGE: Chat results evaluation of the zero-shot prompt:\n\n {prompt_to_evaluate}')
 
         # call to LLM-as-a-judge
-        summary_prompt_types = ['baseline', 'zero_shot', 'few_shot']
         generated_data = df.to_dict(orient='records')
         self.evaluate_prompt(prompt_to_evaluate, generated_data, summary_prompt_types)
 
@@ -172,7 +178,7 @@ class LlmAsAJudge(ChatManagerBase):
         out_df = pd.DataFrame(generated_data)
         out_df.to_csv(os.path.join(eval_out_dir, out_csv_file))
 
-    def offline_evaluation(self, chat_params, test_file, eval_out_dir, target_model, max_samples_to_evaluate=50):
+    def offline_evaluation(self, chat_params, test_file, eval_out_dir, target_model, summary_prompt_types, max_samples_to_evaluate=50):
 
         # select the prompt fpr llm-as-a-judge evaluation: use the CPE zero-shot prompt
         prompt_str = build_few_shot_prompt(chat_params['prompts'][-1], [], self.target_bam_client.parameters['model_id'])
@@ -191,7 +197,6 @@ class LlmAsAJudge(ChatManagerBase):
         print(f'num of test samples to evaluate {len(eval_texts)}')
 
         # generate summaries
-        summary_prompt_types = ['baseline', 'zero_shot', 'few_shot']
         generated_data = []
         for i in range(len(eval_texts)):
             generated_data.append({})
@@ -202,7 +207,7 @@ class LlmAsAJudge(ChatManagerBase):
                     if s is not None:
                         few_shot_examples.append({'text': t, 'summary': s})
 
-            p = chat_params['baseline_prompts']['model_baseline_prompt'] if prompt_type == 'baseline' else prompt_to_evaluate
+            p = chat_params['baseline_prompts']['user_baseline_prompt'] if prompt_type == 'baseline' else prompt_to_evaluate
             prompt_str, eval_outputs = self._generate_texts_output(p, eval_texts, few_shot_examples)
             for i, (t, s) in enumerate(zip(eval_texts, eval_outputs)):
                 generated_data[i].update({f"{prompt_type}_prompt": prompt_str, "text": t, f"{prompt_type}_summary": s})
@@ -221,6 +226,7 @@ if __name__ == "__main__":
     api = "bam"  # select the API "bam"/"watsonx"
     evaluation_mode = "chat_eval"  # select the evaluation mode "chat_eval"/"test_csv"
     evaluation_data_split = "eval"  # select the dataset split csv to evaluate (when evaluation mode is "test_csv")
+    summary_prompt_types = ['baseline', 'zero_shot', 'few_shot']   # select the summaries for evaluation
 
     chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Orith_BAM/07-07-2024 13:10:27"
     #chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Artem_BAM/09-07-2024 15:14:31"
@@ -268,9 +274,9 @@ if __name__ == "__main__":
 
     if evaluation_mode == "chat_eval":
         # Evaluate chat results
-        llm_judge.chat_results_evaluation(chat_eval_csv_file, eval_out_dir, target_model)
+        llm_judge.chat_results_evaluation(chat_eval_csv_file, eval_out_dir, target_model, summary_prompt_types)
     elif evaluation_mode == "test_csv":
         # Evaluate full test with chat prompts
-        llm_judge.offline_evaluation(chat_params, test_data_file, eval_out_dir, target_model)
+        llm_judge.offline_evaluation(chat_params, test_data_file, eval_out_dir, target_model, summary_prompt_types)
     else:
         pass
