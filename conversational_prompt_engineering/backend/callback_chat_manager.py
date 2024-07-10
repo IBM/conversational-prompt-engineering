@@ -102,8 +102,7 @@ class ModelPrompts:
         self.analyze_new_prompt_accepted_outputs = 'Accepted outputs:\n'
         self.analyze_new_prompt_new_outputs = '\nProduced outputs:\n'
 
-        self.conversation_end_instruction = \
-            'Present to the user the final prompt in a nice format, and end the conversation. Do not call conversation_end API anymore.'
+        self.conversation_end_instruction = 'This is the end of conversation. Say goodbye to the user.'
 
 
 class MixtralPrompts(ModelPrompts):
@@ -123,6 +122,7 @@ class CallbackChatManager(ChatManagerBase):
             'mixtral': MixtralPrompts,
             'llama-3': Llama3Prompts,
         }[model]()
+        self.model = model
 
         self.api_names = None
 
@@ -363,7 +363,12 @@ class CallbackChatManager(ChatManagerBase):
     def conversation_end(self):
         self.prompt_conv_end = True
         self._save_chat_result()
-        self.add_system_message(self.model_prompts.conversation_end_instruction)
+        model_id = self.model
+        few_shot_prompt = build_few_shot_prompt(self.prompts[-1], self.approved_outputs, model_id)
+        self._add_msg(self.user_chat, ChatRole.ASSISTANT, f"Here is the final prompt formatted for *{model_id}*:\n"
+                                                          f"```\n{few_shot_prompt}\n```")
+        end_instruction = self.model_prompts.conversation_end_instruction
+        self.add_system_message(end_instruction)
 
     def set_instructions(self, task_instruction, api_instruction, function2description):
         self.api_names = [key[:key.index('(')] for key in function2description.keys()]
