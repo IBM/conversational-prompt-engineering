@@ -181,7 +181,8 @@ class LlmAsAJudge(ChatManagerBase):
     def offline_evaluation(self, chat_params, test_file, eval_out_dir, target_model, summary_prompt_types, max_samples_to_evaluate=50):
 
         # select the prompt fpr llm-as-a-judge evaluation: use the CPE zero-shot prompt
-        prompt_str = build_few_shot_prompt(chat_params['prompts'][-1], [], self.target_bam_client.parameters['model_id'])
+        prompt_instruction = chat_params['prompts'][-1]
+        prompt_str = build_few_shot_prompt(prompt_instruction, [], self.target_bam_client.parameters['model_id'])
         prompt_to_evaluate = remove_tags_from_zero_shot_prompt(prompt_str, target_model)
         print(f'LLM AS A JUDGE: Offline evaluation of the CPE zero-shot prompt:\n\n {prompt_to_evaluate}')
 
@@ -207,7 +208,7 @@ class LlmAsAJudge(ChatManagerBase):
                     if s is not None:
                         few_shot_examples.append({'text': t, 'summary': s})
 
-            p = chat_params['baseline_prompts']['user_baseline_prompt'] if prompt_type == 'baseline' else prompt_to_evaluate
+            p = chat_params['baseline_prompts']['user_baseline_prompt'] if prompt_type == 'baseline' else prompt_instruction
             prompt_str, eval_outputs = self._generate_texts_output(p, eval_texts, few_shot_examples)
             for i, (t, s) in enumerate(zip(eval_texts, eval_outputs)):
                 generated_data[i].update({f"{prompt_type}_prompt": prompt_str, "text": t, f"{prompt_type}_summary": s})
