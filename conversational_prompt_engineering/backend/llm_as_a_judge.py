@@ -222,9 +222,10 @@ if __name__ == "__main__":
     evaluation_mode = "chat_eval"  # select the evaluation mode "chat_eval"/"test_csv"
     evaluation_data_split = "eval"  # select the dataset split csv to evaluate (when evaluation mode is "test_csv")
 
-    #chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Orith_BAM/07-07-2024 13:10:27"
-    chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Artem_BAM/09-07-2024 15:14:31"
+    chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Orith_BAM/07-07-2024 13:10:27"
+    #chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Artem_BAM/09-07-2024 15:14:31"
 
+    # the chat result json file
     chat_res_json_file = "chat_result.json"
     # load the information - and extract relevant info
     with open(os.path.join(chat_out_path, chat_res_json_file), "r") as f:
@@ -232,11 +233,11 @@ if __name__ == "__main__":
 
     # the dataset to evaluate
     dataset_name = chat_params["dataset_name"]
-    print(f'LLM AS A JUDGE: dataset is {dataset_name} split {evaluation_data_split}')
+    print(f'LLM AS A JUDGE: dataset is: {dataset_name} ; split: {evaluation_data_split}')
 
     # the model that generates the summaries
     target_model = get_model_id(chat_params["target_model"])
-    print(f'LLM AS A JUDGE: target_model is {target_model}')
+    print(f'LLM AS A JUDGE: target_model is: {target_model}')
 
     eval_out_dir = os.path.join(chat_out_path, f"llm_judge/{target_model}")
     os.makedirs(eval_out_dir, exist_ok=True)
@@ -245,11 +246,11 @@ if __name__ == "__main__":
     if evaluation_mode == "chat_eval":
         # Evaluate chat results
         chat_eval_csv_file = os.path.join(chat_out_path, "eval/eval_results.csv")
-        print(f'LLM AS A JUDGE: chat manual evaluation file is {chat_eval_csv_file}')
+        print(f'LLM AS A JUDGE: chat manual evaluation file is: {chat_eval_csv_file}')
     elif evaluation_mode == "test_csv":
         # Evaluate csv test data with chat prompts
         test_data_file = dataset_name_to_dir.get(dataset_name)[evaluation_data_split]
-        print(f'LLM AS A JUDGE: dataset file is {test_data_file}')
+        print(f'LLM AS A JUDGE: dataset file is: {test_data_file}')
     else:
         print(f"Wrong evaluation mode {evaluation_mode}")
         exit()

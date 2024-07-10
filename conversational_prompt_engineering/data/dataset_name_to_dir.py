@@ -2,9 +2,9 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
                                               "./data/movie reviews/train.csv",
                                           "eval": "./data/movie reviews/eval.csv",
                                           "desc": "This dataset consists of movie reviews \npublished at https://www.rogerebert.com/."},
-                       "Hotels and Restaurants": {"train":
-                                             "./data/multiwoz/train.csv",
+                       "Hotels and Restaurants": {"train": "./data/multiwoz/train.csv",
                                          "eval": "./data/multiwoz/test.csv",
+                                         "eval_llm": "./data/multiwoz/test_full.csv",
                                          "desc": "This dataset consists of multi-turn dialogues \nabout hotel or restaurant reservation. "},
                         "Privacy Policies and Software Licenses": {"train":
                                              "./data/legal_plain_english/train.csv",
