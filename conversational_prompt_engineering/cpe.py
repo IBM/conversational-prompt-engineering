@@ -1,6 +1,6 @@
 import logging
 import os
-import time
+import datetime
 
 import pandas as pd
 import streamlit as st
@@ -79,6 +79,14 @@ def new_cycle():
             st.write(msg['content'])
 
 
+
+def set_output_dir():
+    subfolder = st.session_state.email_address.split("@")[0] #default is self.conv_id
+    out_folder =  f'_out/{subfolder}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
+    os.makedirs(out_folder, exist_ok=True)
+    return out_folder
+
+
 def callback_cycle():
     # create the manager if necessary
     if "manager" not in st.session_state:
@@ -86,11 +94,16 @@ def callback_cycle():
         sha1.update(st.session_state.credentials["key"].encode('utf-8'))
         st.session_state.conv_id = sha1.hexdigest()[:16]  # deterministic hash of 16 characters
 
+        output_dir = set_output_dir()
+        file_handler = logging.FileHandler(os.path.join(output_dir, "out.log"))
+        logger = logging.getLogger()
+        logger.addHandler(file_handler)
         st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials,
                                                        model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
                                                        conv_id=st.session_state.conv_id, api=st.session_state.API.value,
-                                                       email_address=st.session_state.email_address)
+                                                       email_address=st.session_state.email_address,
+                                                       output_dir=output_dir)
 
     manager = st.session_state.manager
 
@@ -308,7 +321,6 @@ def init_set_up_page():
 
         st.button("Submit", on_click=submit_button_clicked, args=[target_model])
         return False
-
 
 if __name__ == "__main__":
     set_up_is_done = init_set_up_page()

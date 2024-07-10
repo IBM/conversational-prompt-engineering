@@ -3,7 +3,6 @@ import logging
 import time
 import os
 import json
-import datetime
 
 import pandas as pd
 from genai.schema import ChatRole
@@ -32,12 +31,14 @@ def extract_delimited_text(txt, delims):
 
 
 class ChatManagerBase:
-    def __init__(self, credentials, model, conv_id, target_model, api, email_address) -> None:
+    def __init__(self, credentials, model, conv_id, target_model, api, email_address, output_dir) -> None:
         with open("backend/model_params.json", "r") as f:
             params = json.load(f)
         logging.info(f"selected {model}")
         logging.info(f"conv id: {conv_id}")
         logging.info(f"credentials from environment variables: {credentials}")
+        logging.info(f"user email address: {email_address}")
+
 
         def create_mode_param(model_name, api):
             model_params = {x: y for x,y in params['models'][model_name].items()}
@@ -60,15 +61,8 @@ class ChatManagerBase:
         self.state = None
         self.timing_report = []
         self.email_address = email_address
-
-        self.set_output_dir()
+        self.out_dir = output_dir
         logging.info(f"output is saved to {os.path.abspath(self.out_dir)}")
-
-        os.makedirs(self.out_dir, exist_ok=True)
-
-    def set_output_dir(self):
-        out_folder = self.email_address.split("@")[0] #default is self.conv_id
-        self.out_dir = f'_out/{out_folder}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
 
     def save_prompts_and_config(self, approved_prompts, approved_outputs):
         chat_dir = os.path.join(self.out_dir, "chat")
