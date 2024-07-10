@@ -37,6 +37,7 @@ class ChatManagerBase:
             params = json.load(f)
         logging.info(f"selected {model}")
         logging.info(f"conv id: {conv_id}")
+        logging.info(f"credentials from environment variables: {credentials}")
 
         def create_mode_param(model_name, api):
             model_params = {x: y for x,y in params['models'][model_name].items()}
@@ -138,32 +139,31 @@ class ChatManagerBase:
     def print_timing_report(self):
         df = pd.DataFrame(self.timing_report)
         logging.info(df)
-        logging.info(f"Average processing time: {df['time'].mean()}")
-        self.timing_report = sorted(self.timing_report, key=lambda row: row['time'])
+        logging.info(f"Average processing time: {df['total_time'].mean()}")
+        self.timing_report = sorted(self.timing_report, key=lambda row: row['total_time'])
         logging.info(f"Highest processing time: {self.timing_report[-1]}")
         logging.info(f"Lowest processing time: {self.timing_report[0]}")
 
-    def _generate_output(self, prompt_str):
-        start_time = time.time()
-        generated_texts = self.target_bam_client.send_messages(prompt_str)
-        elapsed_time = time.time() - start_time
-        timing_dict = {"state": self.state, "context_length": len(prompt_str),
-                       "output_length": sum([len(gt) for gt in generated_texts]), "time": elapsed_time}
+    def _generate_output_and_log_stats(self, conversation, client, max_new_tokens=None):
+        start_time = time
+        generated_texts, stats_dict = client.send_messages(conversation, max_new_tokens)
+        elapsed_time = time.time() - start_time.time()
+        timing_dict = {"total_time": elapsed_time, "start_time" : start_time.strftime("%d-%m-%Y %H:%M:%S")}
+        timing_dict.update(stats_dict)
         logging.info(timing_dict)
         self.timing_report.append(timing_dict)
+        return generated_texts
+
+    def _generate_output(self, prompt_str):
+        generated_texts = self._generate_output_and_log_stats(prompt_str, client=self.target_bam_client)
         agent_response = generated_texts[0]
         logging.info(f"got summary from model: {agent_response}")
         return agent_response.strip()
 
+
     def _get_assistant_response(self, chat, max_new_tokens=None):
         conversation = self._format_chat(chat)
-        start_time = time.time()
-        generated_texts = self.bam_client.send_messages(conversation, max_new_tokens=max_new_tokens)
-        elapsed_time = time.time() - start_time
-        timing_dict = {"state": self.state, "context_length": len(conversation),
-                       "output_length": sum([len(gt) for gt in generated_texts]), "time": elapsed_time}
-        logging.info(timing_dict)
-        self.timing_report.append(timing_dict)
+        generated_texts = self._generate_output_and_log_stats(conversation, client=self.bam_client, max_new_tokens=max_new_tokens)
         agent_response = ''
         for txt in generated_texts:
             if any([f'<|{r}|>' in txt for r in [ChatRole.SYSTEM, ChatRole.USER]]):
