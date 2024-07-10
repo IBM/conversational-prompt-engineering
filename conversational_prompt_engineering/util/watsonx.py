@@ -1,30 +1,18 @@
 import logging
-import os
-from enum import Enum
-from urllib.parse import quote_plus
 import sys
-
-import pandas as pd
-# from dotenv import load_dotenv
 
 
 from ibm_watsonx_ai import APIClient
 from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
 from ibm_watsonx_ai.foundation_models import ModelInference
-from ibm_watsonx_ai.foundation_models.utils.enums import ModelTypes
+
+from conversational_prompt_engineering.util.abst_generate import AbstGenerate
 
 
-# make sure you have a .env file under genai root with
-# GENAI_KEY=<your-genai-key>
-# GENAI_API=<genai-api-endpoint>
 
-class HumanRole(Enum):
-    User = "user"
-    Admin = "admin"
-
-
-class WatsonXGenerate:
+class WatsonXGenerate(AbstGenerate):
     def __init__(self, params):
+        super(WatsonXGenerate, self).__init__()
         self.parameters = params
         self.api_endpoint = params["api_endpoint"]
         self.project_id = params["project_id"]
@@ -58,7 +46,7 @@ class WatsonXGenerate:
             )
 
 
-    def send_messages(self, conversation, max_new_tokens=None):
+    def do_send_messages(self, conversation, max_new_tokens=None):
         sys.tracebacklimit = 1000
         model = self._get_moded(max_new_tokens)
         for i in [0,1]:

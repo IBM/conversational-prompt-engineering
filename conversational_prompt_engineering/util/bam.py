@@ -7,6 +7,7 @@ import sys
 import pandas as pd
 # from dotenv import load_dotenv
 
+
 from genai.client import Client
 from genai.credentials import Credentials
 from genai.exceptions import ApiResponseException, ApiNetworkException, ValidationError
@@ -17,6 +18,9 @@ from genai.schema import (
     TextGenerationParameters, ChatRole,
 )
 from tqdm import tqdm
+
+from conversational_prompt_engineering.util.abst_generate import AbstGenerate
+
 
 # make sure you have a .env file under genai root with
 # GENAI_KEY=<your-genai-key>
@@ -60,8 +64,9 @@ class BAMChat:
         pass
 
 
-class BamGenerate:
+class BamGenerate(AbstGenerate):
     def __init__(self, params):
+        super(BamGenerate, self).__init__()
         self.client = Client(credentials=Credentials(api_key=params['api_key'], api_endpoint=params['api_endpoint']))
         self.parameters = params
 
@@ -87,7 +92,7 @@ class BamGenerate:
                 token_counts = [len(t.split()) * 3 for t in txt] # tokenization failed, fallback to text split
             return token_counts
 
-    def send_messages(self, conversation, max_new_tokens=None):
+    def do_send_messages(self, conversation, max_new_tokens=None):
         sys.tracebacklimit = 1000
         for i in [0,1]:
             try:

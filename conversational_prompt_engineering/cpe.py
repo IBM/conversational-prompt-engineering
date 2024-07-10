@@ -17,7 +17,7 @@ from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_compone
     create_choose_dataset_component_train, add_evaluator_input
 from st_pages import Page, show_pages, hide_pages
 
-version = "callback manager v1.0.5"
+version = "callback manager v1.0.6"
 st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"})
 
 show_pages(
@@ -199,13 +199,15 @@ def submit_button_clicked(target_model):
     creds_are_ok = True
     st.session_state.cred_error = ""
     st.session_state.email_error = ""
-    if st.session_state.API == APIName.BAM and st.session_state.bam_api_key != "":
-        st.session_state.credentials = {'key': st.session_state.bam_api_key}
-    elif st.session_state.API == APIName.Watsonx and st.session_state.watsonx_api_key != "" and st.session_state.project_id != "":
-        st.session_state.credentials = {'key': st.session_state.watsonx_api_key,
-                                        'project_id': st.session_state.project_id}
-    else:
-        creds_are_ok = False
+    creds_are_ok = "key" in st.session_state.credentials
+    if not creds_are_ok:
+        if st.session_state.API == APIName.BAM and st.session_state.bam_api_key != "":
+            st.session_state.credentials = {'key': st.session_state.bam_api_key}
+        elif st.session_state.API == APIName.Watsonx and st.session_state.watsonx_api_key != "" and st.session_state.project_id != "":
+            st.session_state.credentials = {'key': st.session_state.watsonx_api_key,
+                                            'project_id': st.session_state.project_id}
+        else:
+            creds_are_ok = False
     if creds_are_ok:
         st.session_state.model = 'llama-3'
         st.session_state.target_model = target_model
@@ -241,11 +243,6 @@ eval_instructions = \
     "Stages 1-4 typically takes around 15 minutes. Please complete these stages in a single session without interruption, if possible.\n\n" \
     "Generating the summaries for stage 5 could take several minutes, so this stage can be done at a later time.\n\n" \
     "Do not include PII or confidential information in your responses, nor in the data you share.\n\n" \
-    "To start, choose whether to interact over BAM or watsonx.\n\n" \
-    "To obtain a BAM API key: navigate to [BAM](https://bam.res.ibm.com), login with your w3 id on the top-right side, and then copy the key from the box titled “Documentation”.\n\n" \
-    "To obtain a watsonx API key and project id please follow these steps:\n\n" \
-    "•	To create an API key, please see [documentation](https://cloud.ibm.com/docs/account?topic=account-userapikey&interface=ui).\n\n" \
-    "•	To find your project id, select the project from the [project list](https://dataplatform.cloud.ibm.com/projects/?context=wx), and then take the project id from Manage->General->Details.\n\n" \
     "Thank you for your time!"
 
 
@@ -263,7 +260,7 @@ def load_environment_variables():
         st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
         st.session_state.API = APIName.Watsonx
         st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
-
+        logging.info(f"credentials from environment variables: {st.session_state.credentials}")
     if "IBM_EMAIL" in os.environ and verify_email(os.environ["IBM_EMAIL"]):
         st.session_state.email_address = os.environ["IBM_EMAIL"]
 
@@ -287,7 +284,8 @@ def init_set_up_page():
 
     # default setting
     st.session_state.model = 'llama-3'
-    st.session_state.target_model = 'llama-3'
+    if not hasattr(st.session_state, "target_model"):
+        st.session_state.target_model = 'llama-3'
 
     if "API" not in st.session_state:  # set default API to Watsonx
         st.session_state.API = APIName.Watsonx
@@ -309,15 +307,17 @@ def init_set_up_page():
         # with entry_page.form("my_form"):
         st.write(eval_instructions)
 
-        api = st.radio(
-            "",
-            # add dummy option to make it the default selection
-            options=["BAM", "Watsonx"],
-            horizontal=True, key=f"bam_watsonx_radio",
-            index=0 if st.session_state.API == APIName.BAM else 1)
-        if api:
-            st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
-        set_credentials()
+        if not credentials_are_set:
+            api = st.radio(
+                "",
+                # add dummy option to make it the default selection
+                options=["BAM", "Watsonx"],
+                horizontal=True, key=f"bam_watsonx_radio",
+                index=0 if st.session_state.API == APIName.BAM else 1)
+            if api:
+                st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
+
+            set_credentials()
 
         if USE_ONLY_LLAMA:
             target_model = 'llama-3'
@@ -326,9 +326,9 @@ def init_set_up_page():
                 label="Select the target model. The prompt that you will build will be formatted for this model.",
                 options=["llama-3", "mixtral", "granite"],
                 key="target_model_radio",
-                captions=["llama-3-70B-instruct. Recommended for most use-cases.",
-                          "mixtral-8x7B-instruct-v01. Recommended for very long documents.",
-                          "granite-13b-chat-v2"])
+                captions=["llama-3-70B-instruct. ",
+                          "mixtral-8x7B-instruct-v01. ",
+                          "granite-13b-chat-v2  (Beta version)"])
 
         st.text_input(label="Organization email address", key="email_address_input")
         if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
