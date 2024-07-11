@@ -168,7 +168,8 @@ class CallbackChatManager(ChatManagerBase):
                 'example_num': self.example_num,
                 'prompt_iteration': self.prompt_iteration
             }
-            return all([(m.get(name, None) or curr_val) == curr_val for name, curr_val in tag_values.items()])
+            return all([curr_val is None or (m.get(name, None) or curr_val) == curr_val
+                        for name, curr_val in tag_values.items()])
 
         return [msg for msg in self.model_chat if _include_msg(msg)]
 
