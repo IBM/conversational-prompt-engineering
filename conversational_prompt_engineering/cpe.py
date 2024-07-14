@@ -79,10 +79,9 @@ def new_cycle():
             st.write(msg['content'])
 
 
-
 def set_output_dir():
-    subfolder = st.session_state.email_address.split("@")[0] #default is self.conv_id
-    out_folder =  f'_out/{subfolder}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
+    subfolder = st.session_state.email_address.split("@")[0]  # default is self.conv_id
+    out_folder = f'_out/{subfolder}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
     os.makedirs(out_folder, exist_ok=True)
     return out_folder
 
@@ -142,6 +141,14 @@ def callback_cycle():
         for msg in messages:
             with st.chat_message(msg['role']):
                 st.write(msg['content'])
+
+    if manager.few_shot_prompt is not None:
+        btn = st.download_button(
+            label="Download few shot prompt",
+            data=manager.few_shot_prompt,
+            file_name='few_shot_prompt.txt',
+            mime="text"
+        )
 
 
 def old_cycle():
@@ -293,7 +300,7 @@ def init_set_up_page():
             "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
         st.write(
             "This assistant system uses Watsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
-        #st.write("To proceed, please provide your BAM or WatsonX credentials and select a model.")
+        # st.write("To proceed, please provide your BAM or WatsonX credentials and select a model.")
 
         if not credentials_are_set:
             api = st.radio(
@@ -321,6 +328,7 @@ def init_set_up_page():
 
         st.button("Submit", on_click=submit_button_clicked, args=[target_model])
         return False
+
 
 if __name__ == "__main__":
     set_up_is_done = init_set_up_page()

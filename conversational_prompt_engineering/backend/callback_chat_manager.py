@@ -103,7 +103,10 @@ class ModelPrompts:
         self.analyze_new_prompt_accepted_outputs = 'Accepted outputs:\n'
         self.analyze_new_prompt_new_outputs = '\nProduced outputs:\n'
 
-        self.conversation_end_instruction = 'This is the end of conversation. Say goodbye to the user.'
+        self.conversation_end_instruction = \
+            'This is the end of conversation. Say goodbye to the user, ' \
+            'and inform that the final prompt that includes few-shot examples and is formatted for the *TARGET_MODEL* ' \
+            'can be downloaded via **Download few shot prompt** button below.'
 
 
 class MixtralPrompts(ModelPrompts):
@@ -141,6 +144,7 @@ class CallbackChatManager(ChatManagerBase):
         self.prompts = []
         self.baseline_prompts = {}
         self.prompt_conv_end = False
+        self.few_shot_prompt = None
 
         self.output_discussion_state = None
         self.calls_queue = []
@@ -381,11 +385,9 @@ class CallbackChatManager(ChatManagerBase):
         self.prompt_conv_end = True
         self._save_chat_result()
         model_id = self.model
-        few_shot_prompt = build_few_shot_prompt(self.prompts[-1], self.approved_outputs, model_id)
-        self._add_msg(self.user_chat, ChatRole.ASSISTANT, f"Here is the final prompt formatted for *{model_id}*:\n"
-                                                          f"```\n{few_shot_prompt}\n```")
-        end_instruction = self.model_prompts.conversation_end_instruction
-        self.add_system_message(end_instruction)
+        self.few_shot_prompt = build_few_shot_prompt(self.prompts[-1], self.approved_outputs, model_id)
+        end = self.model_prompts.conversation_end_instruction.replace('TARGET_MODEL', self.target_bam_client.model_id)
+        self.add_system_message(end)
 
     def set_instructions(self, task_instruction, api_instruction, function2description):
         self.api_names = [key[:key.index('(')] for key in function2description.keys()]
