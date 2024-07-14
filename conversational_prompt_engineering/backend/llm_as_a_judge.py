@@ -225,12 +225,14 @@ class LlmAsAJudge(ChatManagerBase):
 if __name__ == "__main__":
 
     api = "bam"  # select the API "bam"/"watsonx"
-    evaluation_mode = "test_csv"  # select the evaluation mode "chat_eval"/"test_csv"
-    evaluation_data_split = "eval_llm"  # select the dataset split csv to evaluate (when evaluation mode is "test_csv")
+    evaluation_mode = "chat_eval" #"test_csv"  # select the evaluation mode "chat_eval"/"test_csv"
+    evaluation_data_split = "eval" #"eval_llm"  # select the dataset split csv to evaluate (when evaluation mode is "test_csv")
     summary_prompt_types = ['baseline', 'zero_shot', 'few_shot']   # select the summaries for evaluation
 
     #chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Orith_BAM/07-07-2024 13:10:27"
+
     chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Artem_BAM/09-07-2024 15:14:31"
+    chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/oritht/14-07-2024 12:36:46"
 
     # the chat result json file
     chat_res_json_file = "chat_result.json"
