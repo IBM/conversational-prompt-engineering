@@ -72,9 +72,10 @@ class ModelPrompts:
             'Remember to communicate only via API calls.'
 
         self.discuss_example_num = \
-            'Apply the user comments from above to the model output for Example EXAMPLE_NUM, and present the result to the user. ' \
-            'Indicate the example (number), and separate between the output and your text with empty lines. ' \
-            'Discuss the presented output taking into account the system conclusion for this example if exists.' \
+            'You have switched to EXAMPLE_NUM. ' \
+            'Apply the user comments from above to the model output for this example, and present the result to the user. ' \
+            'Indicate the example (number), and format the text so that the output and your text are are separated by empty lines. ' \
+            'Discuss the presented output taking into account the system conclusion for this example if exists.'
 
         self.syntax_err_instruction = 'The last API call produced a syntax error. Check escaping double quotes. Try again.'
         self.api_only_instruction = \
@@ -308,6 +309,7 @@ class CallbackChatManager(ChatManagerBase):
         self.calls_queue = []
         self.prompts.append(prompt)
         self.model_chat[-1]['prompt_iteration'] = None
+        self.model_chat[-1]['example_num'] = None
 
         futures = {}
         with ThreadPoolExecutor(max_workers=len(self.examples)) as executor:
