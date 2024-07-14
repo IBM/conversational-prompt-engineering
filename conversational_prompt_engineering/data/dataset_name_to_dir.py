@@ -9,6 +9,7 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
                         "Privacy Policies and Software Licenses": {"train":
                                              "./data/legal_plain_english/train.csv",
                                          "eval": "./data/legal_plain_english/eval.csv",
+                                         "eval_llm": "./data/legal_plain_english/test_full.csv",
                                         "desc": "This dataset consists of passages from legal documents \ndiscussing privacy policies or software licenses."},
                        "IBM blog": {"train": "./data/ibm blog/train.csv",
                                                 "eval": "./data/ibm blog/test.csv",
@@ -19,6 +20,7 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
 
                        "Reddit posts": {"train": "./data/tldr/train.csv",
                                         "eval": "./data/tldr/test.csv",
+                                        "eval_llm": "./data/tldr/test_full.csv",
                                         "desc": "This dataset consists of posts from Reddit (TL;DR dataset)"},
 
                        "Restaurant reviews": {"train": "./data/lentricote_trip_advisor/train.csv",
