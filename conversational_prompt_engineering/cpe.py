@@ -24,7 +24,7 @@ from conversational_prompt_engineering.data.dataset_utils import load_dataset_ma
 
 from st_pages import Page, show_pages, hide_pages
 
-version = "callback manager v1.0.6"
+version = "callback manager v1.0.7"
 st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"})
 
 show_pages(
@@ -254,16 +254,21 @@ def verify_email(email_address):
 
 
 def load_environment_variables():
-    if "BAM_APIKEY" in os.environ:
-        st.session_state.credentials = {}
-        st.session_state.API = APIName.BAM
-        st.session_state.credentials["key"] = os.environ["BAM_APIKEY"]
-    elif "WATSONX_APIKEY" in os.environ:
-        st.session_state.credentials = {}
-        st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
-        st.session_state.API = APIName.Watsonx
-        st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
-        logging.info(f"credentials from environment variables: {st.session_state.credentials}")
+    if "API" not in st.session_state: #do it only once
+        if "BAM_APIKEY" in os.environ:
+            st.session_state.credentials = {}
+            st.session_state.API = APIName.BAM
+            st.session_state.credentials["key"] = os.environ["BAM_APIKEY"]
+        elif "WATSONX_APIKEY" in os.environ:
+            st.session_state.credentials = {}
+            st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
+            st.session_state.API = APIName.Watsonx
+            st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
+            logging.info(f"credentials from environment variables: {st.session_state.credentials}")
+        else:
+            st.session_state.API = APIName.BAM
+            st.session_state["credentials"] = {}
+
     if "IBM_EMAIL" in os.environ and verify_email(os.environ["IBM_EMAIL"]):
         st.session_state.email_address = os.environ["IBM_EMAIL"]
 
@@ -301,11 +306,6 @@ def init_set_up_page():
     st.session_state.model = 'llama-3'
     if not hasattr(st.session_state, "target_model"):
         st.session_state.target_model = 'llama-3'
-
-    if "API" not in st.session_state:  # set default API to Watsonx
-        st.session_state.API = APIName.BAM
-    if 'credentials' not in st.session_state:
-        st.session_state["credentials"] = {}
 
     load_environment_variables()
 
