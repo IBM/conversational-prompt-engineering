@@ -18,7 +18,8 @@ from conversational_prompt_engineering.backend.manager import Manager, Mode
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
     create_choose_dataset_component_train, add_evaluator_input
-from configs.config_names import config_name_to_file
+from configs.config_names import load_config
+from conversational_prompt_engineering.data.dataset_utils import load_dataset_mapping
 
 from st_pages import Page, show_pages, hide_pages
 
@@ -108,16 +109,13 @@ def callback_cycle():
         logger = logging.getLogger()
         logger.addHandler(file_handler)
 
-        #moved here so we can log the selected config
-        if not "config" in st.session_state:
-            load_config()
-
         st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials,
                                                        model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
                                                        conv_id=st.session_state.conv_id, api=st.session_state.API.value,
                                                        email_address=st.session_state.email_address,
-                                                       output_dir=output_dir)
+                                                       output_dir=output_dir,
+                                                       config_name=st.session_state["config_name"])
 
     manager = st.session_state.manager
 
@@ -328,10 +326,6 @@ instructions_for_user = "Welcome to IBM Research Conversational Prompt Engineeri
             "This assistant system uses Watsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share."
 
 def init_set_up_page():
-
-
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
     st.title(":blue[IBM Research Conversational Prompt Engineering]")
 
     # default setting
@@ -358,13 +352,16 @@ def init_set_up_page():
         # with entry_page.form("my_form"):
         st.write(eval_instructions_for_user)
 
-        api = st.radio(
-                "",
-                # add dummy option to make it the default selection
-            options=["BAM", "Watsonx"],
-            horizontal=True, key=f"bam_watsonx_radio",
-            index=0 if st.session_state.API == APIName.BAM else 1)
-
+        only_watsonx = st.session_state["config"].getboolean("General", "only_watsonx")
+        if not only_watsonx:
+            api = st.radio(
+                    "",
+                    # add dummy option to make it the default selection
+                options=["BAM", "Watsonx"] ,
+                horizontal=True, key=f"bam_watsonx_radio",
+                index=0 if st.session_state.API == APIName.BAM else 1)
+        else:
+            api = APIName.Watsonx
         st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
 
         set_credentials()
@@ -388,7 +385,7 @@ def init_set_up_page():
         return False
 
 
-def load_config():
+def init_config():
     if len(sys.argv) > 1:
         logging.info(f"Loading {sys.argv[1]} config")
         config_name = sys.argv[1]
@@ -396,22 +393,15 @@ def load_config():
         logging.info(f"Loading default config")
         config_name = "main"
 
-    if config_name not in config_name_to_file:
-        raise ValueError(f"Provided config name is: {config_name} is invalid!")
-
-    config_file_name = config_name_to_file.get(config_name)
-    config = configparser.ConfigParser()
-    config.read(config_file_name)
+    config = load_config(config_name)
     st.session_state["config_name"] = config_name
-
-    #setup datasets loading script:
-    script_path_name = config.get("Dataset", "ds_script")
-    spec = importlib.util.spec_from_file_location('module_name', script_path_name)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    st.session_state["dataset_name_to_dir"] = getattr(module, "dataset_name_to_dir")
+    st.session_state["config"] = config
+    st.session_state["dataset_name_to_dir"] = load_dataset_mapping(config)
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    if not "config" in st.session_state:
+        init_config()
     set_up_is_done = init_set_up_page()
     if set_up_is_done:
         callback_cycle()

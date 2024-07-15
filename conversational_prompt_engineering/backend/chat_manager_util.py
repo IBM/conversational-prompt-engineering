@@ -30,7 +30,7 @@ def extract_delimited_text(txt, delims):
 
 
 class ChatManagerBase:
-    def __init__(self, credentials, model, conv_id, target_model, api, email_address, output_dir) -> None:
+    def __init__(self, credentials, model, conv_id, target_model, api, email_address, output_dir, config_name) -> None:
         with open("backend/model_params.json", "r") as f:
             params = json.load(f)
         logging.info(f"selected {model}")
@@ -60,7 +60,9 @@ class ChatManagerBase:
         self.timing_report = []
         self.email_address = email_address
         self.out_dir = output_dir
+        self.config_name = config_name
         logging.info(f"output is saved to {os.path.abspath(self.out_dir)}")
+
 
     def save_prompts_and_config(self, approved_prompts, approved_outputs):
         chat_dir = os.path.join(self.out_dir, "chat")
@@ -74,10 +76,9 @@ class ChatManagerBase:
                                                                                   'model_id'])
             json.dump(approved_prompts, f)
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
-            config = {"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name,
+            json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name,
                        "baseline_prompts": self.baseline_prompts,
-                      }
-            json.dump(config, f)
+                       "config_name": self.config_name}, f)
 
     def save_chat_html(self, chat, file_name):
         def _format(msg):

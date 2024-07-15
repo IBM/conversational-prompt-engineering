@@ -4,9 +4,9 @@ import pandas as pd
 
 prompt_from_chat = st.session_state.manager.prompts[-1] if st.session_state.manager.prompts else "no-prompt"
 questions = [f"1.	I’m satisfied with the final prompt **{prompt_from_chat}**, it met my requirements. ",
-             "2.	The system helped me think through how the summaries should look like and what criteria to consider when building the prompt",
+             "2.	The system helped me think through how the desired outputs should look like and what criteria to consider when building the prompt.",
              "3.	I felt the system was pleasant and responsive throughout the interaction.",
-             "4.	I’m satisfied with the time it took to come up with the final prompt"
+             "4.	I’m satisfied with the time it took to come up with the final prompt."
              ]
 answers = [None]* len(questions)
 
@@ -31,7 +31,7 @@ def run():
         )
         if selected_value:
             answers[i] = selected_value
-    free_text = st.text_input(label = "Please write any other feedback here:", )
+    free_text = st.text_area(label = "Please write any other feedback here:", height=150)
     submit_clicked = st.button("Submit")
     if submit_clicked:
         if None in answers:
@@ -41,7 +41,7 @@ def run():
 
 
 if __name__ == "__main__":
-    if False: #if not hasattr(st.session_state.manager, "prompt_conv_end") or not st.session_state.manager.prompt_conv_end:
-        st.write("Evaluation will be open after at least one prompt has been curated in the chat.")
+    if False: #not hasattr(st.session_state.manager, "prompt_conv_end") or not st.session_state.manager.prompt_conv_end:
+        st.write("Survey will be open after at least one prompt has been curated in the chat.")
     else:
         run()

@@ -122,8 +122,8 @@ class Llama3Prompts(ModelPrompts):
 
 
 class CallbackChatManager(ChatManagerBase):
-    def __init__(self, credentials, model, conv_id, target_model, api, email_address, output_dir) -> None:
-        super().__init__(credentials, model, conv_id, target_model, api, email_address, output_dir)
+    def __init__(self, credentials, model, conv_id, target_model, api, email_address, output_dir, config_name) -> None:
+        super().__init__(credentials, model, conv_id, target_model, api, email_address, output_dir, config_name)
         self.model_prompts = {
             'mixtral': MixtralPrompts,
             'llama-3': Llama3Prompts,
@@ -437,7 +437,8 @@ class CallbackChatManager(ChatManagerBase):
             'target_model': self.target_bam_client.parameters['model_id'],
             'dataset_name': self.dataset_name,
             'sent_words_count': self.bam_client.sent_words_count,
-            'received_words_count': self.bam_client.received_words_count
+            'received_words_count': self.bam_client.received_words_count,
+            'config_name': self.config_name
         }
         with open(self.result_json_file, 'w') as f:
             json.dump(data, f)
