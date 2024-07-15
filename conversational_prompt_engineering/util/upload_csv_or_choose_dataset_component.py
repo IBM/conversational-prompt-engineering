@@ -1,15 +1,15 @@
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
-from conversational_prompt_engineering.data.dataset_name_to_dir import dataset_name_to_dir
 
 
 def add_download_button(st, split_name):
     #this button should be present during all the session.
-    selected_file_dir = dataset_name_to_dir.get(st.session_state["selected_dataset"])[split_name]
+    selected_file_dir = st.session_state["dataset_name_to_dir"].get(st.session_state["selected_dataset"])[split_name]
     with open(selected_file_dir, 'rb') as f:
         st.download_button(f'Download data', f, file_name=f"{selected_file_dir}_{split_name}.csv", )
 
 def rander_component(st, default_value_for_droplist, split_name):
     upload_your_csv = "upload your csv"
+    dataset_name_to_dir = st.session_state["dataset_name_to_dir"]
     col1, col2 = st.columns(2)
     with col1:
         list_of_datasets = list(dataset_name_to_dir.keys()) + [upload_your_csv]
@@ -43,7 +43,7 @@ def create_choose_dataset_component_train(st, manager):
 
 
 def create_choose_dataset_component_eval(st):
-    datasets = list(dataset_name_to_dir.keys())
+    datasets = list(st.session_state["dataset_name_to_dir"].keys())
     selected_index=None
     if "selected_dataset" in st.session_state:
         selected_index = datasets.index(st.session_state["selected_dataset"])
