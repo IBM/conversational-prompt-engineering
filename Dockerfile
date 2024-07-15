@@ -7,7 +7,9 @@ WORKDIR /conversational_prompt_engineering
 ENV PYTHONPATH /:/conversational_prompt_engineering
 ARG watsonx_api_key
 ARG watsonx_project_id
-ARG config_name
+ARG config_name=main
 ENV WATSONX_APIKEY=${watsonx_api_key}
 ENV PROJECT_ID=${watsonx_project_id}
-CMD streamlit run cpe.py --server.port 8000 ${config_name}
+ENV BAM_APIKEY=${bam_api_key}
+ENV CONFIG_NAME=${config_name}
+CMD streamlit run cpe.py --server.port 8000 ${CONFIG_NAME}
