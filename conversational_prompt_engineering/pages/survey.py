@@ -41,7 +41,7 @@ def run():
 
 
 if __name__ == "__main__":
-    if False: #not hasattr(st.session_state.manager, "prompt_conv_end") or not st.session_state.manager.prompt_conv_end:
+    if not hasattr(st.session_state.manager, "prompt_conv_end") or not st.session_state.manager.prompt_conv_end:
         st.write("Survey will be open after at least one prompt has been curated in the chat.")
     else:
         run()
