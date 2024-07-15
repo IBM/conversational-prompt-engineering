@@ -72,9 +72,10 @@ class ModelPrompts:
             'Remember to communicate only via API calls.'
 
         self.discuss_example_num = \
-            'Apply the user comments from above to the model output for Example EXAMPLE_NUM, and present the result to the user. ' \
-            'Indicate the example (number), and separate between the output and your text with empty lines. ' \
-            'Discuss the presented output taking into account the system conclusion for this example if exists.' \
+            'You have switched to EXAMPLE_NUM. ' \
+            'Apply the user comments from above to the model output for this example, and present the result to the user. ' \
+            'Indicate the example (number), and format the text so that the output and your text are are separated by empty lines. ' \
+            'Discuss the presented output taking into account the system conclusion for this example if exists.'
 
         self.syntax_err_instruction = 'The last API call produced a syntax error. Check escaping double quotes. Try again.'
         self.api_only_instruction = \
@@ -103,7 +104,9 @@ class ModelPrompts:
         self.analyze_new_prompt_new_outputs = '\nProduced outputs:\n'
 
         self.conversation_end_instruction = \
-            'Present to the user the final prompt in a nice format, and end the conversation. Do not call conversation_end API anymore.'
+            'This is the end of conversation. Say goodbye to the user, ' \
+            'and inform that the final prompt that includes few-shot examples and is formatted for the *TARGET_MODEL* ' \
+            'can be downloaded via **Download few shot prompt** button below.'
 
 
 class MixtralPrompts(ModelPrompts):
@@ -117,12 +120,13 @@ class Llama3Prompts(ModelPrompts):
 
 
 class CallbackChatManager(ChatManagerBase):
-    def __init__(self, credentials, model, conv_id, target_model, api, email_address) -> None:
-        super().__init__(credentials, model, conv_id, target_model, api, email_address)
+    def __init__(self, credentials, model, conv_id, target_model, api, email_address, output_dir) -> None:
+        super().__init__(credentials, model, conv_id, target_model, api, email_address, output_dir)
         self.model_prompts = {
             'mixtral': MixtralPrompts,
             'llama-3': Llama3Prompts,
         }[model]()
+        self.model = model
 
         self.api_names = None
 
@@ -140,6 +144,7 @@ class CallbackChatManager(ChatManagerBase):
         self.prompts = []
         self.baseline_prompts = {}
         self.prompt_conv_end = False
+        self.few_shot_prompt = None
 
         self.output_discussion_state = None
         self.calls_queue = []
@@ -157,19 +162,27 @@ class CallbackChatManager(ChatManagerBase):
     def validated_example_idx(self):
         return len([s for s in self.outputs if s is not None])
 
-    def _add_msg(self, chat, role, msg, example_num=None):
-        message = {'role': role, 'content': msg}
-        if example_num is not None:
-            message['example_num'] = example_num
-        chat.append(message)
-
-    def add_system_message(self, msg, example_num=None):
-        self._add_msg(self.model_chat, ChatRole.SYSTEM, msg, example_num)
+    @property
+    def prompt_iteration(self):
+        return len(self.prompts) or None
 
     @property
     def _filtered_model_chat(self):
-        return [msg for msg in self.model_chat
-                if self.example_num is None or (msg.get('example_num', None) or self.example_num) == self.example_num]
+        def _include_msg(m):
+            tag_values = {
+                'example_num': self.example_num,
+                'prompt_iteration': self.prompt_iteration
+            }
+            return all([curr_val is None or (m.get(name, None) or curr_val) == curr_val
+                        for name, curr_val in tag_values.items()])
+
+        return [msg for msg in self.model_chat if _include_msg(msg)]
+
+    def _add_msg(self, chat, role, msg, **tag_kwargs):
+        chat.append({'role': role, 'content': msg, **tag_kwargs})
+
+    def add_system_message(self, msg, **tag_kwargs):
+        self._add_msg(self.model_chat, ChatRole.SYSTEM, msg, **tag_kwargs)
 
     def submit_model_chat_and_process_response(self):
         while len(self.model_chat) > self.model_chat_length:
@@ -180,7 +193,8 @@ class CallbackChatManager(ChatManagerBase):
 
             while len(self.calls_queue) > 0:
                 call = self.calls_queue.pop(0)
-                self._add_msg(self.model_chat, ChatRole.ASSISTANT, call, example_num=self.example_num)
+                self._add_msg(self.model_chat, ChatRole.ASSISTANT, call,
+                              example_num=self.example_num, prompt_iteration=self.prompt_iteration)
                 self.model_chat_length += 1
                 self._execute_api_call(call)
                 self._save_chat_transcripts()
@@ -212,7 +226,8 @@ class CallbackChatManager(ChatManagerBase):
 
             leftovers = resp
             if len(spans) > 0:
-                leftovers = ''.join([resp[prev[1]: cur[0]] for prev, cur in zip([(0, 0)] + spans, spans + [(len_resp, len_resp)])])
+                leftovers = ''.join(
+                    [resp[prev[1]: cur[0]] for prev, cur in zip([(0, 0)] + spans, spans + [(len_resp, len_resp)])])
             is_valid = len(api_calls) > 0 and len(leftovers.strip()) == 0
 
             if is_valid:
@@ -244,7 +259,8 @@ class CallbackChatManager(ChatManagerBase):
     def add_user_message(self, message):
         self._add_msg(self.user_chat, ChatRole.USER, message)
         self.user_chat_length = len(self.user_chat)  # user message is rendered by cpe
-        self._add_msg(self.model_chat, ChatRole.USER, message)  # not adding dummy initial user message
+        self._add_msg(self.model_chat, ChatRole.USER, message,
+                      prompt_iteration=self.prompt_iteration)  # not adding dummy initial user message
 
     def add_user_message_only_to_user_chat(self, message):
         self._add_msg(self.user_chat, ChatRole.USER, message)
@@ -290,12 +306,14 @@ class CallbackChatManager(ChatManagerBase):
         self.example_num = example_num
         discuss_ex = self.model_prompts.discuss_example_num.replace('EXAMPLE_NUM', str(self.example_num))
         self.calls_queue = []
-        self.add_system_message(discuss_ex, example_num=example_num)
+        self.add_system_message(discuss_ex, example_num=example_num, prompt_iteration=self.prompt_iteration)
 
     def submit_prompt(self, prompt):
         prev_discussion_cot = (self.output_discussion_state or {}).get('outputs_discussion_CoT', None)
         self.calls_queue = []
         self.prompts.append(prompt)
+        self.model_chat[-1]['prompt_iteration'] = None
+        self.model_chat[-1]['example_num'] = None
 
         futures = {}
         with ThreadPoolExecutor(max_workers=len(self.examples)) as executor:
@@ -310,11 +328,12 @@ class CallbackChatManager(ChatManagerBase):
             'model_outputs': [None] * len(self.examples),
             'user_chat_begin': self.user_chat_length
         }
-        self.add_system_message(self.model_prompts.result_intro)
+        self.add_system_message(self.model_prompts.result_intro, prompt_iteration=self.prompt_iteration)
         for i, f in futures.items():
             output = f.result()
             example_num = i + 1
-            self.add_system_message(f'Example {example_num}: {output}', example_num)
+            self.add_system_message(f'Example {example_num}: {output}',
+                                    example_num=example_num, prompt_iteration=self.prompt_iteration)
             self.output_discussion_state['model_outputs'][i] = output
 
         if len(self.prompts) > 1 and prev_discussion_cot is not None:
@@ -330,15 +349,17 @@ class CallbackChatManager(ChatManagerBase):
             self.save_chat_html(tmp_chat + [{'role': ChatRole.ASSISTANT, 'content': response}],
                                 f'CoT_{self.cot_count}.html')
             self.cot_count += 1
-            self.add_system_message(response)
+            self.add_system_message(response, prompt_iteration=self.prompt_iteration)
 
         self.add_system_message(
-            self.model_prompts.analyze_result_instruction.replace('NUM_EXAMPLES', str(len(self.examples))))
+            self.model_prompts.analyze_result_instruction.replace('NUM_EXAMPLES', str(len(self.examples))),
+            prompt_iteration=self.prompt_iteration)
 
     def output_accepted(self, example_num, output):
         example_idx = int(example_num) - 1
         self.outputs[example_idx] = output
         self.model_chat[-1]['example_num'] = None
+        self.model_chat[-1]['prompt_iteration'] = None
         if len(self.calls_queue) == 0:
             if example_idx < len(self.examples) - 1:
                 self.calls_queue.append(f'self.switch_to_example({example_idx + 2})')
@@ -363,7 +384,10 @@ class CallbackChatManager(ChatManagerBase):
     def conversation_end(self):
         self.prompt_conv_end = True
         self._save_chat_result()
-        self.add_system_message(self.model_prompts.conversation_end_instruction)
+        model_id = self.model
+        self.few_shot_prompt = build_few_shot_prompt(self.prompts[-1], self.approved_outputs, model_id)
+        end = self.model_prompts.conversation_end_instruction.replace('TARGET_MODEL', self.target_bam_client.model_id)
+        self.add_system_message(end)
 
     def set_instructions(self, task_instruction, api_instruction, function2description):
         self.api_names = [key[:key.index('(')] for key in function2description.keys()]
@@ -384,7 +408,7 @@ class CallbackChatManager(ChatManagerBase):
         for i, ex in enumerate(self.examples):
             example_num = i + 1
             self.example_num = example_num
-            self.add_system_message(f'Example {example_num}: {ex}', example_num)
+            self.add_system_message(f'Example {example_num}: {ex}', example_num=example_num)
         self.example_num = None
 
         self.add_system_message(self.model_prompts.task_definition_instruction)
