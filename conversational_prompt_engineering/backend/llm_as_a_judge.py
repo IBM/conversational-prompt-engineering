@@ -3,12 +3,15 @@ import pandas as pd
 import json
 import random
 
+from concurrent.futures import ThreadPoolExecutor
+
 from genai.schema import ChatRole
 from conversational_prompt_engineering.backend.chat_manager_util import ChatManagerBase
 from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt, remove_tags_from_zero_shot_prompt
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
-from conversational_prompt_engineering.data.dataset_name_to_dir import dataset_name_to_dir
-from concurrent.futures import ThreadPoolExecutor
+from conversational_prompt_engineering.data.dataset_utils import load_dataset_mapping
+from conversational_prompt_engineering.configs.config_names import load_config
+
 
 ## Prompts definitions are taken from: https://github.com/prometheus-eval/prometheus-eval/blob/main/libs/prometheus-eval/prometheus_eval/prompts.py
 
@@ -258,6 +261,8 @@ if __name__ == "__main__":
         print(f'LLM AS A JUDGE: chat manual evaluation file is: {chat_eval_csv_file}')
     elif evaluation_mode == "test_csv":
         # Evaluate csv test data with chat prompts
+        config = load_config("config_name")
+        dataset_name_to_dir = load_dataset_mapping(config)
         test_data_file = dataset_name_to_dir.get(dataset_name)[evaluation_data_split]
         print(f'LLM AS A JUDGE: dataset file is: {test_data_file}')
     else:
