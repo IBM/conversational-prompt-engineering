@@ -18,7 +18,7 @@ MIN_EXAMPLE_TO_EVALUATE = 3
 class WorkMode(Enum):
     REGULAR, DUMMY_PROMPT = range(2)
 
-work_mode = WorkMode.DUMMY_PROMPT
+work_mode = WorkMode.REGULAR
 
 dimensions = ["dim1"]
 
