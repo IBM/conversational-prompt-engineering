@@ -28,6 +28,7 @@ st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"
 show_pages(
     [
         Page("cpe.py", "Chat", ""),
+        Page("pages/survey.py", "Survey", ""),
         Page("pages/evaluation.py", "Evaluate", ""),
     ]
 )
