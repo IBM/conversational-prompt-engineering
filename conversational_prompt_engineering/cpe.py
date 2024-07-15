@@ -18,6 +18,8 @@ from conversational_prompt_engineering.backend.manager import Manager, Mode
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
     create_choose_dataset_component_train, add_evaluator_input
+from configs.config_names import config_name_to_file
+
 from st_pages import Page, show_pages, hide_pages
 
 version = "callback manager v1.0.6"
@@ -383,12 +385,17 @@ def init_set_up_page():
 
 def load_config():
     if len(sys.argv) > 1:
-        config_file = sys.argv[1]
+        config_name = sys.argv[1]
     else:
-        config_file = "main.config.conf"
+        config_name = "main"
+
+    if config_name not in config_name_to_file:
+        raise ValueError(f"Provided config name is: {config_name} is invalid!")
+
+    config_file_name = config_name_to_file.get(config_name)
     config = configparser.ConfigParser()
-    config.read(os.path.join("configs", config_file))
-    st.session_state["config"] = config
+    config.read(config_file_name)
+    st.session_state["config_name"] = config_name
 
     #setup datasets loading script:
     script_path_name = config.get("Dataset", "ds_script")
@@ -396,7 +403,6 @@ def load_config():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     st.session_state["dataset_name_to_dir"] = getattr(module, "dataset_name_to_dir")
-    print(st.session_state["config"])
 
 if __name__ == "__main__":
     if not "config" in st.session_state:
