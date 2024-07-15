@@ -73,7 +73,8 @@ class ModelPrompts:
 
         self.discuss_example_num = \
             'You have switched to EXAMPLE_NUM. ' \
-            'Apply the user comments from above to the model output for this example, and present the result to the user. ' \
+            'Look at the user comments and the accepted outputs for the previous examples, ' \
+            'apply them to the model output of this example,and present the result to the user. ' \
             'Indicate the example (number), and format the text so that the output and your text are are separated by empty lines. ' \
             'Discuss the presented output taking into account the system conclusion for this example if exists.'
 
