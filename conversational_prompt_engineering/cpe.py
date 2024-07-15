@@ -102,6 +102,11 @@ def callback_cycle():
         file_handler = logging.FileHandler(os.path.join(output_dir, "out.log"))
         logger = logging.getLogger()
         logger.addHandler(file_handler)
+
+        #moved here so we can log the selected config
+        if not "config" in st.session_state:
+            load_config()
+
         st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials,
                                                        model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
@@ -370,8 +375,6 @@ def load_config():
     st.session_state["dataset_name_to_dir"] = getattr(module, "dataset_name_to_dir")
 
 if __name__ == "__main__":
-    if not "config" in st.session_state:
-        load_config()
     set_up_is_done = init_set_up_page()
     if set_up_is_done:
         callback_cycle()
