@@ -73,7 +73,8 @@ class ModelPrompts:
 
         self.discuss_example_num = \
             'You have switched to EXAMPLE_NUM. ' \
-            'Apply the user comments from above to the model output for this example, and present the result to the user. ' \
+            'Look at the user comments and the accepted outputs for the previous examples, ' \
+            'apply them to the model output of this example,and present the result to the user. ' \
             'Indicate the example (number), and format the text so that the output and your text are are separated by empty lines. ' \
             'Discuss the presented output taking into account the system conclusion for this example if exists.'
 
@@ -92,7 +93,7 @@ class ModelPrompts:
 
         self.analyze_discussion_continue = \
             'Continue your conversation with the user taking into account these recommendations above. ' \
-            'If the prompt should be modified based on these recommendations, then present it to the user. ' \
+            'If the prompt should be modified based on these recommendations, then present it to the user, do not submit silently. ' \
             'If the prompt works well and needs no modifications, communicate it to user and suggest to finish the conversation.'
 
         self.analyze_new_prompt_task = \
