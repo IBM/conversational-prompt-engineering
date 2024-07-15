@@ -54,7 +54,7 @@ class ModelPrompts:
             'From this point, don\'t use task_is_defined API. '
 
         self.generate_baseline_instruction_task = \
-            'Generate a general prompt for this task and submit it via submit_prompt API. '
+            'Generate a concise and general prompt for this task, for example "summarize this text" for summarization, or "generate questions in the following text" for question generation. Submit the general prompt via submit_prompt API. '
 
         self.result_intro = 'Based on the suggested prompt, the model has produced the following outputs for the user input examples:'
 
