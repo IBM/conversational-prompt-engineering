@@ -1,6 +1,9 @@
 import logging
 import os
 import datetime
+import sys
+import configparser
+import importlib
 
 import pandas as pd
 import streamlit as st
@@ -341,7 +344,26 @@ def init_set_up_page():
         return False
 
 
+def load_config():
+    if len(sys.argv) > 1:
+        config_file = sys.argv[1]
+    else:
+        config_file = "main.config.conf"
+    config = configparser.ConfigParser()
+    config.read(os.path.join("configs", config_file))
+    st.session_state["config"] = config
+
+    #setup datasets loading script:
+    script_path_name = config.get("Dataset", "ds_script")
+    spec = importlib.util.spec_from_file_location('module_name', script_path_name)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    st.session_state["dataset_name_to_dir"] = getattr(module, "dataset_name_to_dir")
+    print(st.session_state["config"])
+
 if __name__ == "__main__":
+    if not "config" in st.session_state:
+        load_config()
     set_up_is_done = init_set_up_page()
     if set_up_is_done:
         callback_cycle()
