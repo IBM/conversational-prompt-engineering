@@ -92,7 +92,8 @@ class ModelPrompts:
 
         self.analyze_discussion_continue = \
             'Continue your conversation with the user taking into account these recommendations above. ' \
-            'If the prompt should be modified based on these recommendations, then present it to the user.'
+            'If the prompt should be modified based on these recommendations, then present it to the user. ' \
+            'If the prompt works well and needs no modifications, communicate it to user and suggest to finish the conversation.'
 
         self.analyze_new_prompt_task = \
             'We are working on a prompt that would produce the outputs as preferred by the user. ' \
@@ -386,7 +387,8 @@ class CallbackChatManager(ChatManagerBase):
         self._save_chat_result()
         model_id = self.model
         self.few_shot_prompt = build_few_shot_prompt(self.prompts[-1], self.approved_outputs, model_id)
-        end = self.model_prompts.conversation_end_instruction.replace('TARGET_MODEL', self.target_bam_client.model_id)
+        model_id = self.target_bam_client.parameters['model_id']
+        end = self.model_prompts.conversation_end_instruction.replace('TARGET_MODEL', model_id)
         self.add_system_message(end)
 
     def set_instructions(self, task_instruction, api_instruction, function2description):
