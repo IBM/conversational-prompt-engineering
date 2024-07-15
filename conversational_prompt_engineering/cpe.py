@@ -348,8 +348,10 @@ def init_set_up_page():
 
 def load_config():
     if len(sys.argv) > 1:
+        logging.info(f"Loading {sys.argv[1]} config")
         config_name = sys.argv[1]
     else:
+        logging.info(f"Loading default config")
         config_name = "main"
 
     if config_name not in config_name_to_file:
