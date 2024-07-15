@@ -18,7 +18,7 @@ MIN_EXAMPLE_TO_EVALUATE = 3
 class WorkMode(Enum):
     REGULAR, DUMMY_PROMPT = range(2)
 
-work_mode = WorkMode.REGULAR
+work_mode = WorkMode.DUMMY_PROMPT
 
 dimensions = ["dim1"]
 
@@ -69,11 +69,11 @@ def previous_text():
         st.session_state.count -= 1
 
 
-def display_summary(side):
+def display_output(side):
     mixed_to_real = st.session_state.generated_data[st.session_state.count]["mixed_indices_mapping_to_prompt_type"][side]
-    summary = st.session_state.generated_data[st.session_state.count][f"{mixed_to_real}_summary"]
-    st.write(f"Summary {side+1}")
-    st.text_area(label=f"output_{side}", value=summary, label_visibility="collapsed", height=200)
+    output = st.session_state.generated_data[st.session_state.count][f"{mixed_to_real}_output"]
+    st.write(f"Output {side+1}")
+    st.text_area(label=f"output_{side}", value=output, label_visibility="collapsed", height=200)
 
 
 def display_llm_judge(side):
@@ -111,7 +111,10 @@ def calculate_results():
 def save_results():
     out_path = os.path.join(st.session_state.manager.out_dir, "eval")
     os.makedirs(out_path, exist_ok=True)
-    df = pd.DataFrame(st.session_state.generated_data)
+    #reorder shuffled data:
+    ordered_generate_data = sorted(st.session_state.generated_data, key=lambda x: x["index"])
+
+    df = pd.DataFrame(ordered_generate_data)
     for dim in dimensions:
         for rank in ["Best", "Worst"]:
             df[f"ranked_prompt_{(dim,rank)}"] = df["prompts"].apply(lambda x: x.get((dim, rank)))
@@ -137,7 +140,7 @@ def validate_annotation():
         best = st.session_state.generated_data[st.session_state.count]["sides"][(dim, "Best")]
         worst = st.session_state.generated_data[st.session_state.count]["sides"][(dim, "Worst")]
         if (best == worst):
-            st.error(f':heavy_exclamation_mark: You cannot select the same summary as best and worst in respect to {dim}')
+            st.error(f':heavy_exclamation_mark: You cannot select the same output as best and worst in respect to {dim}')
             return False
     return True
 
@@ -241,24 +244,24 @@ def run():
             display_text()
             st.divider()
             st.subheader("Generated outputs (random order)")
-            st.write("Bellow are presented the compared summaries. Please select the best and worst summary in respect to the different aspects. ")
-            summary_cols_list = st.columns(len(prompt_types))
+            st.write("Bellow are presented the compared summaries. Please select the best and worst output in respect to the different aspects. ")
+            output_cols_list = st.columns(len(prompt_types))
 
             for i in range(len(prompt_types)):
-                with summary_cols_list[i]:
-                    display_summary(i)
+                with output_cols_list[i]:
+                    display_output(i)
                     if "llm_judge" in st.session_state:
                         display_llm_judge(i)
             add_next_buttons("bellow_summaries")
             options = ["Best", "Worst"]
-            radio_button_labels = [f"Summary {i+1}" for i in range(len(prompt_types))]
+            radio_button_labels = [f"Output {i+1}" for i in range(len(prompt_types))]
             for dim in dimensions:
                 st.write(f"{dim}")
                 cols = st.columns(len(options))
                 for col, op in zip(cols, options):
                     with col:
                         selected_value = st.radio(
-                                f"{op} summary:",
+                                f"{op} output:",
                             # add dummy option to make it the default selection
                                 options = radio_button_labels,
                                 horizontal=True, key=f"radio_{st.session_state.count}_{dim}_{op}",

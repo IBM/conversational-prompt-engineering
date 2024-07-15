@@ -54,9 +54,8 @@ class Evaluation:
 
     def summarize(self, prompts, prompt_types, texts):
         generated_ordered = []
-        for t in texts:
-            row_data_ordered = {"text": t}
-            row_data_mixed = {"text": t}
+        for i, t in enumerate(texts):
+            row_data_ordered = {"text": t, "index": i}
             prompts_responses = []
             for _,prompt in enumerate(tqdm(prompts)):
                 prompt_str = prompt.format(text=t)
@@ -67,8 +66,9 @@ class Evaluation:
             mixed_mapping = {}
             for i in range(len(prompts)):
                 row_data_ordered[f"{prompt_types[i]}_prompt"] = prompts[i]
-                row_data_ordered[f"{prompt_types[i]}_summary"] = prompts_responses[i]
+                row_data_ordered[f"{prompt_types[i]}_output"] = prompts_responses[i]
                 mixed_mapping[mixed_indices[i]] = prompt_types[i]
             row_data_ordered["mixed_indices_mapping_to_prompt_type"] = mixed_mapping
             generated_ordered.append(row_data_ordered)
+        random.shuffle((generated_ordered))
         return generated_ordered

@@ -23,9 +23,8 @@ st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"
 show_pages(
     [
         Page("cpe.py", "Chat", ""),
-        Page("pages/evaluation.py", "Evaluate", ""),
         Page("pages/survey.py", "Survey", ""),
-
+        Page("pages/evaluation.py", "Evaluate", ""),
     ]
 )
 
@@ -226,7 +225,7 @@ def verify_email(email_address):
 
 
 
-eval_instructions = \
+eval_instructions_for_user = \
     "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n\n" \
     "This service is intended to help users build an effective prompt, personalized to their specific summarization use case, through a simple chat with an LLM.\n\n" \
     f"The *prompts* built by CPE are comprised of two parts: an instruction, describing to the LLM in natural language how to generate the summaries; and up to 3 text-summary pairs, exemplifying how summaries should look like.\n\n" \
@@ -305,7 +304,7 @@ def init_set_up_page():
         # credentials:
         st.empty()
         # with entry_page.form("my_form"):
-        st.write(eval_instructions)
+        st.write(eval_instructions_for_user)
 
         if not credentials_are_set:
             api = st.radio(
