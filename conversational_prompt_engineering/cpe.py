@@ -206,19 +206,26 @@ def old_cycle():
 
 
 def submit_button_clicked(target_model):
+    def get_secret_key(env_var_name, text_area_key):
+        return getattr(st.session_state, text_area_key) if env_var_name not in os.environ else os.environ[env_var_name]
+
     # verify credentials
-    creds_are_ok = True
     st.session_state.cred_error = ""
     st.session_state.email_error = ""
-    creds_are_ok = "key" in st.session_state.credentials
-    if not creds_are_ok:
-        if st.session_state.API == APIName.BAM and st.session_state.bam_api_key != "":
-            st.session_state.credentials = {'key': st.session_state.bam_api_key}
-        elif st.session_state.API == APIName.Watsonx and st.session_state.watsonx_api_key != "" and st.session_state.project_id != "":
-            st.session_state.credentials = {'key': st.session_state.watsonx_api_key,
-                                            'project_id': st.session_state.project_id}
-        else:
-            creds_are_ok = False
+    creds_are_ok = False
+    if st.session_state.API == APIName.BAM:
+        api_key = get_secret_key("BAM_APIKEY","bam_api_key")
+        if api_key != "":
+            st.session_state.credentials = {'key': api_key}
+            creds_are_ok = True
+    elif st.session_state.API == APIName.Watsonx:
+        api_key = get_secret_key("WATSONX_APIKEY","watsonx_api_key")
+        project_id = get_secret_key("PROJECT_ID","project_id")
+        if api_key != "" and project_id != "":
+            st.session_state.credentials = {'key': api_key,
+                                                'project_id': project_id}
+            creds_are_ok = True
+
     if creds_are_ok:
         st.session_state.model = 'llama-3'
         st.session_state.target_model = target_model
@@ -251,18 +258,34 @@ def load_environment_variables():
         st.session_state.email_address = os.environ["IBM_EMAIL"]
 
 
+def set_credentials():
+    def handle_secret_key(cred_key, env_var_name, text_area_key, text_area_label):
+        is_disabled = False
+        val = "" if not hasattr(st.session_state, text_area_key) else getattr(st.session_state, text_area_key)
+        if env_var_name in os.environ:
+            val = "****" #hidden
+            is_disabled = True
+        st.text_input(label=text_area_label, key=text_area_key, disabled=is_disabled, value=val)
+
+
+    #st.session_state.API = APIName.Watsonx if api == "Watsonx" else APIName.BAM
+    if st.session_state.API == APIName.Watsonx:
+        handle_secret_key(cred_key='key', env_var_name='WATSONX_APIKEY', text_area_key="watsonx_api_key", text_area_label="Watsonx API key")
+        handle_secret_key(cred_key='project_id', env_var_name='PROJECT_ID',text_area_key="project_id", text_area_label="project ID" )
+    else:
+        handle_secret_key(cred_key='key', env_var_name='BAM_APIKEY',text_area_key="bam_api_key", text_area_label="BAM API key" )
+
+    if hasattr(st.session_state, "cred_error") and st.session_state.cred_error != "":
+        st.error(st.session_state.cred_error)
+
+instructions_for_user = "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n" \
+            "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.\n" \
+            "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.\n" \
+            "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).\n"\
+            "This assistant system uses Watsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share."
+
 def init_set_up_page():
-    def set_credentials():
-        st.session_state.API = APIName.Watsonx if api == "Watsonx" else APIName.BAM
-        if st.session_state.API == APIName.Watsonx:
-            key_val = st.session_state.credentials.get('key', "")
-            st.text_input(label="Watsonx API key", key="watsonx_api_key", disabled=False, value=key_val)
-            proj_id_val = st.session_state.credentials.get('project_id', "")
-            st.text_input(label="project ID", key="project_id", disabled=False, value=proj_id_val)
-        else:
-            st.text_input(label="BAM API key", key="bam_api_key", disabled=False)
-        if hasattr(st.session_state, "cred_error") and st.session_state.cred_error != "":
-            st.error(st.session_state.cred_error)
+
 
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -274,7 +297,7 @@ def init_set_up_page():
         st.session_state.target_model = 'llama-3'
 
     if "API" not in st.session_state:  # set default API to Watsonx
-        st.session_state.API = APIName.Watsonx
+        st.session_state.API = APIName.BAM
     if 'credentials' not in st.session_state:
         st.session_state["credentials"] = {}
 
@@ -288,31 +311,19 @@ def init_set_up_page():
         return True
 
     else:
-        # credentials:
         st.empty()
-        # with entry_page.form("my_form"):
-        st.write("Welcome to IBM Research Conversational Prompt Engineering (CPE) service.")
-        st.write(
-            "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.")
-        st.write(
-            "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.")
-        st.write(
-            "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).")
-        st.write(
-            "This assistant system uses Watsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.")
-        # st.write("To proceed, please provide your BAM or WatsonX credentials and select a model.")
+        st.write(instructions_for_user)
 
-        if not credentials_are_set:
-            api = st.radio(
+        api = st.radio(
                 "",
                 # add dummy option to make it the default selection
-                options=["BAM", "Watsonx"],
-                horizontal=True, key=f"bam_watsonx_radio",
-                index=0 if st.session_state.API == APIName.BAM else 1)
-            if api:
-                st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
+            options=["BAM", "Watsonx"],
+            horizontal=True, key=f"bam_watsonx_radio",
+            index=0 if st.session_state.API == APIName.BAM else 1)
 
-            set_credentials()
+        st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
+
+        set_credentials()
 
         target_model = st.radio(
             label="Select the target model. The prompt that you will build will be formatted for this model.",
