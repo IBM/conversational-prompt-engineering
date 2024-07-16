@@ -86,7 +86,8 @@ class AutoChat:
                                                      conv_id=conv_id,
                                                      api=api,
                                                      email_address=email_address,
-                                                     output_dir=assistant_out_dir)
+                                                     output_dir=assistant_out_dir,
+                                                     config_name='main')
         examples_df = read_user_csv_file(examples_csv)
         self.assistant_manager.process_examples(examples_df, ds_name)
         examples = self.assistant_manager.examples
