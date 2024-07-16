@@ -93,7 +93,7 @@ class ModelPrompts:
 
         self.analyze_discussion_continue = \
             'Continue your conversation with the user taking into account these recommendations above. ' \
-            'If the prompt should be modified based on these recommendations, then present it to the user, do not submit silently. ' \
+            'If the prompt should be modified based on these recommendations, then present it to the user, submit it only after the user approval. ' \
             'If the prompt works well and needs no modifications, communicate it to user and suggest to finish the conversation.'
 
         self.analyze_new_prompt_task = \
