@@ -336,7 +336,7 @@ instructions_for_user = "Welcome to IBM Research Conversational Prompt Engineeri
             "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.\n" \
             "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.\n" \
             "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).\n"\
-            "This assistant system uses Watsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share."
+            "This assistant system uses BAM or CWatsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share."
 
 def init_set_up_page():
     st.title(":blue[IBM Research Conversational Prompt Engineering]")

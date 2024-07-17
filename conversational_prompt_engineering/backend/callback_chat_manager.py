@@ -108,7 +108,8 @@ class ModelPrompts:
         self.conversation_end_instruction = \
             'This is the end of conversation. Say goodbye to the user, ' \
             'and inform that the final prompt that includes few-shot examples and is formatted for the *TARGET_MODEL* ' \
-            'can be downloaded via **Download few shot prompt** button below.'
+            'can be downloaded via **Download few shot prompt** button below. '\
+            'Also, kindly refer the user to the survey tab that is now available, and let the user know that we will appreciate any feedback.'
 
 
 class MixtralPrompts(ModelPrompts):
