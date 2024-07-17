@@ -18,7 +18,6 @@ from conversational_prompt_engineering.backend.manager import Manager, Mode
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
     create_choose_dataset_component_train
-from conversational_prompt_engineering.configs.config_names import config_name_to_file
 from configs.config_names import load_config
 from conversational_prompt_engineering.data.dataset_utils import load_dataset_mapping
 
@@ -38,6 +37,14 @@ show_pages(
 
 class APIName(Enum):
     BAM, Watsonx = "bam", "watsonx"
+    def __eq__(self, other):
+        if type(self).__qualname__ != type(other).__qualname__:
+            return NotImplemented
+        return self.name == other.name and self.value == other.value
+
+    def __hash__(self):
+        return hash((type(self).__qualname__, self.name))
+
 
 
 def old_reset_chat():
