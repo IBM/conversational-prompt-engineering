@@ -265,7 +265,7 @@ eval_instructions_for_user = \
     "This service is intended to help users build an effective prompt, personalized to their specific summarization use case, through a simple chat with an LLM.\n\n" \
     f"The *prompts* built by CPE are comprised of two parts: an instruction, describing to the LLM in natural language how to generate the summaries; and up to 3 text-summary pairs, exemplifying how summaries should look like.\n\n" \
     "To use and evaluate CPE, proceed according to the following steps:\n\n" \
-    "1.	After submitting your API key (see below), we will ask you to select a summarization dataset from our catalog. " \
+    "1.	Select a summarization dataset from our catalog. " \
     "Please select the dataset that is most related to your daily work, or if none exists, select the dataset which interests you most. \n\n" \
     "2.	Dedicate a few moments to consider your preferences for generating a summary. " \
     "It may be helpful to download the dataset and go over a few text inputs in order to obtain a better understanding of the task. \n\n" \
