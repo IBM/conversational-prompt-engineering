@@ -2,7 +2,13 @@ import streamlit as st
 import os
 import pandas as pd
 
-prompt_from_chat = st.session_state.manager.prompts[-1] if st.session_state.manager.prompts else "no-prompt"
+
+def get_chosen_prompt():
+    if hasattr(st.session_state, "manager") and hasattr(st.session_state.manager, "prompts"):
+        return st.session_state.manager.prompts[-1] if st.session_state.manager.prompts \
+    else "no-prompt"
+
+prompt_from_chat = get_chosen_prompt()
 questions = [f"1.	I’m satisfied with the final prompt **{prompt_from_chat}**, it met my requirements. ",
              "2.	The system helped me think through how the desired outputs should look like and what criteria to consider when building the prompt.",
              "3.	I felt the system was pleasant and responsive throughout the interaction.",
@@ -43,9 +49,10 @@ def run():
 
 
 if __name__ == "__main__":
-    if not hasattr(st.session_state.manager, "prompt_conv_end") or not st.session_state.manager.prompt_conv_end:
+    if not hasattr(st.session_state, "manager") or not hasattr(st.session_state.manager, "prompt_conv_end") or not st.session_state.manager.prompt_conv_end:
         st.write("Survey will be open after at least one prompt has been curated in the chat.")
-    if hasattr(st.session_state, "survey_is_submitted"):
-        st.write("Survey was already submitted.")
     else:
-        run()
+        if hasattr(st.session_state, "survey_is_submitted"):
+            st.write("Survey was already submitted.")
+        else:
+            run()
