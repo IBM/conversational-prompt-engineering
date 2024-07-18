@@ -25,17 +25,17 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
                                         "eval": "./data/public/lentricote_trip_advisor/test.csv",
                                         "desc": "This dataset consists of reviewes of the restaurant\n \"L'entrecote\" in London, posted on the trip-advisor website"},
 
-                       "20 Newsgroups": {"train": "./data/public/20_newsgroup/train.csv",
+                       "20 Newsgroups - Space": {"train": "./data/public/20_newsgroup/train.csv",
                             "eval": "./data/public/20_newsgroup/test.csv",
                             "eval_llm": "./data/public/20_newsgroup/test_full.csv",
                             "desc": "This dataset is a collection newsgroup documents.\nThe topic of the documents is 'space'"},
 
-                       "Consumer Financial Protection Bureau": {"train": "./data/public/cfpb/train.csv",
+                       "Consumer Financial Protection Bureau - Credit Reporting": {"train": "./data/public/cfpb/train.csv",
                             "eval": "./data/public/cfpb/test.csv",
                             "eval_llm": "./data/public/cfpb/test_full.csv",
                             "desc": "This dataset consists of complaints about\nconsumer financial products and services.\nThe topic of the complaints is 'credit reporting'."},
 
-                       "Reuters Financial News": {"train": "./data/public/reuters/train.csv",
+                       "Reuters Financial News - Acquisition": {"train": "./data/public/reuters/train.csv",
                             "eval": "./data/public/reuters/test.csv",
                             "eval_llm": "./data/public/reuters/test_full.csv",
                             "desc": "This dataset is a collection of documents with news articles.\nThe topic of the articles is 'acquisition'."},
