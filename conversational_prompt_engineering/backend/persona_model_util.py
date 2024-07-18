@@ -48,28 +48,50 @@ def persona_generator(credentials, model, api, task_description, num_of_persona)
 
 
 class ModelBasedUser:
-    def __init__(self, bam_client, persona, task, examples):
+    def __init__(self, bam_client, persona, task):
         self.bam_client = bam_client
         self.persona = persona
-        instruction = f'You you need to act as a persona who is interested in the general task of {task}.' \
-                      f'Your persona is described as follows:\n+{self.persona}\n' \
-                      f'You are about to chat with a system that helps users build a personalized instruction - a.k.a. prompt - for their specific task and data.' \
-                      f'You should work together with the system through a natural conversation, to build your own prompt. Please make sure to express the specific expectation and requirements of your persona from the task output.'
+        self.persona_instruction = {
+            'role': ChatRole.SYSTEM,
+            'content': f'Below is a conversation between the user and AI assistant. '
+                       f'General structure of the conversation is as follows:'
+                       f'1. the assistant finds out the type of task, looks at the examples and asks the user few questions to figure out the initial prompt.\n'
+                       f'2. the assistant presents the prompt to the user, and if the user agrees to try it uses it to generate the outputs for the text examples.\n'
+                       f'3. the assistant presents the generated outputs to the user, and discusses them with him in order to improve them if necessary.\n'
+                       f'4. if all the outputs produced by the prompt were accepted by the user without modification, the goal is achieved.\n'
+                       f'5. if there were changes to the produced outputs, the assistant suggests a new prompt that takes into account these changes, and returns to the step 2\n'
+                       f'In this case the user wants the assistant to build a prompt for the task of {task}. '
+                       f'The user persona can be described as follows:\n{persona}\n'
+        }
 
-        instruction += '\nHere are the text examples you will work on:\n' + \
-                       '\n'.join([f'Example {i + 1}:\n{ex}' for i, ex in enumerate(examples)])
+        # this message is shown in UI and is not part of the user chat
+        self.user_chat_opening = [{
+            'role': ChatRole.ASSISTANT,
+            'content': "Hello! I'm an IBM prompt building assistant. "
+                       "In the following session we will work together through a natural conversation, "
+                       "to build an effective instruction – a.k.a. prompt – personalized for your task and data."
+        }]
 
-        static_welcome_msg = \
-            "Hello! I'm an IBM prompt building assistant. In the following session we will work together through a natural conversation, to build an effective instruction – a.k.a. prompt – personalized for your task and data."
+    def turn(self, assistant):
+        # relevant example texts
+        if assistant.example_num is None:
+            example_txt = 'The text examples under discussion are:\n'
+            example_txt += '\n'.join([f'Example {i + 1}:\n{ex}' for i, ex in enumerate(assistant.examples)])
+        else:
+            txt = assistant.examples[assistant.example_num - 1]
+            example_txt = f'The example under discussion is:\nExample {assistant.example_num}:\n{txt}'
+        example_msg = {'role': ChatRole.SYSTEM, 'content': example_txt}
 
-        self.system_instruction = [
-            {'role': ChatRole.SYSTEM, 'content': instruction},
-            {'role': ChatRole.ASSISTANT, 'content': static_welcome_msg},
-        ]
+        # compose the conversation
+        chat = [self.persona_instruction, example_msg] + self.user_chat_opening + assistant.user_chat
 
-    def turn(self, user_chat):
-        conversation = format_chat(self.system_instruction + user_chat, self.bam_client.parameters['model_id'])
-        generated_texts, stats_dict = self.bam_client.send_messages(conversation)
+        chat.append({
+            'role': ChatRole.SYSTEM,
+            'content': 'You are the user persona. Answer to the assistant. Be brief.'
+        })
+
+        formatted_chat = format_chat(chat, self.bam_client.parameters['model_id'])
+        generated_texts, stats_dict = self.bam_client.send_messages(formatted_chat)
         return '\n'.join(generated_texts)
 
 
@@ -103,13 +125,12 @@ class AutoChat:
         user_out_dir = os.path.join(user_time_dir, 'user')
         os.makedirs(user_out_dir, exist_ok=True)
         self.user_manager = ModelBasedUser(bam_client=self.assistant_manager.bam_client,
-                                           persona=persona, task=task,
-                                           examples=examples)
+                                           persona=persona, task=task)
 
     def create_prompt(self):
         # roll the chat
         while not self.assistant_manager.prompt_conv_end:
-            user_msg = self.user_manager.turn(self.assistant_manager.user_chat)
+            user_msg = self.user_manager.turn(self.assistant_manager)
             self.assistant_manager.add_user_message(user_msg)
             self.assistant_manager.generate_agent_messages()
 
@@ -120,7 +141,6 @@ class AutoChat:
 
         def _parse_num(txt, prefix):
             return int(txt[txt.index(prefix) + len(prefix):].split(' ')[0])
-
 
         prompt_type_metadata = {
             "baseline": {
@@ -157,11 +177,11 @@ class AutoChat:
             user_msg = self.user_manager.turn(example_chat)
 
             best_side = _parse_num(user_msg, 'best=') - 1
-            example[f'sides_{(dim,"Best")}'] = best_side
+            example[f'sides_{(dim, "Best")}'] = best_side
             example[f'ranked_prompt_{(dim, "Best")}'] = idx2prompt[best_side][1]
 
             worst_side = _parse_num(user_msg, 'worst=') - 1
-            example[f'sides_{(dim,"Worst")}'] = worst_side
+            example[f'sides_{(dim, "Worst")}'] = worst_side
             example[f'ranked_prompt_{(dim, "Worst")}'] = idx2prompt[worst_side][1]
 
         out_dir = os.path.join(self.assistant_manager.out_dir, "eval")
