@@ -101,7 +101,7 @@ def run():
 
             st.write(f"Using model [{st.session_state.manager.target_bam_client.parameters['model_id']}](https://bam.res.ibm.com/docs/models#{st.session_state.manager.target_bam_client.parameters['model_id'].replace('/', '-')})")
 
-        test_texts = create_choose_dataset_component_eval(st)
+        test_texts = create_choose_dataset_component_eval(st)[:10] #select first 10 instances
 
         col1, col2 = st.columns(2)
         with col1:
