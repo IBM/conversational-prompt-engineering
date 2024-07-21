@@ -5,14 +5,22 @@ import pandas as pd
 
 def get_chosen_prompt():
     if hasattr(st.session_state, "manager") and hasattr(st.session_state.manager, "prompts"):
-        return st.session_state.manager.prompts[-1] if st.session_state.manager.prompts \
-    else "no-prompt"
+        if st.session_state.manager.prompts:
+            return st.session_state.manager.prompts[-1]
+    return "no-prompt"
 
-prompt_from_chat = get_chosen_prompt()
-questions = [f"1.	I’m satisfied with the final prompt **{prompt_from_chat}**, it met my requirements. ",
-             "2.	The system helped me think through how the desired outputs should look like and what criteria to consider when building the prompt.",
-             "3.	I felt the system was pleasant and responsive throughout the interaction.",
-             "4.	I’m satisfied with the time it took to come up with the final prompt."
+def get_baseline_prompt():
+    if hasattr(st.session_state, "config") and hasattr(st.session_state, "manager"):
+        baseline_prompt_type = st.session_state["config"].get("Evaluation", "main_baseline_prompt")
+        return st.session_state.manager.baseline_prompts[baseline_prompt_type]
+    return "no-prompt"
+
+
+questions = [f"1\. I’m satisfied with the baseline prompt **{get_baseline_prompt()}**, it met my requirements. ",
+             f"2\. I’m satisfied with the final prompt **{get_chosen_prompt()}**, it met my requirements. ",
+             "3\. The system helped me think through how the desired outputs should look like and what criteria to consider when building the prompt.",
+             "4\. I felt the system was pleasant and responsive throughout the interaction.",
+             "5\. I’m satisfied with the time it took to come up with the final prompt."
              ]
 answers = [None]* len(questions)
 
@@ -29,7 +37,7 @@ def run():
     st.write("Please rate your agreement with the following statements (1 – Strongly disagree, 5 – Strongly agree)")
     for i, q in enumerate(questions):
         selected_value = st.radio(
-            f"{q}",
+            q,
             # add dummy option to make it the default selection
             options=radio_button_options,
             horizontal=True, key=f"summary_radio_{i}",

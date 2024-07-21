@@ -4,6 +4,7 @@ from collections import Counter
 
 import streamlit as st
 import pandas as pd
+import ast
 
 from enum import Enum
 from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
@@ -26,16 +27,21 @@ class WorkMode(Enum):
         return hash((type(self).__qualname__, self.name))
 
 
+
 work_mode = WorkMode.REGULAR
 if hasattr(st.session_state, "config") and st.session_state["config"].getboolean("Evaluation", "dummy_prompt_mode", fallback=False):
     work_mode = WorkMode.DUMMY_PROMPT
 
 dimensions = ["dim1"]
 
-prompt_types = ["baseline", "zero_shot", "few_shot"]
+prompt_types = ["baseline", "zero_shot", "few_shot"] # default
+if hasattr(st.session_state, "config") and st.session_state["config"].get("Evaluation", "prompt_types"):
+    prompt_types = ast.literal_eval(st.session_state["config"].get("Evaluation", "prompt_types"))
+
+
 
 def build_baseline_prompt():
-    baseline_prompt_type = st.session_state["config"].get("Evaluation", "main_baseline_prompt", fallback="user_baseline_prompt")
+    baseline_prompt_type = st.session_state["config"].get("Evaluation", "main_baseline_prompt")
     return build_few_shot_prompt(st.session_state.manager.baseline_prompts[baseline_prompt_type], [],
                           st.session_state.manager.target_bam_client.parameters['model_id'])
 
