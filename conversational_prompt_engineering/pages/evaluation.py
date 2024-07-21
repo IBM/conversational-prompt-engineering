@@ -17,15 +17,26 @@ MIN_EXAMPLE_TO_EVALUATE = 3
 
 class WorkMode(Enum):
     REGULAR, DUMMY_PROMPT = range(2)
+    def __eq__(self, other):
+        if type(self).__qualname__ != type(other).__qualname__:
+            return NotImplemented
+        return self.name == other.name and self.value == other.value
+
+    def __hash__(self):
+        return hash((type(self).__qualname__, self.name))
+
 
 work_mode = WorkMode.REGULAR
+if hasattr(st.session_state, "config") and st.session_state["config"].getboolean("Evaluation", "dummy_prompt_mode", fallback=False):
+    work_mode = WorkMode.DUMMY_PROMPT
 
 dimensions = ["dim1"]
 
 prompt_types = ["baseline", "zero_shot", "few_shot"]
 
 def build_baseline_prompt():
-    return build_few_shot_prompt(st.session_state.manager.baseline_prompts["user_baseline_prompt"], [],
+    baseline_prompt_type = st.session_state["config"].get("Evaluation", "main_baseline_prompt", fallback="user_baseline_prompt")
+    return build_few_shot_prompt(st.session_state.manager.baseline_prompts[baseline_prompt_type], [],
                           st.session_state.manager.target_bam_client.parameters['model_id'])
 
 def build_z_sh_prompt():

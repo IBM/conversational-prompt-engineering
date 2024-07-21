@@ -7,6 +7,7 @@ WORKDIR /conversational_prompt_engineering
 ENV PYTHONPATH /:/conversational_prompt_engineering
 ARG watsonx_api_key
 ARG watsonx_project_id
+ARG bam_api_key
 ARG config_name=main
 ENV WATSONX_APIKEY=${watsonx_api_key}
 ENV PROJECT_ID=${watsonx_project_id}

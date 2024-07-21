@@ -17,13 +17,13 @@ from conversational_prompt_engineering.backend.double_chat_manager import Double
 from conversational_prompt_engineering.backend.manager import Manager, Mode
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
-    create_choose_dataset_component_train, add_evaluator_input
+    create_choose_dataset_component_train,add_evaluator_input
 from configs.config_names import load_config
 from conversational_prompt_engineering.data.dataset_utils import load_dataset_mapping
 
 from st_pages import Page, show_pages, hide_pages
 
-version = "callback manager v1.0.6"
+version = "callback manager v1.0.7"
 st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"})
 
 show_pages(
@@ -41,6 +41,14 @@ USE_ONLY_LLAMA = True
 
 class APIName(Enum):
     BAM, Watsonx = "bam", "watsonx"
+    def __eq__(self, other):
+        if type(self).__qualname__ != type(other).__qualname__:
+            return NotImplemented
+        return self.name == other.name and self.value == other.value
+
+    def __hash__(self):
+        return hash((type(self).__qualname__, self.name))
+
 
 
 def old_reset_chat():
@@ -265,7 +273,7 @@ eval_instructions_for_user = \
     "This service is intended to help users build an effective prompt, personalized to their specific summarization use case, through a simple chat with an LLM.\n\n" \
     f"The *prompts* built by CPE are comprised of two parts: an instruction, describing to the LLM in natural language how to generate the summaries; and up to 3 text-summary pairs, exemplifying how summaries should look like.\n\n" \
     "To use and evaluate CPE, proceed according to the following steps:\n\n" \
-    "1.	After submitting your API key (see below), we will ask you to select a summarization dataset from our catalog. " \
+    "1.	Select a summarization dataset from our catalog. " \
     "Please select the dataset that is most related to your daily work, or if none exists, select the dataset which interests you most. \n\n" \
     "2.	Dedicate a few moments to consider your preferences for generating a summary. " \
     "It may be helpful to download the dataset and go over a few text inputs in order to obtain a better understanding of the task. \n\n" \
@@ -285,16 +293,21 @@ eval_instructions_for_user = \
 
 
 def load_environment_variables():
-    if "BAM_APIKEY" in os.environ:
-        st.session_state.credentials = {}
-        st.session_state.API = APIName.BAM
-        st.session_state.credentials["key"] = os.environ["BAM_APIKEY"]
-    elif "WATSONX_APIKEY" in os.environ:
-        st.session_state.credentials = {}
-        st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
-        st.session_state.API = APIName.Watsonx
-        st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
-        logging.info(f"credentials from environment variables: {st.session_state.credentials}")
+    if "API" not in st.session_state: #do it only once
+        if "BAM_APIKEY" in os.environ:
+            st.session_state.credentials = {}
+            st.session_state.API = APIName.BAM
+            st.session_state.credentials["key"] = os.environ["BAM_APIKEY"]
+        elif "WATSONX_APIKEY" in os.environ:
+            st.session_state.credentials = {}
+            st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
+            st.session_state.API = APIName.Watsonx
+            st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
+            logging.info(f"credentials from environment variables: {st.session_state.credentials}")
+        else:
+            st.session_state.API = APIName.BAM
+            st.session_state["credentials"] = {}
+
     if "IBM_EMAIL" in os.environ and verify_email(os.environ["IBM_EMAIL"]):
         st.session_state.email_address = os.environ["IBM_EMAIL"]
 
@@ -323,7 +336,7 @@ instructions_for_user = "Welcome to IBM Research Conversational Prompt Engineeri
             "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.\n" \
             "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.\n" \
             "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).\n"\
-            "This assistant system uses Watsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share."
+            "This assistant system uses BAM or CWatsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share."
 
 def init_set_up_page():
     st.title(":blue[IBM Research Conversational Prompt Engineering]")
@@ -332,11 +345,6 @@ def init_set_up_page():
     st.session_state.model = 'llama-3'
     if not hasattr(st.session_state, "target_model"):
         st.session_state.target_model = 'llama-3'
-
-    if "API" not in st.session_state:  # set default API to Watsonx
-        st.session_state.API = APIName.BAM
-    if 'credentials' not in st.session_state:
-        st.session_state["credentials"] = {}
 
     load_environment_variables()
 
