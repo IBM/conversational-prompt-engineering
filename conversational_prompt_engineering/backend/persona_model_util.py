@@ -94,6 +94,32 @@ class ModelBasedUser:
         generated_texts, stats_dict = self.bam_client.send_messages(formatted_chat)
         return '\n'.join(generated_texts)
 
+    def select_best_worst(self, assistant, example_text, output_options):
+        def _parse_num(txt, prefix):
+            return int(txt[txt.index(prefix) + len(prefix):].split(' ')[0])
+
+        chat = [self.persona_instruction] + self.user_chat_opening + assistant.user_chat
+        chat += [
+            {
+                'role': ChatRole.SYSTEM,
+                'content':
+                    'The conversation has finished. Now your user persona is asked to evaluate the result:\n'
+                    'For the following text and the presented output options choose the best and the worst output. '
+                    'Format your response like this: best=<option_number> worst=<option_number>'
+            },
+            {
+                'role': ChatRole.SYSTEM,
+                'content': f'Text:\n{example_text}\n' + '\n'.join(output_options)
+            },
+        ]
+
+        formatted_chat = format_chat(chat, self.bam_client.parameters['model_id'])
+        generated_texts, stats_dict = self.bam_client.send_messages(formatted_chat)
+        out_txt = '/n'.join(generated_texts)
+        best_idx = _parse_num(out_txt, 'best=') - 1
+        worst_idx = _parse_num(out_txt, 'worst=') - 1
+        return best_idx, worst_idx
+
 
 class AutoChat:
     def __init__(self, email_address, credentials, model, api, persona, task, ds_name, train_csv, eval_csv) -> None:
@@ -139,9 +165,6 @@ class AutoChat:
             model_id = self.assistant_manager.target_bam_client.parameters['model_id']
             return partial(build_few_shot_prompt, prompt=prompt, texts_and_summaries=few_shot, model_id=model_id)
 
-        def _parse_num(txt, prefix):
-            return int(txt[txt.index(prefix) + len(prefix):].split(' ')[0])
-
         prompt_type_metadata = {
             "baseline": {
                 "title": "Prompt 1 (Baseline prompt)",
@@ -163,26 +186,16 @@ class AutoChat:
         evaluation = Evaluation(self.assistant_manager.target_bam_client)
         generated_data = evaluation.summarize(eval_prompts, prompt_types, eval_texts)
 
-        eval_instruction = \
-            'For the following text and the presented output options choose the best and the worst output. ' \
-            'Format your response like this: best=<option_number> worst=<option_number>'
         dim = dimensions[0]
         for example in generated_data:
-            example_text = f'{eval_instruction}\nText:\n{example["text"]}'
             idx2prompt = sorted(example['mixed_indices_mapping_to_prompt_type'].items())
-            for idx, prompt_type in idx2prompt:
-                example_text += f'\nOutput {idx + 1}:\n{example[prompt_type + "_output"]}'
+            outputs = [f'\nOutput {i + 1}:\n{example[p_type + "_output"]}' for i, p_type in idx2prompt]
+            best_idx, worst_idx = self.user_manager.select_best_worst(self.assistant_manager, example['text'], outputs)
 
-            example_chat = self.assistant_manager.user_chat + [{'role': ChatRole.SYSTEM, 'content': example_text}]
-            user_msg = self.user_manager.turn(example_chat)
-
-            best_side = _parse_num(user_msg, 'best=') - 1
-            example[f'sides_{(dim, "Best")}'] = best_side
-            example[f'ranked_prompt_{(dim, "Best")}'] = idx2prompt[best_side][1]
-
-            worst_side = _parse_num(user_msg, 'worst=') - 1
-            example[f'sides_{(dim, "Worst")}'] = worst_side
-            example[f'ranked_prompt_{(dim, "Worst")}'] = idx2prompt[worst_side][1]
+            example[f'sides_{(dim, "Best")}'] = best_idx
+            example[f'ranked_prompt_{(dim, "Best")}'] = idx2prompt[best_idx][1]
+            example[f'sides_{(dim, "Worst")}'] = worst_idx
+            example[f'ranked_prompt_{(dim, "Worst")}'] = idx2prompt[worst_idx][1]
 
         out_dir = os.path.join(self.assistant_manager.out_dir, "eval")
         os.makedirs(out_dir, exist_ok=True)
