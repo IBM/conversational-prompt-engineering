@@ -39,5 +39,9 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
                             "eval": "./data/public/reuters/test.csv",
                             "eval_llm": "./data/public/reuters/test_full.csv",
                             "desc": "This is part of the Reuters dataset, which is a collection of\ndocuments with news articles. The topic of the articles\nis Acquisition."},
+                       "Debate Speeches": {"train": "./data/public/debate_speeches/train.csv",
+                                                          "eval": "./data/public/debate_speeches/test.csv",
+                                                          "eval_llm": "./data/public/debate_speeches/test_full.csv",
+                                                          "desc": "This is part of the Debate Speeches dataset.\nThe dataset contains manually-corrected transcripts of speeches recorded by expert debaters."},
 
                        }
