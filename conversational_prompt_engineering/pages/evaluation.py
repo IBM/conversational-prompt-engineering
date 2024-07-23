@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from collections import Counter
 
@@ -35,7 +36,7 @@ if hasattr(st.session_state, "config") and st.session_state["config"].getboolean
 dimensions = ["dim1"]
 
 prompt_types = ["baseline", "zero_shot", "few_shot"] # default
-if hasattr(st.session_state, "config") and st.session_state["config"].get("Evaluation", "prompt_types"):
+if hasattr(st.session_state, "config") and st.session_state["config"].has_option("Evaluation", "prompt_types"):
     prompt_types = ast.literal_eval(st.session_state["config"].get("Evaluation", "prompt_types"))
 
 
@@ -260,7 +261,7 @@ def run():
             add_next_buttons("above_summaries")
             display_text()
             st.divider()
-            st.subheader("Generated outputs (random order)")
+            st.subheader(f"Generated outputs (random order) for text {st.session_state.count+1}/{len(st.session_state.generated_data)} ")
             st.write("Bellow are presented the compared summaries. Please select the best and worst output in respect to the different aspects. ")
             output_cols_list = st.columns(len(prompt_types))
 
@@ -274,9 +275,9 @@ def run():
             radio_button_labels = [f"Output {i+1}" for i in range(len(prompt_types))]
             for dim in dimensions:
                 st.write(f"{dim}")
-                cols = st.columns(len(options))
-                for col, op in zip(cols, options):
-                    with col:
+                cols = st.columns(1)
+                for op in options:
+                    with cols[0]:
                         selected_value = st.radio(
                                 f"{op} output:",
                             # add dummy option to make it the default selection
@@ -285,15 +286,23 @@ def run():
                                 index=st.session_state.generated_data[st.session_state.count]['sides'].get((dim,op))
                                 )
                         if selected_value:
+                            logging.info(f"selected {selected_value} for ({dim},{op}) for item {st.session_state.count}. ")
                             side_index = radio_button_labels.index(selected_value)
+                            mixed_to_real = st.session_state.generated_data[st.session_state.count][
+                                "mixed_indices_mapping_to_prompt_type"][side_index]
+                            output = st.session_state.generated_data[st.session_state.count][f"{mixed_to_real}_output"]
+                            logging.info(f"\toutput = {output[:200]}")
+                            logging.info(f"\tselected value = {selected_value} (side index = {side_index})")
                             real_prompt_type = st.session_state.generated_data[st.session_state.count]["mixed_indices_mapping_to_prompt_type"][side_index]
+                            logging.info(f"\treal prompt type = {real_prompt_type}")
+                            logging.info(f"\treal example index = {st.session_state.generated_data[st.session_state.count]['index']}")
                             selected_prompt = st.session_state.generated_data[st.session_state.count][f"{real_prompt_type}_prompt"]
                             st.session_state.generated_data[st.session_state.count]['sides'][(dim,op)] = side_index
                             st.session_state.generated_data[st.session_state.count]['prompts'][(dim,op)] = real_prompt_type
                 st.divider()
 
             num_of_fully_annotated_items = len([x["prompts"] for x in st.session_state.generated_data if len(x["prompts"]) == len(dimensions)*len(options)])
-            st.write(f"Annotation for {num_of_fully_annotated_items} out of {len(st.session_state.generated_data)} is completed")
+            st.write(f"Annotation for {num_of_fully_annotated_items} out of {len(st.session_state.generated_data)} examples is completed")
             finish_clicked = st.button(f"Submit", disabled = num_of_fully_annotated_items < MIN_EXAMPLE_TO_EVALUATE)
             if finish_clicked:
                 if validate_annotation():

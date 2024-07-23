@@ -1,11 +1,697 @@
 text
-"From: msjohnso@donald.WichitaKS.NCR.COM (Mark Johnson) Subject: Re: Big amateur rockets Organization: NCR Corporation Wichita, KS Lines: 86 pbd@runyon.cim.cdc.com (Paul Dokas) writes: >I was reading Popular Science this morning and was surprised by an ad in >the back. I know that a lot of the ads in the back of PS are fringe >science or questionablely legal, but this one really grabbed my attention. >It was from a company name ""Personal Missle, Inc."" or something like that. The company was probably ""Public Missiles, Inc"" of Michigan. >Anyhow, the ad stated that they'd sell rockets that were up to 20' in length >and engines of sizes ""F"" to ""M"". They also said that some rockets will >reach 50,000 feet. Yup. >Now, aside from the obvious dangers to any amateur rocketeer using one >of these beasts, isn't this illegal? I can't imagine the FAA allowing >people to shoot rockets up through the flight levels of passenger planes. >Not to even mention the problem of locating a rocket when it comes down. Nope, it's not illegal. It is, however, closely regulated. In order to purchase and use the big rocket motors required, it is necessary to be one of the following: a) An employee of a government agency. b) An employee or student at a university doing research involving rockets. c) A member or representative of an educational organization involved in research or other uses of rockets. There are two such organizations: The Tripoli Rocketry Association and the National Association of Rocketry. Members of either organization must demonstrate proficiency in construction and flight before they are allowed to purchase large motors on their own. The FAA will issue a waiver of its regulations, upon request, to any organization which can persuade them it has taken adequate precautions to avoid conflicts with aircraft. The usual stipulations are: - Only operation up to a specified ceiling is allowed. Depending on the location, this ceiling may be from 5000 to 50000 feet AGL. - The operator of the rocket is responsible for avoiding any aircraft within the operating radius around the launch site. - Flight into clouds or beyond visual range in haze is expressly prohibited. - The FAA will provide a NOTAM informing other users of the airspace that unmanned rocket operations are taking place at the specified place and time. Most of the launches that are held (and there are dozens of them every year) are held in areas where air traffic is relatively light, such as over the western deserts (the Black Rock Desert north of Reno is particularly popular since it is 25 x 150 miles of *nothing to hit* on the ground). The two rocketry associations test and approve motors for their members' use, to insure safety. Depending on motor size, the launcher setback is from 50 to 500 or more feet. By the way, rockets under 1 lb and powered by an ""F"" motor are exempt from most Federal regulations on unmanned rockets anyway. See FAR 101, Subpart C, for details. As for recovery...although the higher altitude rockets can reach up to 50,000 feet, most of them only get to 2,000 to 5,000 feet. The typical rocket is 2 to 6 inches in diameter, and carries a 3 to 6 foot parachute, or multiple parachutes, depending on the payload. Many rockets also carry either a small transmitter or an audio sounder--particularly at launches in the eastern US, where there are more obstructions. Camera, telemetry transmitter, and video payloads are becoming quite common. >And no, I'm not going to even think of buying one. I'm not that crazy. Why not? It's a lot of fun...check out the traffic on rec.models.rockets for information about the model (3 lb and under) and high power (everything bigger) rocket hobbies. As with all dangerous activities, the key is to practice safety. I've been flying consumer rockets ranging up to 4-5 lbs takeoff weight for 27 years, and still have all my extremities intact. >-Paul ""mine'll do 50,000 feet and carries 50 pounds of dynamite"" Dokas That's another thing. NO EXPLOSIVE WARHEADS OF ANY KIND ARE ALLOWED ON THESE ROCKETS. NONE! Please forgive me for shouting, but that's one of the biggest misconceptions people have about our hobby. >/* Just remember, you *WILL* die someday. */ True. But it will not be related to the rocket hobby, unless I get hit while crossing a road with a rocket in my hand. -- Mark Johnson USnail: NCR Peripheral Products Division E-mail: Mark.Johnson@WichitaKS.NCR.COM 3718 N. Rock Rd. Voice: (316) 636-8189 [V+ 654-8189] Wichita, KS 67226 [Non-business email: 76670.1775@compuserve.com]"
-"From: palmer@cco.caltech.edu (David M. Palmer) Subject: Re: Boom! Whoosh...... Organization: California Institute of Technology, Pasadena Lines: 39 NNTP-Posting-Host: alumni.caltech.edu matthew@phantom.gatech.edu (Matthew DeLuca) writes: >In article <1993Apr21.024423.29182@mnemosyne.cs.du.edu> wdwells@nyx.cs.du.edu (David ""Fuzzy"" Wells) writes: >>I hear <insert favorite rumor here> that it will supposedly coincide >>with the Atlanta Olympics. >Even worse, the city of Atlanta has a proposal before it to rent space on this >orbiting billboard. Considering the caliber of people running this city, >there's no telling what we're going to have leering down at us from orbit. I would just like to point out that it is much easier to place an object at orbital altitude than it is to place it with orbital velocity. For a target 300 km above the surface of Earth, you need a delta-v of 2.5 km/s. Assuming that rockets with specific impulses of 300 seconds are easy to produce, a rocket with a dry weight of 50 kg would require only about 65 kg of fuel+oxidizer. A small dispersal charge embedded in about 20 kg of sand or birdshot (depending on the nature of the structure) would be the payload. I am sure the whole project is well within the capability of the amateur rocketry community. It sounds like a good Science Fair project--'Reduction of Light Pollution Through Applied Ballistics'. Or, it could be part of the Challenge Prize being discussed here: $1 billion for the first person to spend 1 year on the moon, $1 million for the first erradication of an orbital eyesore/CCD burner. I wouldpledge $1000 for the first person to bring it down, and I am sure there are at least 999 other astronomers, nature lovers, or just plain people of good taste who would do likewise. Of course, a Gerald Bull solution might be simpler. (Either the solution Gerald Bull would apply--the use of a large caliber gun; or the solution which was applied to Gerald Bull--the use of a small caliber gun.) -- David M. Palmer palmer@alumni.caltech.edu palmer@tgrs.gsfc.nasa.gov"
-"From: baalke@kelvin.jpl.nasa.gov (Ron Baalke) Subject: HST Servicing Mission Scheduled for 11 Days Organization: Jet Propulsion Laboratory Lines: 88 Distribution: world NNTP-Posting-Host: kelvin.jpl.nasa.gov Keywords: HST News-Software: VAX/VMS VNEWS 1.41 Ed Campion Headquarters, Washington, D.C. April 23, 1993 (Phone: 202/358-1780) Kyle Herring Johnson Space Center, Houston (Phone: 713/483-5111) RELEASE: 93-76 HUBBLE TELESCOPE SERVICING MISSION SCHEDULED FOR ELEVEN DAYS The December flight of Endeavour on Space Shuttle mission STS-61 to service the Hubble Space Telescope (HST) has been scheduled as an 11 day mission designed to accommodate a record five spacewalks with the capability for an additional two, if needed. The decision to schedule five extravehicular activities, or EVAs, was reached following extensive evaluations of underwater training, maneuver times required using the Shuttle's robot arm based on software simulations and actual EVA tasks on previous missions. ""Basically what we've done by going to five EVAs rather than three is to repackage our margin so that we have the capability to respond to the dynamics, or unknowns, of spacewalks,"" Mission Director Randy Brinkley said. ""It improves the probabilities for mission success while providing added flexibility and adaptability for reacting to real-time situations."" In laying out the specific tasks to be completed on each of the spacewalks, officials have determined that changing out the gyros, solar arrays and the Wide Field/Planetary Camera (WF/PC) and installing the Corrective Optics Space Telescope Axial Replacement (COSTAR) are priority objectives during the mission. ""When we looked at accomplishing all of the tasks, highest through lowest priority, and recognizing that the major tasks -- gyros, solar arrays, WF/PC and COSTAR -- would consume most of the time set aside for each spacewalk, five EVAs were deemed appropriate,"" said Milt Heflin, Lead Flight Director for the mission. While the five spacewalks will be unprecedented, the use of two alternating spacewalk teams will alleviate placing more stress on the crew than previous missions requiring two, three or four EVAs. ""We have paid close attention to lessons learned during previous spacewalks and factored these into our timeline estimates for five EVAs,"" Heflin said. ""In planning for all Space Shuttle missions, it is necessary to formulate a work schedule that represents as realistic a timeline as possible to accomplish the mission objectives."" Planning currently calls for at least five water tank training sessions that include support from the Mission Control Center, called joint integrated simulations, lasting between 10 and 36 hours. In addition, many stand alone underwater training ""runs"" will practice individual tasks in each spacewalk. Various refinements to the specific tasks on each spacewalk will be made based on actual training experience during the months prior to the mission. Also, lessons learned from other spacewalks leading up to the flight will be valuable in assisting the STS-61 crew in its training techniques. Endeavour's June flight and Discovery's July mission both will include spacewalks to evaluate some of the unique tools to be used on the HST mission. The evaluations will help in better understanding the differences between the actual weightlessness of space and the ground training in the water tanks at the Johnson Space Center, Houston, and the Marshall Space Flight Center, Huntsville, Ala. Also, the inflight spacewalking experiences will assist in gaining further insight into the time required for the various tasks and expand the experience levels among the astronaut corps, the flight controllers and trainers. Designed to be serviced by a Space Shuttle crew, Hubble was built with grapple fixtures and handholds to assist in the capture and repair procedures. The telescope was launched aboard Discovery in April 1990. At that time the NASA mixed fleet manifest showed the first revisit mission to HST in 1993 to change out science instruments and make any repairs that may have become necessary. - end - ___ _____ ___ /_ /| /____/ \ /_ /| Ron Baalke | baalke@kelvin.jpl.nasa.gov | | | | __ \ /| | | | Jet Propulsion Lab | ___| | | | |__) |/ | | |__ M/S 525-3684 Telos | The aweto from New Zealand /___| | | | ___/ | |/__ /| Pasadena, CA 91109 | is part caterpillar and |_____|/ |_|/ |_____|/ | part vegetable."
-"From: baalke@kelvin.jpl.nasa.gov (Ron Baalke) Subject: Iapetus/Saturn Eclipse Organization: Jet Propulsion Laboratory Lines: 79 Distribution: world NNTP-Posting-Host: kelvin.jpl.nasa.gov News-Software: VAX/VMS VNEWS 1.41 Forwarded from John Spencer (spencer@lowell.edu): There will be two eclipses of Iapetus by Saturn and its rings, in May and July. Please spread the word! Here's some information about the events, and then a couple of messages from Jay Goguen of JPL appealing for thermal observations of the eclipse to learn more about the thermal properties of Iapetus. He might also have some money available... John Spencer, 1993/04/21 Iapetus will be eclipsed by the shadows of Saturn's rings and Saturn itself on 1993/05/01-02 (18:27-13:43 UT) and again on 1993/07/20-21, (21:16-09:38 UT). Timing is as follows; 1993 May 1-2 A-ring ingress 18:27 egress 19:30 B-ring ingress 19:51 egress 21:42 C-ring egress 23:00 Saturn ingress 23:59 egress 10:02 B-ring ingress 10:28 egress 12:19 A-ring ingress 12:40 egress 13:43 1993 July 20-21 Saturn ingress 21:16 egress 05:08 A-ring ingress 05:13 (grazing) egress 09:38 Times could be 30 minutes later according to an alternate ephemeris, and photometric observations are important for refining Iapetus' orbit. Because the Sun's size projected on the rings as seen from Iapetus is 3100 km it's unlikely that we will learn anything new about the rings themselves from the observations. See Soma (1992), Astronomy and Astrophysics 265, L21-L24 for more details. Thanks to Andy Odell of Northern Arizona University for bringing the events to my attention. THERMAL OBSERVATIONS? Jay Goguen (jdg@scn5.Jpl.Nasa.Gov) writes: To me, the interesting thing to do would be thermal IR of the 20 July disappearance into the shadow of the planet to measure thermal inertia, etc. Unfortunately, the 21:30 UT of this event renders it inaccessible, except from Russia. Even from Calar Alto, Saturn is rising through 3 airmasses at 23:00 UT. Do you know anyone in Russia or Ukraine with a big telescope and 10 um instrumentation that's looking for something to do? I'd be willing to make a personal grant of >$100 for the data. Jay and again: please try to encourage anyone that can observe the iapetus planet disappearance to do so at thermal wavelengths. My impression would be that it's not an easy observation. Iapetus will be faint and getting fainter in eclipse, so you'll need a big telescope that's a good IR telescope and reasonable 10 - 20 um instrumentation. I don't think that combination is widely available at the longitudes that are well placed for observation. We need SOFIA for this one. One possibility would be the IR telescope in India, but it's only a 1.2 m. jay ___ _____ ___ /_ /| /____/ \ /_ /| Ron Baalke | baalke@kelvin.jpl.nasa.gov | | | | __ \ /| | | | Jet Propulsion Lab | ___| | | | |__) |/ | | |__ M/S 525-3684 Telos | The aweto from New Zealand /___| | | | ___/ | |/__ /| Pasadena, CA 91109 | is part caterpillar and |_____|/ |_|/ |_____|/ | part vegetable."
-"From: baez@guitar.ucr.edu (john baez) Subject: End of the Space Age Article-I.D.: galaxy.29034 Organization: University of California, Riverside Lines: 82 Nntp-Posting-Host: guitar.ucr.edu There is an interesting opinion piece in the business section of today's LA Times (Thursday April 15, 1993, p. D1). I thought I'd post it to stir up some flame wars - I mean reasoned debate. Let me preface it by saying that I largely agree that the ""Space Age"" in the romantic sense of several decades ago is over, and that projects like the space station miss the point at this time. Reading, for example, ""What's New"" - the weekly physics update we get here on the net - it's clear that the romance of the day lies in the ever more fine-grained manipulation of matter: by which I include biotechnology, condensed matter physics (with its spinoffs in computer hardware and elsewhere), and the amazing things people are doing with individual atoms these days. To a large extent, I think, the romance some people still have with space is a matter of nostalgia. I feel sure that someday we - or more precisely, our ""mind children"" - will spread across space (unless we wipe ourselves out); but I think that *manned* space exploration is not what is exciting about what we can do *now*. Anyway, let me quote some of this article, but not all... SPACE AGE GLORY FADES FROM VIEW Micheal Schrage (writer, consultant, and research associate at MIT) At 35, America's Space Age won't have to suffer through the angst of a midlife crisis. The reason is that the Space Age is already dead. The technologies no longer define our times, and the public has grown weary of the multibillion -dollar celestial investments that yield minimal psychic or economic rewards. Space exploration has mutated from a central focuse of America's science and technology debate into a peripheral issue. Speace is not a meaningful part of the ongoing industrial competitiveness debate, our technology infrastructure discussions or even our defense conversion policy. To be sure, America should continue to invest in satellite technologies for telecommunications and remote sensing - cheap deep-space probes would be nice too - but the ideal of space as a meaningful driver of scientific and industrial innovation is now dead. ..... Before the change in administrations, it would have been foolish to write an obituary for the Space Age. The Bush White House aggressively supported the space program and proposed spending well over $30 billion to build space station Freedom alone. Even as he proposed budget cuts in other science and technology domains, Office of Management and Budget Director Richard Darman was an outspoken public champion of big-ticket space expenditures. The reality that much of the civilian space program - from the shuttle to the Hubble telescope to the space station - was poorly conceived and unimpressively implemented did not seem to matter much. Political inertia and a nostalgic sense of futurism - not a coherent vision or cost-effective sensibilities - determined multibillion-dollar space budgets. Indeed, with few notable exceptions, such as Voyager, the post-Apollo era is the story of the gold-plated porkification of space exploration with programs and promises that delivered less for more and more. ...... While the Clinton Administration has kept on the highly regarded Daniel Goldin as administrator of the National Aeronautics and Space Administration, it seems clear that space exploration is not being positioned as either a symbolic or substantive centerpiece of America's technological prowess. The space station budget has - rightly - been slashed. Space is virtually ignored when the Administration champions its competitiveness agenda. ...... ""I wish this had happened 10 years ago instead of starting to happen now,"" says Bruce Murray, a Caltech professor who ran NASA's Jet Propulsion Lab in Pasadena. ""We've put off a lot of things we shouldn't have.... I would rather see a $10-billion NASA doing well than a $40-billion one filled with white elephants."""
-"From: wiml@stein2.u.washington.edu (William Lewis) Subject: Re: Abyss--breathing fluids Organization: University of Washington Lines: 33 NNTP-Posting-Host: stein2.u.washington.edu loss@fs7.ECE.CMU.EDU (Doug Loss) writes: >Besides the mechanical problems of moving so dense a medium in oan out >of the lungs (diaphragm fatigue, etc.), is there likely to be a problem >with the mixture? I mean, since the lungs never expel all the air in >them, the inhaled air has to mix pretty quickly with the residual air in >the lungs to provide a useful partial pressure of oxygen, right? Would >this mixing be substantially faster/slower at the pressures we're >talking about? There was an interesting article in Scientific American some time ago about breathing liquid. (It was a few months before _The Abyss_ came out.) As far as I can remember, they mentioned three things that were difficult to do at once with a substitute breathing fluid: - low viscosity --- if it's too difficult to force the fluid in & out of the lungs, you can't extract enough oxygen to power your own breathing effort (let alone anything else) - diffusion rate --- obviously, not all the air in your lungs is expelled when you breathe out; and the part that isn't expelled is the part that's nearest the walls of the alveoli. (alveolus?) So the trip from the blood vessels to the new air has to be done by diffusion of the gas through the fluid. Apparently oxygen tends to diffuse more readily than CO2, so even if you can get enough oxygen in, you might not be able to get enough CO2 out. - oxygen/CO2 capacity --- you have to be able to dissolve enough gas per unit volume. Oh, and of course, your new breathing fluid must not irritate the lungs or interfere with their healing or anything like that... -- Wim Lewis, wiml@u.washington.edu"
-"From: daviss@sweetpea.jsc.nasa.gov (S.F. Davis) Subject: Re: japanese moon landing/temporary orbit Organization: NSPC Lines: 46 In article <pgf.735012282@srl03.cacs.usl.edu>, pgf@srl03.cacs.usl.edu (Phil G. Fraering) writes: |> rls@uihepa.hep.uiuc.edu (Ray Swartz (Oh, that guy again)) writes: |> |> >The gravity maneuvering that was used was to exploit 'fuzzy regions'. These |> >are described by the inventor as exploiting the second-order perturbations in a |> >three body system. The probe was launched into this region for the |> >earth-moon-sun system, where the perturbations affected it in such a way as to |> >allow it to go into lunar orbit without large expenditures of fuel to slow |> >down. The idea is that 'natural objects sometimes get captured without |> >expending fuel, we'll just find the trajectory that makes it possible"". The |> >originator of the technique said that NASA wasn't interested, but that Japan |> >was because their probe was small and couldn't hold a lot of fuel for |> >deceleration. |> |> |> I should probably re-post this with another title, so that |> the guys on the other thread would see that this is a practical |> use of ""temporary orbits..."" |> |> Another possible temporary orbit: |> |> -- |> Phil Fraering |""Seems like every day we find out all sorts of stuff. |> pgf@srl02.cacs.usl.edu|Like how the ancient Mayans had televison."" Repo Man |> |> If you are really interested in these orbits and how they are obtained you should try and find the following paper: Hiroshi Yamakawa, Jun'ichiro Kawaguchi, Nobuaki Ishii, and Hiroki Matsuo, ""A Numerical Study of Gravitational Capture Orbit in the Earth-Moon System,"" AAS-92-186, AAS/AIAA Spaceflight Mechanics Meeting, Colorado Springs, Colorado, 1992. The references included in this paper are quite interesting also and include several that are specific to the HITEN mission itself. |--------------------------------- ******** -------------------------| | * _!!!!_ * | | Steven Davis * / \ \ * | | daviss@sweetpea.jsc.nasa.gov * (<o><o>) * | | * \>_db_</ * McDonnell Douglas | | - I don't represent * |vv| * Space Systems Company| | anybody but myself. - * (__) * Houston Division | |--------------------------------- ******** -------------------------|"
-"From: dnadams@nyx.cs.du.edu (Dean Adams) Subject: Ariane v.56 Mission Data Organization: University of Denver, Dept. of Math & Comp. Sci. Lines: 114 ARIANESPACE FLIGHT 56 (Flight V.56 was originally intended to carry the Hughes HS-601 series Galaxy IV satellite, but the payload was withdrawn just prior to flight.) The 56th Ariane launch is now scheduled to place the ASTRA 1C and ARSENE satellites into an improved geostationary transfer orbit (GTO), with inclination reduced to 5 degrees and apogee altitude increased by 150 km. This will be the 28th launch of an Ariane 4 and the first in the 42L configuration, with 2 liquid strap-on boosters (PAL). It will be launched from the newly refurbished Ariane launch complex ELA 2, in Kourou - French Guiana. The launch vehicle performance requirement for this mission is 3,147 kg of which 2,944 kg represents the satellite mass. The total vehicle mass at liftoff is 361,778 kg. Required Orbit Characteristics: Perigee Altitude ..... 200 km Apogee Altitude ...... 36,160 km at injection Inclination .......... 5 degrees The Ariane 42L lift-off for Flight 56 is scheduled on Thursday, April 29, 1993, as soon as possible within the following launch window: Kourou Time GMT (04/30/93) Washington, DC 21:52 - 22:50 00:52 - 01:50 20:52 - 21:50 LAUNCH VEHICLE: Ariane 42L. This is a three-stage liquid fueled launcher with two liquid fueled strap-on boosters. The first stage (L220) is built by Aerospatiale, and is powered by 4 liquid fueled Viking V engines. The second stage (L33) is built by MBB Erno and is powered by a single Viking IV engine. Both the Viking IV and V engines are manufactured by SEP. The first and second stages use a biliquid UH25/N2O4 fuel. The third stage (H10) is built by Aerospatiale, and is powered by a cryogenic H2/O2 fueled HM-7B engine built by SEP. The two strap-on boosters (PAL) are each powered by a Viking VI engine, also built by SEP, which use the same biliquid fuel as the first and second stages. The fully assembled launch vehicle stands 56 meters high on the pad. It uses the Type 01 Ariane Short payload fairing. Flight Profile: +02:21 Liquid strap-on booster jettison +03:11 First stage separation +03:18 Second stage ignition +04:10 Fairing jettison +05:21 Second stage separation +05:26 Third stage ignition +17:30 Third stage shutdown / orbit injection +19:56 ASTRA 1C separation +22:36 Cyclade adapter separation +24:26 ARSENE separation +28:47 End of Ariane mission 56 PAYLOADS: ASTRA 1C is the third spacecraft in the fleet of ""Societe Europeenne des Satellites"" to broadcast direct TV to homes all over Europe. Built by Hughes, it will be the second HS-601 launched by Ariane. Total mass at lift-off .... 2,790 kg Mass at GEO insertion ..... 1,700 kg Dry mass .................. 1,180 kg On-board power ............ 3,300 W (end of life) Nominal lifetime .......... 15 years Span of solar panels ...... 21 m On-Orbit position ......... 19.2 degrees east, over Africa. Transmission capacity: 34 channels in Ku-band, via 18 transponders. In-flight operations: Solar array deployment ............ about 6 days after lift-off First of 3 apogee motor firings ... about 40 hours after lift-off at 4th apogee ARSENE is the first spacecraft built by the European Space Industry for the benefit of the world amateur radio community. Total mass at lift-off .... 154 kg Mass at GEO insertion ..... 98 kg Dry mass .................. 97 kg On-board power ............ 42 W (end of life) Nominal lifetime .......... 3 years Spacecraft dimensions ..... 1.1m x .96m Orbital parameters ........ 20000/36000 km, 0 inclination, period 17:30. Transmission capacity: S-band: 1 transponder at 2.446 ghz VHF/UHF: 145/435 mhz LAUNCH COVERAGE: All Ariane missions are broadcast live via satellite from Kourou. Coverage begins at 30 minutes before launch and continues until all payloads have been deployed. This mission will likely be carried in the US on Galaxy 6, however it could be Galaxy 7 or another satellite. (What is the European satellite normally used for Ariane coverage?) -{ Dean Adams }-"
-"From: keithley@apple.com (Craig Keithley) Subject: Re: Moonbase race, NASA resources, why? Organization: Apple Computer, Inc. Lines: 44 In article <C5w5un.Bpq@zoo.toronto.edu>, henry@zoo.toronto.edu (Henry Spencer) wrote: > > The major component of any realistic plan to go to the Moon cheaply (for > more than a brief visit, at least) is low-cost transport to Earth orbit. > For what it costs to launch one Shuttle or two Titan IVs, you can develop > a new launch system that will be considerably cheaper. (Delta Clipper > might be a bit more expensive than this, perhaps, but there are less > ambitious ways of bringing costs down quite a bit.) Ah, there's the rub. And a catch-22 to boot. For the purposes of a contest, you'll probably not compete if'n you can't afford the ride to get there. And although lower priced delivery systems might be doable, without demand its doubtful that anyone will develop a new system. Course, if a low priced system existed, there might be demand... I wonder if there might be some way of structuring a contest to encourage low cost payload delivery systems. The accounting methods would probably be the hardest to work out. For example, would you allow Rockwell to 'loan' you the engines? And so forth... > Any plan for doing > sustained lunar exploration using existing launch systems is wasting > money in a big way. > This depends on the how soon the new launch system comes on line. In other words, perhaps a great deal of worthwhile technology (life support, navigation, etc.) could be developed prior to a low cost launch system. You wouldn't want to use the expensive stuff forever, but I'd hate to see folks waiting to do anything until a low cost Mac, oops, I mean launch system comes on line. I guess I'd simplify this to say that 'waste' is a slippery concept. If your goal is manned lunar exploration in the next 5 years, then perhaps its not 'wasted' money. If your goal is to explore the moon for under $500 million, then you should put of this exploration for a decade or so. Craig Craig Keithley |""I don't remember, I don't recall, Apple Computer, Inc. |I got no memory of anything at all"" keithley@apple.com |Peter Gabriel, Third Album (1980)"
-"From: nickh@CS.CMU.EDU (Nick Haines) Subject: Re: What if the USSR had reached the Moon first? In-Reply-To: gary@ke4zv.uucp's message of Sun, 18 Apr 1993 09:10:51 GMT Originator: nickh@SNOW.FOX.CS.CMU.EDU Nntp-Posting-Host: snow.fox.cs.cmu.edu Organization: School of Computer Science, Carnegie Mellon University <1993Apr7.124724.22534@yang.earlham.edu> <dxb105.734495289@virgo> <1993Apr12.161742.22647@yang.earlham.edu> <93107.144339SAUNDRSG@QUCDN.QueensU.CA> <1993Apr18.091051.14496@ke4zv.uucp> Lines: 35 In article <1993Apr18.091051.14496@ke4zv.uucp> gary@ke4zv.uucp (Gary Coffman) writes: In article <93107.144339SAUNDRSG@QUCDN.QueensU.CA> Graydon <SAUNDRSG@QUCDN.QueensU.CA> writes: >This is turning into 'what's a moonbase good for', and I ought not >to post when I've a hundred some odd posts to go, but I would >think that the real reason to have a moon base is economic. > >Since someone with space industry will presumeably have a much >larger GNP than they would _without_ space industry, eventually, >they will simply be able to afford more stuff. If I read you right, you're saying in essence that, with a larger economy, nations will have more discretionary funds to *waste* on a lunar facility. That was certainly partially the case with Apollo, but real Lunar colonies will probably require a continuing military, scientific, or commercial reason for being rather than just a ""we have the money, why not?"" approach. Ah, but the whole point is that money spent on a lunar base is not wasted on the moon. It's not like they'd be using $1000 (1000R?) bills to fuel their moon-dozers. The money to fund a lunar base would be spent in the country to which the base belonged. It's a way of funding high-tech research, just like DARPA was a good excuse to fund various fields of research, under the pretense that it was crucial to the defense of the country, or like ESPRIT is a good excuse for the EC to fund research, under the pretense that it's good for pan-European cooperation. Now maybe you think that government-funded research is a waste of money (in fact, I'm pretty sure you do), but it does count as investment spending, which does boost the economy (and just look at the size of that multiplier :->). Nick Haines nickh@cmu.edu"
+"From: ethanb@ptolemy.astro.washington.edu (Ethan Bradford)
+Subject: Re: Gamma Ray Bursters. WHere are they.
+
+In article <STEINLY.93Apr27121443@topaz.ucsc.edu> steinly@topaz.ucsc.edu (Steinn Sigurdsson) writes:
+
+   _The_ problem with Oort cloud sources is that absolutely
+   no plausible mechanism has been proposed. It would have
+   to involve new physics as far as I can tell. Closest to
+   ""conventional"" Oort sources is a model of B-field pinching
+   by comets, it's got too many holes in it to count, but at
+   least it was a good try...
+
+So you have a plausible model for GRB's at astronomical distances?
+Recent observations have just about ruled out the merging neutron star
+hypothesis, which had a lot of problems, anyhow.  We have to look for
+implausible models and what is fundamentally allowed independent of
+models.
+
+A paper on the possibility of GRB's in the Oort cloud just came
+through the astrophysics abstract service.  To get a copy of this
+paper, send a message to astro-ph@babbage.sissa.it with the subject
+line 
+  get 9304001
+
+
+Here is the abstract of that paper.
+
+   The currently favored explanation for the origin of \GRBs puts them
+   at cosmological distances;
+   but as long as there is no distance
+   indicator to these events all possible sources which are
+   isotropically distributed should remain under consideration. This is
+   why the Oort cloud of comets is kept on the list,
+   although there is no known mechanism for generating \GRBs
+   from cometary nuclei. Unlikely as it may seem, the possibility that \GRBs
+   originate in the solar cometary cloud
+   cannot be excluded until it is disproved.
+
+   We use the available data on the distribution of \GRBs (the BATSE
+   catalogue up to March, 1992), and
+   the Catalogue of Cometary Orbits  by Marsden and Williams (1992) to
+   investigate whether there is any observational indication for correlations
+   between the angular distributions of \GRBs and comets' aphelia,
+   assuming that the distribution of aphelia direction reflect,
+   at least to some extent, true variations
+   in the column density of the Oort cloud. We also apply the $\vov$
+   test to both distributions.
+
+   We have  performed a variety of statistical tests (a Kolmogorov-Smirnov
+   test for the distributions in galactic latitude, a
+   $\chi^2$ test for the spherical multiple moments, and a 2-D
+   cross-correlation analysis), including testing sub-samples for
+   isolating the effect of possible observational biases.
+   These tests imply that it is unlikely that the two distributions agree, but
+   the statistical significance  is not sufficient for ruling out any
+   connection with complete confidence. We performed Monte-Carlo simulations
+   which show that only when the number of bursts exceeds $\sim 800$
+   it is possible to rule out a correlation between the angular distributions.
+   Currently,
+    it is only the combination of these tests  with the large disagreement
+   found for the $\vov$ parameter which makes the Oort
+   cloud of comets unlikely to be related to \GRBs.
+"
+"From: globus@nas.nasa.gov (Al Globus)
+Subject: Space Colony Size Preferences Summary
+
+
+Some time ago I sent the following message:
+   Every once in a while I design an orbital space colony.  I'm gearing up to
+   do another one.  I'd some info from you. If you were to move
+   onto a space colony to live permanently, how big would the colony have
+   to be for you to view a permanent move as desirable?  Specifically,
+
+   How many people do you want to share the colony with?
+ 
+
+   What physical dimensions does the living are need to have?  
+
+
+   Assume 1g living (the colony will rotate).  Assume that you can leave
+   from time to time for vacations and business trips.  If you're young
+   enough, assume that you'll raise your children there.
+
+I didn't get a lot of responses, and they were all over the block.
+Thanx muchly to all those who responded, it is good food for thought.
+
+
+
+
+Here's the (edited) responses I got:
+
+
+   How many people do you want to share the colony with?
+ 
+100
+
+   What physical dimensions does the living are need to have?  
+
+Cylinder 200m diameter x 1 km long
+
+Rui Sousa
+ruca@saber-si.pt
+
+=============================================================================
+
+>   How many people do you want to share the colony with?
+
+100,000 - 250,000
+
+>   What physical dimensions does the living are need to have?  
+
+100 square kms surface, divided into city, towns, villages and
+countryside.  Must have lakes, rivers amd mountains.
+
+=============================================================================
+
+> How many
+1000.  1000 people really isn't that large a number;
+everyone will know everyone else within the space of a year, and will probably
+be sick of everyone else within another year.
+
+>What physical dimensions does the living are need to have?  
+
+Hm.  I am not all that great at figuring it out.  But I would maximize the
+percentage of colony-space that is accessible to humans.  Esecially if there
+were to be children, since they will figure out how to go everywhere anyways.
+And everyone, especially me, likes to ""go exploring""...I would want to be able
+to go for a walk and see something different each time...
+
+=============================================================================
+
+For population, I think I would want a substantial town -- big enough
+to have strangers in it.  This helps get away from the small-town
+""everybody knows everything"" syndrome, which some people like but
+I don't.  Call it several thousand people.
+
+For physical dimensions, a somewhat similar criterion:  big enough
+to contain surprises, at least until you spent considerable time
+getting to know it.  As a more specific rule of thumb, big enough
+for there to be places at least an hour away on foot.  Call that
+5km, which means a 10km circumference if we're talking a sphere.
+
+                                         Henry Spencer at U of Toronto Zoology
+                                          henry@zoo.toronto.edu   utzoo!henry
+
+=============================================================================
+My desires, for permanent move to a space colony, assuming easy communication
+and travel:
+
+Size:  About a small-town size, say 9 sq. km.  'Course, bigger is better :-)
+Population:  about 100/sq km or less.  So, ~1000 for 9sqkm.  Less is
+better for elbow room, more for interest and sanity, so say max 3000, min 300.
+
+-Tommy Mac
+-------------------------------------------------------------------------
+Tom McWilliams | 517-355-2178 (work) \\     Inhale to the Chief!
+18084tm@ibm.cl.msu.edu  | 336-9591 (hm)\\  Zonker Harris in 1996!
+-------------------------------------------------------------------------
+"
+"From: prb@access.digex.net (Pat)
+Subject: Re: HST Servicing Mission Scheduled for 11 Days
+
+In article <1993Apr30.145450.1@stsci.edu> hathaway@stsci.edu writes:
+>.. 
+>> 
+>> After all the space walking,  they are going to  re-boost the HST's
+>> orbit.  I think right now  it's sitting  at 180 miles up,
+>> they would like  220.  I don't know the exact orbit numbers.
+					^^^^^^^^^^^^^^^^^^^^^^
+>
+>As Ben says - this re-boost idea is all news to us here.  Do you know 
+>something we don't?  Please supply a source - it would be nice for 
+>the schedulers of observations to know where the thing is going to 
+>be.  These altitude numbers are also way off.  
+>
+>My best source has: 
+>""Minimum ST ALTITUDE in the PMDB is:    573 Kilometers""
+>""Maximum ST ALTITUDE in the PMDB is:    603 Kilometers""
+>""Delta   ST ALTITUDE in the PMDB is:      3 Kilometers"" 
+>
+>(PMDB is Proposal Management Data Base - used to schedule observations.) 
+>..
+>
+
+I am sure your numbers are far better then mine.  As i said above,
+i don't have exact numbers.
+
+>> In order to perform the re-boost of the HST, the OMS engines
+>> will be fired for a long period.  Now the shuttle is a heavy
+>> thing.  THe HST isn't light either.  THe amount of OMS fuel
+>> needed to fly both up is substantial.   a small booster
+>> carried up and used to boost HST on it's own will weigh significantly
+>> less then the OMS fuel required to Boost  both HST and SHUttle,
+>> for a given orbital change.  
+>> 
+>
+>Could you supply some calculations?  You might check some recent 
+>postings that explained that 'a small booster' as suggested does 
+>not now exist, so comparing the mass of something that doesn't 
+>exist to the mass of the OMS fuel seems impossible.  The contamination 
+>threat also remains.  
+>
+
+How different would the contamination threat of a small manuevering tug
+be from that of the Shuttle and it's OMS engines??????
+
+I know that no small manuevering tug exists,  but maybe  one could
+soup up a Bus 1.   Does anyone out there have the de-clasified
+specs on hte BUS 1?  would it be able to provide enough  control
+force to balance the HST,  and  still have the rocket thrust
+to hurl her into a decent high orbit?
+
+>.. 
+>> 
+>> or the HST could even get placed into  some sort of medium orbit.
+>> The reason they want a high orbit, is less antenna pointing,
+>> and longer drag life.
+>> 
+>  Longer drag life I can understand, but could you explain the 
+>antenna pointing?  
+
+Sorry,  that should be intrument pointing.
+
+>
+>> Whatever it is,  the problem in the tilt array is a big constraint
+>> on HST ops.
+>
+>Tell me about it.  Although the arrays can be (and are) moved perfectly 
+>well utilizing the second electronics box.  Getting them both working 
+>is much desireable so as to reclaim redundancy.  
+
+Plus, if the second box gets fritzy, you could be in shitter ville
+real fast.
+
+>
+>I don't mean to jump on you - helpful suggestions are always welcome 
+>and we all know the more ideas the better, but I do want the true 
+>situation to be described clearly and correctly, lest some get 
+>confused. 
+>
+>Regards, 
+>Wm. Hathaway 
+
+The problem is no-one seems to have the exact numbers.  When the mission
+was planned originally at 3 spacewalks,  and 3 astronauts,  there was
+enormous concern over the mass margins for the flight.  THey
+have now planned for 5 EVA's,  an 11 day mission and have 2 reserve
+EVA's and an emergency EVA.  Obviously that is coming from somewhere.
+My guess is the OMS burn  fuel,  or  re-boost  margin.   
+
+I just figured, if GOldin wants to really,  prove out faster, cheaper
+better,   have some of the whiz kids  slap together an expendable
+space manuevering tug  out of a BUs1,  and use that for the re-boost.
+it has to be better then using the Discovery as a tow truck.
+
+pat
+
+"
+"From: prb@access.digex.com (Pat)
+Subject: Re: How many read sci.space?
+
+In article <1993Apr16.014506.27923@sol.UVic.CA> rborden@ugly.UVic.CA (Ross  Borden) writes:
+|In article <1qjs1j$306@access.digex.net> prb@access.digex.com (Pat) writes:
+|>
+|>
+|>In the old days,  their used to be Arbitron stats'  that analyzed
+|>the readership and posting volumes  by group  and user.
+|>
+|>They were available from UUNET.   That's how you check the
+|>readership of Sci.space,  not some stupid  unscientific attempt
+|>to  flood the newsgroup.
+|>
+|>I have abetter idea.  WHy don't we all reply directly to the
+|>origanator  of this post,  and tell him we read sci.space ;-)
+|>
+|>
+|>pat
+|
+|	Sigh.
+|	I try to make a little joke, I try to inject some humour here
+|and what happens?  In the immortal words of Foghorn Leghorn:
+|
+|	""I say, that was a _joke_, son.""
+|
+|	I thought that the bit about McElwaine, not to mention the two
+|smileys, would indicate to even the most humour impaired that I was
+|JOKING.
+>	Sigh.
+>	(And will everyone who pat's suggestion (thanks bunches, pat)
+>*please* stop sending me email.)
+>
+>-------------------------------------------------------------------------------
+>|  I shot a man just to watch him die;    |     Ross Borden                   |
+>|  I'm going to Disneyland!               |     rborden@ra.uvic.ca            |
+>-------------------------------------------------------------------------------
+
+
+Now, I had put a Wink at the end of my suggestion indicating it was
+intensely sarcastic.  I can't help it if everyone got all serious.
+
+Ross.
+
+	I never saw your original posting.  it dropped on the floor
+somewhere.  I just saw the trickle down, thought it was intensely
+stupid,  not knowing anything about the joke, mentioned arbitron
+and left it with an equally stupid joke.  Bill in his ever increasing
+devotion to thoroughness dug up  several  arbitron stats.
+
+I myself think the arbitron stats are  severely methodologically impaired,
+but are a good measure of proportion.  I don't think anyone
+knows how many people read news anymore.
+
+pat
+"
+"From: glover@casbah.acns.nwu.edu (Eric Glover)
+Subject: Re: What if the USSR had reached the Moon first?
+
+In article <1993Apr06.020021.186145@zeus.calpoly.edu> jgreen@trumpet.calpoly.edu (James Thomas Green) writes:
+>Suppose the Soviets had managed to get their moon rocket working
+>and had made it first.  They could have beaten us if either:
+>* Their rocket hadn't blown up on the pad thus setting them back,
+>and/or
+>* A Saturn V went boom.
+
+The Apollo fire was harsh, A Saturn V explosion would have been
+hurtful but The Soviets winning would have been crushing. That could have
+been *the* technological turning point for the US turning us
+from Today's ""We can do anything, we're *the* Super Power"" to a much more
+reserved attitude like the Soviet Program today.
+
+Kennedy was gone by 68\69, the war was still on is the east, I think
+the program would have stalled badly and the goal of the moon
+by 70 would have been dead with Nasa trying to figure were they went wrong.
+ 
+>If they had beaten us, I speculate that the US would have gone
+>head and done some landings, but we also would have been more
+>determined to set up a base (both in Earth Orbit and on the
+>Moon).  Whether or not we would be on Mars by now would depend
+>upon whether the Soviets tried to go.  Setting up a lunar base
+>would have stretched the budgets of both nations and I think
+>that the military value of a lunar base would outweigh the value
+>of going to Mars (at least in the short run).  Thus we would
+>have concentrated on the moon.
+
+I speulate that:
++The Saturn program would have been pushed into
+the 70s with cost over runs that would just be too evil. 
+Nixon still wins.
++The Shuttle was never proposed and Skylab never built.
++By 73 the program stalled yet again under the fuel crisis.
++A string of small launches mark the mid seventies.
++By 76 the goal of a US man on the moon is dead and the US space program
+drifts till the present day.
+
+
+>/~~~(-: James T. Green :-)~~~~(-: jgreen@oboe.calpoly.edu :-)~~~\ 
+>| ""I believe that this nation should commit itself to achieving	| 
+>| the goal, before this decade is out, of landing a man on the 	|
+>| Moon and returning him safely to the Earth.""    		|
+>|                  <John F. Kennedy; May 25, 1961> 		|
+
+
+"
+"From: tstroup@force.ssd.lmsc.lockheed.com
+Subject: Re: Long Term Space Voyanges and Effect NEwsgroup?
+
+In article <1rp0ht$g25@hsc.usc.edu>, khayash@hsc.usc.edu (Ken Hayashida) writes:
+>
+>The first item of business is to establish the importance space life
+>sciences in the whole of scheme of humankind.  I mean compared
+>to football and baseball, the average joe schmoe doesn't seem interested
+>or even curious about spaceflight. 
+
+I disagree.  It think the average joe is interested/curious about spaceflight
+but sees it as an elitist activity.  Not one which he is ever going to
+participate in.
+
+>All of us, in our own way, can contribute to a comprehensive document
+>which can be released to the general public around the world.  The
+>document would scientifically analyze the technical aspects of long
+>term human habitation in space.
+
+Why is the general public going to be interested in the technical details
+of long term space habitation?  I like the idea of the study, but it should
+be released to other scientists and engineers who will be able to use it.
+If you want a general public document, you'll need a more general publication.
+
+>I believe that if any long-term space exploration program is to 
+>succeed we need to basically learn how to engineer our own microworld
+>(i.e. the spacecraft).  Only through the careful analyses of engineering,
+>chemical, biological, and medical factors will a good ecosystem be created
+>to facilitate human life on a long-duration flight.
+
+As one working on Controlled Ecological Life Support Systems, engineering
+the microworld isn't the problem.  The problem is understanding the basic
+chemical, biological and medical factors to be able to engineer them
+efficiently.  For example, the only way we know how to produce food is from
+plants and animals.  Food synthesis is not very far advanced.  So we have
+to orbit a farm.  Well that's obviously not very efficient, so we use 
+technology to reduce the mass and grow plants hydroponically instead of 
+using dirt.  This is where the engineering comes in.  But new technologies
+bring new basic questions that we don't have the answers to.  Like, in 
+dirt we can grow tomatoes and lettuce right beside each other, but in 
+hydroponics it turns out that you can't do that.  The lettuce growth is 
+stunted when it's grown in the same hydroponic solution as tomatoes.  So 
+now you have to consider what other plants are going to have similar
+interactions.  This means some basic applied scientific research.  And that's
+what needs to be done with all technologies that have been developed so far.
+We also need to find out how they interact together.  That's where we are now.
+
+>So, I would like to see posts of opinions regarding the most objective
+>methods to analyze the accepted scientific literature for technologies
+>which can be applied to long-duration spaceflight. 
+
+First you need to do the literature search.  There is a lot of information
+out there.  Maybe we should just pick a specific area of long term habitation.
+This could be useful, especially if we make it available on the net.  Then
+we can look at methods of analyzing the technologies.
+
+>Such a detailed
+>literature search would be of interest to ourselves as space advocates
+>and clearly important to existing space programs.
+>In essence, we would be dividing the space life science issues into
+>various technical problems which could be solved with various technologies.
+>This database of acceptable solutions to various problems could form the
+>basis of detailed discussions involving people from the bionet, isunet,
+>and any other source!
+
+Unless there is an unbelievable outpouring of interest on this on the net,
+I think we should develop a detailed data base of the literature search 
+first.  Then if we accomplish that we can go on to real analysis.  The data
+base itself could be useful for future engineers.
+
+That's my response Ken, what do you think?
+
+Tim
+
+"
+"From: daviss@sweetpea.jsc.nasa.gov (S.F. Davis)
+Subject: Re: Conference on Manned Lunar Exploration.  May 7  Crystal City
+
+In article <1quule$5re@access.digex.net>, prb@access.digex.com (Pat) writes:
+|> 
+|> AW&ST  had a brief blurb on a Manned Lunar Exploration confernce
+|> May 7th  at Crystal City Virginia, under the auspices of AIAA.
+|> 
+|> Does anyone know more about this?  How much, to attend????
+|> 
+|> Anyone want to go?
+|> 
+|> pat
+
+Here are some selected excerpts of the invitation/registration form they
+sent me. Retyped without permission, all typo's are mine.
+
+---------------------------------------------------------------------
+Low-Cost Lunar Access: A one-day conference to explore the means and 
+benefits of a rejuvenated human lunar program.
+
+Friday, May 7, 1993
+Hyatt Regency - Crystal City Hotel
+Arlington, VA
+
+ABOUT THE CONFERENCE
+The Low-Cost Lunar Access conference will be a forum for the exchange of
+ideas on how to initiate and structure an affordable human lunar program.
+Inherent in such low-cost programs is the principle that they be 
+implemented rapidly and meet their objectives within a short time
+frame.
+
+[more deleted]
+
+CONFERENCE PROGRAM (Preliminary)
+
+In the Washington Room:
+
+  9:00 - 9:10 a.m.     Opening Remarks
+    Dr. Alan M. Lovelace
+
+  9:10 - 9:30 a.m.     Keynote Address
+    Mr. Brian Dailey
+
+  9:30 - 10:00 a.m.    U.S. Policy Outlook
+    John Pike, American Federation of Scientists
+
+  A discussion of the prospects for the introduction of a new low-cost
+  lunar initiative in view of the uncertain direction the space
+  program is taking.
+
+  10:00 - 12:00 noon   Morning Plenary Sessions
+
+  Presentations on architectures, systems, and operational concepts.
+  Emphasis will be on mission approaches that produce significant
+  advancements beyond Apollo yet are judged to be affordable in the
+  present era of severely constrained budgets
+
+
+In the Potomac Room
+
+  12:00 - 1:30 p.m.    Lunch
+    Guest Speaker: Mr. John W. Young,
+    NASA Special Assistant and former astronaut
+
+In the Washington Room
+
+  1:30 - 2:00 p.m.     International Policy Outlook
+    Ian Pryke (invited)
+    ESA, Washington Office
+
+  The prevailing situation with respect to international space 
+  commitments, with insights into preconditions for European 
+  entry into new agreements, as would be required for a cooperative
+  lunar program.
+
+  2:00 - 3:30 p.m.     Afternoon Plenary Sessions
+
+  Presentations on scientific objectives, benefits, and applications.
+  Emphasis will be placed on the scientific and technological value
+  of a lunar program and its timeliness.
+
+
+---------------------------------------------------------------------
+
+There is a registration form and the fee is US$75.00. The mail address
+is 
+
+     American Institute of Aeronautics and Astronautics
+     Dept. No. 0018
+     Washington, DC 20073-0018
+
+and the FAX No. is: 
+
+     (202) 646-7508
+
+or it says you can register on-site during the AIAA annual meeting 
+and on Friday morning, May 7, from 7:30-10:30
+
+
+Sounds interesting. Too bad I can't go.
+
+|--------------------------------- ******** -------------------------|
+|                                 * _!!!!_ *                         |
+| Steven Davis                   * /  \   \ *                        |
+| daviss@sweetpea.jsc.nasa.gov  *  (<o><o>)  *                       |  
+|                               *  \>_db_</  *  McDonnell Douglas    |
+|  - I don't represent           *   |vv|   *   Space Systems Company| 
+|    anybody but myself. -        *  (__)  *    Houston Division     |
+|--------------------------------- ******** -------------------------|
+"
+"From: henry@zoo.toronto.edu (Henry Spencer)
+Subject: Re: Moonbase race, NASA resources, why?
+
+In article <keithley-220493104229@kip-37.apple.com> keithley@apple.com (Craig Keithley) writes:
+>Ah, there's the rub.  And a catch-22 to boot.  For the purposes of a
+>contest, you'll probably not compete if'n you can't afford the ride to get
+>there.  And although lower priced delivery systems might be doable, without
+>demand its doubtful that anyone will develop a new system...
+
+You're assuming that the low-cost delivery system has to be a separate
+project.  But why?  If you are spending hundreds of millions of dollars
+in hopes of winning a billion-dollar prize, it is *cheaper* to develop
+your own launch system, charging its entire development cost against
+your contest entry, than to try to do it with existing launchers.  No
+other demand is necessary.
+
+>> Any plan for doing
+>> sustained lunar exploration using existing launch systems is wasting
+>> money in a big way.
+>
+>This depends on the how soon the new launch system comes on line.  In other
+>words, perhaps a great deal of worthwhile technology (life support,
+>navigation, etc.) could be developed prior to a low cost launch system. 
+>You wouldn't want to use the expensive stuff forever, but I'd hate to see
+>folks waiting to do anything until a low cost Mac, oops, I mean launch
+>system comes on line.
+
+You're assuming that it's going to take a decade to build a new launch
+system.  But why?  The Saturn V took less than six years, depending on
+exactly when you date its start.  Pegasus took about three from project
+start to first flight.  Before SDIO chickened out on orbital development,
+the target date for an orbital DC-Y flight was 1996.  If you really want
+speed, consider that the first prototypes of the Thor missile (still in
+service as the core of the Delta launcher) shipped to the USAF less
+than 18 months after the development go-ahead.
+
+One of the most pernicious myths in this whole business is the belief
+that you can't build a launcher without taking ten years and spending
+billions of dollars.  It isn't true and never was.
+"
+"From: u9263012@wampyr.cc.uow.edu.au (Walker Andrew John)
+Subject: Re: Gamma Ray Bursters. WHere are they.
+
+steinly@topaz.ucsc.edu (Steinn Sigurdsson) writes:
+
+>In article <1993Apr27.132255.12653@tpl68k0.tplrd.tpl.oz.au> keithh@tplrd.tpl.oz.au (Keith Harwood) writes:
+
+
+
+>   In article <1rbl0eINNip4@gap.caltech.edu>, palmer@cco.caltech.edu (David M. Palmer) writes:
+>   > prb@access.digex.com (Pat) writes:
+
+>   > >  What  evidence  indicates that Gamma Ray bursters are very far away?
+
+>   > >Given the enormous  power,  i was just wondering,  what if they are
+>   > >quantum  black holes or something  like that  fairly close by?
+
+>   > >Why would they have to be at  galactic ranges?   
+
+>   . . . David gives good explaination of the deductions from the isotropic,
+>   'edged' distribution, to whit, they are either part of the Universe or
+>   part of the Oort cloud.
+
+>   Why couldn't they be Earth centred, with the edge occuring at the edge
+>   of the gravisphere? I know there isn't any mechanism for them, but there
+>   isn't a mechanism for the others either.
+
+>What on Earth is the ""gravisphere""?
+>Anyway, before it's decay the Pioneer Venus Orbiter
+>had a gamma ray detector, as does Ulysses, they 
+>detect the brightest bursts that the Earth orbit detectors
+>do, so the bursts are at least at Oort cloud distances.
+>In principle four detectors spaced out by a few AU would
+>see parallax if the bursts are of solar system origin.
+
+>_The_ problem with Oort cloud sources is that absolutely
+>no plausible mechanism has been proposed. It would have
+>to involve new physics as far as I can tell. Closest to
+>""conventional"" Oort sources is a model of B-field pinching
+>by comets, it's got too many holes in it to count, but at
+>least it was a good try...
+
+>*  Steinn Sigurdsson   			Lick Observatory      	*
+>*  steinly@lick.ucsc.edu		""standard disclaimer""  	*
+>*  The laws of gravity are very,very strict			*
+>*  And you're just bending them for your own benefit - B.B. 1988*
+
+	Also,if they did come from the Oort cloud we would expect to
+see the same from other stars Oort Clouds.
+Andrew Walker
+"
+"From: mccall@mksol.dseg.ti.com (fred j mccall 575-3539)
+Subject: Re: Market or gov failures
+
+In <C4tCL8.7xI.1@cs.cmu.edu> 18084TM@msu.edu (Tom) writes:
+
+
+>[Fred saying that gov coercive poser is necessary for any space program]
+
+>I reply;
+>>>BTW, Fred, you've really crossed the border, since you admit that the ideas
+>>>you support can only be carried out with coercive power.  Now that's really
+>>>f***in' intolerant, so get off yer high horse about tolerance.
+
+>Fred replies;
+>>No, Tommy, I ""admit"" that there are such things as 'market failures'
+>>which necessitate intervention by other than capitalist forces to
+>>correct.
+
+>I guess your understanding of this 'market failure' should be classified
+>under Phil's 'economics on the level of 19th century medicine', since you
+>apparently completely ignored that this 'market failure' can as easily,
+>or even much more easily, be attributed to ""government intervention
+>failure"".  So, in addition to a strong moral argument against what you
+>propose, there is also a strong utilitarian argument, namely that gov's
+>destruction of wealth through confiscastory taxation and redistribution
+>on a major scale has made significant private capital investments harder
+>to make.
+
+I note that you make no such case as you claim can be 'even more
+easily made'.  Yes, the argument can (and has) been made that current
+government policy creates even larger market barriers than there were
+in the first place, but there is no such term as 'government failure',
+since the government can change policies whenever it pleases.  The
+market doesn't do that and is governed by (relatively) well-understood
+forces.  This libertopican bilge about 'moral arguments' about
+taxation, etc., is, at bottom, so much simplistic economic thinking.
+It can only be 'justified' by cliche derision of anyone who knows more
+about economics than the libertopian -- which is what invariably
+happens.  Tripe a la Tommy, the new libertopian dish.
+
+>>Get a clue, little boy, and go salve your wounded pride in my not
+>>considering you infallible in some other fashion.  I'm not interested
+>>in your ego games.
+
+>Puh-leese, Fred.  This, besides being simply an attempt to be insulting,
+>really belongs on private mail.  If 'ego-games' are so unimportatnt to
+>you, why the insults and this strange negative attatchment for me?
+
+Wherever do you get this inflated idea of your own importance?
+
+-- 
+""Insisting on perfect safety is for people who don't have the balls to live
+ in the real world.""   -- Mary Shafer, NASA Ames Dryden
+------------------------------------------------------------------------------
+Fred.McCall@dseg.ti.com - I don't speak for others and they don't speak for me.
+"

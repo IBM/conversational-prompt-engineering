@@ -103,9 +103,10 @@ class ModelBasedUser:
             {
                 'role': ChatRole.SYSTEM,
                 'content':
-                    'The conversation has finished. Now your user persona is asked to evaluate the result:\n'
-                    'For the following text and the presented output options choose the best and the worst output. '
-                    'Format your response like this: best=<option_number> worst=<option_number>'
+                    'The conversation has finished. Now the user persona is asked to evaluate the result:\n'
+                    'For the following text and the presented output options the user has to choose the best and the worst option. '
+                    'The response format must be like this: best=<option_number> worst=<option_number>\n'
+                    'You are the the user persona. Choose the best and the worst output options.'
             },
             {
                 'role': ChatRole.SYSTEM,
@@ -207,21 +208,22 @@ class AutoChat:
 
 def run_auto_chat(email_address, credentials, model, api):
     persona = """
-        Name: Busy Executive
-        Age: 45
-        Occupation: CEO of a large corporation
-        Goal: To quickly grasp the main points of a long document or article
+        Name: Bob
+        Occupation: Data scientist and prompt engineer
+        Goal: Create a prompt that would summarize legal texts in short summaries easily read and understood by everyone.     
         Requirements: 
-        - The summary should be concise (less than 100 words)
-        - The summary should highlight the key takeaways and main points
-        - The summary should be easy to read and understand
+        - The summary should written in plain form, without formatting
+        - The summary should use simple language understood by everyone 
+        - The summary should cover all the important points of the orig text
+        - The summary should be as short as possible, but still covering all the important points
+        - The prompt should not be wordy, with a lot of special cases. It should be generic, compact, and straight to the point.
     """
     chat = AutoChat(
         email_address=email_address, credentials=credentials, model=model, api=api,
         persona=persona, task='text_summarization',
         ds_name='movie reviews',
-        train_csv='data/public/movie reviews/train.csv',
-        eval_csv='data/public/movie reviews/eval.csv',
+        train_csv='data/public/legal_plain_english/train.csv',
+        eval_csv='data/public/legal_plain_english/eval.csv',
     )
     chat.create_prompt()
     chat.evaluate()
