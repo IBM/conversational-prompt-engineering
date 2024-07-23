@@ -36,7 +36,7 @@ if hasattr(st.session_state, "config") and st.session_state["config"].getboolean
 dimensions = ["dim1"]
 
 prompt_types = ["baseline", "zero_shot", "few_shot"] # default
-if hasattr(st.session_state, "config") and st.session_state["config"].get("Evaluation", "prompt_types"):
+if hasattr(st.session_state, "config") and st.session_state["config"].has_option("Evaluation", "prompt_types"):
     prompt_types = ast.literal_eval(st.session_state["config"].get("Evaluation", "prompt_types"))
 
 
