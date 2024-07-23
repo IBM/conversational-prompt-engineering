@@ -269,7 +269,7 @@ if __name__ == "__main__":
 
     api = "bam"  # select the API "bam"/"watsonx"
     summary_prompt_types = ['baseline', 'zero_shot', 'few_shot']   # select the summaries for evaluation
-    offline_test_splits = ["eval", "test", "test_full"]
+    offline_test_splits = ["eval", "eval_llm"]
 
     # Chats for analysis
     chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out"
