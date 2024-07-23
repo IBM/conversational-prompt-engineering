@@ -47,8 +47,8 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
                                                           "desc": "This is part of the Debate Speeches dataset.\nThe dataset contains manually-corrected transcripts of speeches recorded by expert debaters."},
 
                        "Wikipedia Animal pages": {"train": "./data/public/wiki_animals/train.csv",
-                            "eval": "./data/public/reuters/test.csv",
-                            "eval_llm": "./data/public/reuters/test_full.csv",
+                            "eval": "./data/public/wiki_animals/test.csv",
+                            "eval_llm": "./data/public/wiki_animals/test_full.csv",
                             "desc": "This dataset consists of animal pages extracted from Wikipedia"},
 
                        "Wikipedia Movie pages ": {"train": "./data/public/wiki_movies/train.csv",
