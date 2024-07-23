@@ -12,6 +12,16 @@ from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_
 from conversational_prompt_engineering.data.dataset_utils import load_dataset_mapping
 from conversational_prompt_engineering.configs.config_names import load_config
 
+## Our customized rubric definition
+SUMMRIZATION_RUBRIC = """
+[Is the model response aligned with the user's instructions?]
+Score 1: There is no alignment between the instruction and the model response.
+Score 2: There is poor alignment between the instruction and the model response. Most of the requirements are not fulfilled.
+Score 3: There is partial alignment between the instruction and the model response.
+Score 4: There is good alignment between the instruction and the model response. Most of the requirements are fulfilled.
+Score 5: There is full alignment between the instruction and the model response.
+""".strip()
+
 
 ## Prompts definitions are taken from: https://github.com/prometheus-eval/prometheus-eval/blob/main/libs/prometheus-eval/prometheus_eval/prompts.py
 
@@ -45,12 +55,14 @@ An instruction (might include an Input inside it), a response to evaluate, and a
 
 ###Feedback: """
 
+# Modified the prompt: corrected the input ("two responses" instead of "a response") and add instruction 1.
 RELATIVE_PROMPT_WO_REF = """###Task Description:
-An instruction (might include an Input inside it), a response to evaluate, and a score rubric representing a evaluation criteria are given.
-1. Write a detailed feedback that assess the quality of two responses strictly based on the given score rubric, not evaluating in general.
-2. After writing a feedback, choose a better response between Response A and Response B. You should refer to the score rubric.
-3. The output format should look as follows: "(write a feedback for criteria) [RESULT] (A or B)"
-4. Please do not generate any other opening, closing, and explanations.
+An instruction (might include an Input inside it), two responses to evaluate, and a score rubric representing a evaluation criteria are given.
+1. Read the two responses carefully before making any decision. The order in which the responses are presented to you should not affect your decision.
+2. Write a detailed feedback that assess the quality of two responses strictly based on the given score rubric, not evaluating in general.
+3. After writing a feedback, choose a better response between Response A and Response B. You should refer to the score rubric.
+4. The output format should look as follows: "(write a feedback for criteria) [RESULT] (A or B)"
+5. Please do not generate any other opening, closing, and explanations.
 
 ###Instruction:
 {instruction}
@@ -90,8 +102,8 @@ def get_all_pairs(l, add_reversed_pairs=True):
 
 
 class LlmAsAJudge(ChatManagerBase):
-    def __init__(self, credentials, model, conv_id, target_model, api, email_address) -> None:
-        super().__init__(credentials, model, conv_id, target_model, api, email_address)
+    def __init__(self, credentials, model, conv_id, target_model, api, email_address, output_dir, config_name) -> None:
+        super().__init__(credentials, model, conv_id, target_model, api, email_address, output_dir, config_name)
 
         self.model_chat = []
 
@@ -109,6 +121,10 @@ class LlmAsAJudge(ChatManagerBase):
                 result = result.split('Response')[-1].strip()
                 if result in ["A", "B"]:
                     return (result, feedback), relative_map[result]
+                if result == "A is the better response.":
+                    return ("A", feedback), relative_map["A"]
+                if result == "B is the better response.":
+                    return ("B", feedback), relative_map["B"]
         return outputs, "-1"
 
     def _generate_texts_output(self, prompt, texts, few_shot_examples=[]):
@@ -126,7 +142,7 @@ class LlmAsAJudge(ChatManagerBase):
         return prompt_str, outputs
 
     def _evaluate_prompt_absolute(self, prompt, summary):
-        user_content = ABSOLUTE_PROMPT_WO_REF.format(instruction=prompt, response=summary, rubric=HELPFULNESS_RUBRIC)
+        user_content = ABSOLUTE_PROMPT_WO_REF.format(instruction=prompt, response=summary, rubric=SUMMRIZATION_RUBRIC)
         self.model_chat = [{'role': ChatRole.SYSTEM, 'content': ABS_SYSTEM_PROMPT},
                            {'role': ChatRole.USER, 'content': user_content}]
         resp = self._get_assistant_response()
@@ -135,7 +151,7 @@ class LlmAsAJudge(ChatManagerBase):
 
     def _evaluate_prompt_relative(self, prompt, summary_a, summary_b, res_map):
         user_content = REL_SYSTEM_PROMPT + "\n\n" + RELATIVE_PROMPT_WO_REF.format(instruction=prompt, response_A=summary_a,
-                                                                                  response_B=summary_b, rubric=HELPFULNESS_RUBRIC)
+                                                                                  response_B=summary_b, rubric=SUMMRIZATION_RUBRIC)
         self.model_chat = [{'role': ChatRole.SYSTEM, 'content': REL_SYSTEM_PROMPT},
                            {'role': ChatRole.USER, 'content': user_content}]
         resp = self._get_assistant_response()
@@ -151,15 +167,15 @@ class LlmAsAJudge(ChatManagerBase):
             # mode "absolute"
             for prompt_type in summary_prompt_types:
                 row[f'{prompt_type}_llm_judge_abs_feedback'], row[f'{prompt_type}_llm_judge_abs_result'] = \
-                    self._evaluate_prompt_absolute(instruction_text, row[f'{prompt_type}_summary'])
+                    self._evaluate_prompt_absolute(instruction_text, row[f'{prompt_type}_output'])
 
             # mode "relative":
             if score_relative:
                 for summary_a, summary_b in get_all_pairs(summary_prompt_types):
                     pair_name = f'<{summary_a}>-<{summary_b}>'
                     row[f'{pair_name}_llm_judge_rel_feedback'], row[f'{pair_name}_llm_judge_rel_result'] = \
-                        self._evaluate_prompt_relative(instruction_text, row[f"{summary_a}_summary"],
-                                                       row[f"{summary_b}_summary"],
+                        self._evaluate_prompt_relative(instruction_text, row[f"{summary_a}_output"],
+                                                       row[f"{summary_b}_output"],
                                                        {'A': f'{summary_a}', 'B': f'{summary_b}'})
 
     def chat_results_evaluation(self, chat_csv_file, eval_out_dir, target_model, summary_prompt_types):
@@ -214,7 +230,7 @@ class LlmAsAJudge(ChatManagerBase):
             p = chat_params['baseline_prompts']['user_baseline_prompt'] if prompt_type == 'baseline' else prompt_instruction
             prompt_str, eval_outputs = self._generate_texts_output(p, eval_texts, few_shot_examples)
             for i, (t, s) in enumerate(zip(eval_texts, eval_outputs)):
-                generated_data[i].update({f"{prompt_type}_prompt": prompt_str, "text": t, f"{prompt_type}_summary": s})
+                generated_data[i].update({f"{prompt_type}_prompt": prompt_str, "text": t, f"{prompt_type}_output": s})
 
         # call to LLM-as-a-judge
         self.evaluate_prompt(prompt_to_evaluate, generated_data, summary_prompt_types)
@@ -225,49 +241,43 @@ class LlmAsAJudge(ChatManagerBase):
         out_df.to_csv(os.path.join(eval_out_dir, out_csv_file))
 
 
+def evaluate_chat():
+    # Evaluate chat results
+    chat_eval_csv_file = os.path.join(chat_out_path, "eval/eval_results.csv")
+    print(f'LLM AS A JUDGE: chat manual evaluation file is: {chat_eval_csv_file}')
+    # Evaluate chat results
+    llm_judge.chat_results_evaluation(chat_eval_csv_file, eval_out_dir, target_model, summary_prompt_types)
+
+
+def evaluate_offline_test(data_split):
+    # Evaluate csv test data with chat prompts
+    config = load_config(config_name)
+    dataset_name_to_dir = load_dataset_mapping(config)
+    print(dataset_name_to_dir.get(dataset_name))
+    test_data_file = ""
+    if data_split in dataset_name_to_dir.get(dataset_name).keys():
+        test_data_file = dataset_name_to_dir.get(dataset_name)[data_split]
+    if not os.path.isfile(test_data_file):
+        print(f'Skip {test_data_file}, file does not exist')
+        return
+    print(f'LLM AS A JUDGE: dataset file is: {test_data_file}')
+    # Evaluate full test with chat prompts
+    llm_judge.offline_evaluation(chat_params, test_data_file, eval_out_dir, target_model, summary_prompt_types)
+
+
 if __name__ == "__main__":
 
     api = "bam"  # select the API "bam"/"watsonx"
-    evaluation_mode = "chat_eval" #"test_csv"  # select the evaluation mode "chat_eval"/"test_csv"
-    evaluation_data_split = "eval" #"eval_llm"  # select the dataset split csv to evaluate (when evaluation mode is "test_csv")
     summary_prompt_types = ['baseline', 'zero_shot', 'few_shot']   # select the summaries for evaluation
+    offline_test_splits = ["eval", "test", "test_full"]
 
-    #chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Orith_BAM/07-07-2024 13:10:27"
-
-    chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Artem_BAM/09-07-2024 15:14:31"
-    chat_out_path = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/oritht/14-07-2024 12:36:46"
-
-    # the chat result json file
-    chat_res_json_file = "chat_result.json"
-    # load the information - and extract relevant info
-    with open(os.path.join(chat_out_path, chat_res_json_file), "r") as f:
-        chat_params = json.load(f)
-
-    # the dataset to evaluate
-    dataset_name = chat_params["dataset_name"]
-    print(f'LLM AS A JUDGE: dataset is: {dataset_name} ; split: {evaluation_data_split}')
-
-    # the model that generates the summaries
-    target_model = get_model_id(chat_params["target_model"])
-    print(f'LLM AS A JUDGE: target_model is: {target_model}')
-
-    eval_out_dir = os.path.join(chat_out_path, f"llm_judge/{target_model}")
-    os.makedirs(eval_out_dir, exist_ok=True)
-    print(f'LLM AS A JUDGE: output directory: {eval_out_dir}')
-
-    if evaluation_mode == "chat_eval":
-        # Evaluate chat results
-        chat_eval_csv_file = os.path.join(chat_out_path, "eval/eval_results.csv")
-        print(f'LLM AS A JUDGE: chat manual evaluation file is: {chat_eval_csv_file}')
-    elif evaluation_mode == "test_csv":
-        # Evaluate csv test data with chat prompts
-        config = load_config("config_name")
-        dataset_name_to_dir = load_dataset_mapping(config)
-        test_data_file = dataset_name_to_dir.get(dataset_name)[evaluation_data_split]
-        print(f'LLM AS A JUDGE: dataset file is: {test_data_file}')
-    else:
-        print(f"Wrong evaluation mode {evaluation_mode}")
-        exit()
+    # Chats for analysis
+    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out"
+    chats_list = [
+        "oritht/14-07-2024 12:36:46",
+        "liat/21-07-2024 12:16:37",
+        "shai/21-07-2024 12:36:52",
+    ]
 
     # Credentials for API
     if api == "bam":
@@ -277,14 +287,41 @@ if __name__ == "__main__":
     else:
         credentials = {}
 
-    llm_judge = LlmAsAJudge(credentials=credentials, model="prometheus_7b",
-                            conv_id="llm_as_a_judge_offline", target_model=target_model, api=api, email_address=os.environ["IBM_EMAIL"])
+    for chat_dir in chats_list:
+        chat_out_path = os.path.join(chats_output_dir, chat_dir)
+        print(f"Evaluating {chat_dir}")
 
-    if evaluation_mode == "chat_eval":
-        # Evaluate chat results
-        llm_judge.chat_results_evaluation(chat_eval_csv_file, eval_out_dir, target_model, summary_prompt_types)
-    elif evaluation_mode == "test_csv":
-        # Evaluate full test with chat prompts
-        llm_judge.offline_evaluation(chat_params, test_data_file, eval_out_dir, target_model, summary_prompt_types)
-    else:
-        pass
+        # the chat result json file
+        chat_res_json_file = "chat_result.json"
+        # load the information - and extract relevant info
+        with open(os.path.join(chat_out_path, chat_res_json_file), "r") as f:
+            chat_params = json.load(f)
+
+        # config name
+        print(chat_params)
+        config_name = chat_params["config_name"]
+        print(f'LLM AS A JUDGE: config name: {config_name}')
+
+        # the dataset to evaluate
+        dataset_name = chat_params["dataset_name"]
+        print(f'LLM AS A JUDGE: dataset is: {dataset_name}')
+
+        # the model that generates the summaries
+        target_model = get_model_id(chat_params["target_model"])
+        print(f'LLM AS A JUDGE: target_model is: {target_model}')
+
+        eval_out_dir = os.path.join(chat_out_path, f"llm_judge/{target_model}")
+        os.makedirs(eval_out_dir, exist_ok=True)
+        print(f'LLM AS A JUDGE: output directory: {eval_out_dir}')
+
+        llm_judge = LlmAsAJudge(credentials=credentials, model="prometheus_7b",
+                                conv_id="llm_as_a_judge_offline", target_model=target_model, api=api, email_address=os.environ["IBM_EMAIL"],
+                                output_dir=chat_out_path, config_name=config_name)
+
+        # LLM Evaluation on chat
+        evaluate_chat()
+        # LLM Evaluation on offline test data
+        for split in offline_test_splits:
+            evaluate_offline_test(split)
+
+
