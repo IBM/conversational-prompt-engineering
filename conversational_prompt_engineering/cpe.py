@@ -152,19 +152,26 @@ def callback_cycle():
         if user_msg := st.chat_input("Write your message here"):
             manager.add_user_message(user_msg)
 
-        for msg in manager.user_chat[:manager.user_chat_length]:
-            with st.chat_message(msg['role']):
-                st.write(msg['content'])
+    for msg in manager.user_chat[:manager.user_chat_length]:
+        with st.chat_message(msg['role']):
+            st.markdown(msg['content'], help = msg['tooltip'] if "tooltip" in msg else None)
 
         # generate and render the agent response
-        with st.spinner("Thinking..."):
-            if uploaded_file:
-                manager.process_examples(read_user_csv_file(st.session_state["csv_file_train"]), st.session_state[
-                    "selected_dataset"] if "selected_dataset" in st.session_state else "user")
-            messages = manager.generate_agent_messages()
-            for msg in messages:
-                with st.chat_message(msg['role']):
-                    st.write(msg['content'])
+    with st.spinner("Thinking..."):
+        if uploaded_file:
+            manager.process_examples(read_user_csv_file(st.session_state["csv_file_train"]), st.session_state[
+                "selected_dataset"] if "selected_dataset" in st.session_state else "user")
+        messages = manager.generate_agent_messages()
+        for msg in messages:
+            with st.chat_message(msg['role']):
+                if manager.example_num is not None:
+                    orig = manager.examples[manager.example_num - 1].replace('\n', '\n\n')
+                    tooltip = f"Currently discussed input example (#{manager.example_num}):\n\n{orig}"
+                    manager.user_chat[-1]["tooltip"] = tooltip
+                else:
+                    tooltip=None
+                st.markdown(msg['content'], help=tooltip)
+
 
     if manager.few_shot_prompt is not None:
         btn = st.download_button(
