@@ -1,3 +1,5 @@
+import datetime
+import json
 import os
 
 import pandas as pd
@@ -103,8 +105,19 @@ def save_evaluation(df, eval_chat_file):
     else:
         eval_type = "_with_few_shot"
     out_csv = eval_chat_file.replace('.csv', f'_analysis{eval_type}.csv')
-    print('Analysis output file:', out_csv)
+    print('Analysis output csv file:', out_csv)
     df.to_csv(out_csv)
+
+
+def save_evaluation_results_json(eval_res, eval_out_path, time_stamp=""):
+    if DO_NOT_EVALUATE_FEW_SHOT:
+        eval_type = ""
+    else:
+        eval_type = "_with_few_shot"
+    out_json = os.path.join(eval_out_path, f"evaluation_analysis{eval_type}{time_stamp}.json")
+    print('Analysis output json file:', out_json)
+    with open(out_json, 'w') as f:
+        json.dump(eval_res, f)
 
 
 def analyze_llm_evaluation(df):
@@ -207,6 +220,7 @@ if __name__ == "__main__":
     ]
 
     chats_list = [
+        "liat/21-07-2024 12:16:37",
         "shai/wiki_animals",
     ]
 
@@ -229,10 +243,14 @@ if __name__ == "__main__":
             if eval_result is None:
                 continue
             offline_res[chat_dir].update({split:eval_result})
+        chat_res = {"chat": chat_dir, "manual": manual_res[chat_dir], "offline": offline_res[chat_dir], "target_model": target_model, "no_few_shot": DO_NOT_EVALUATE_FEW_SHOT}
+        save_evaluation_results_json(chat_res, os.path.join(chat_output_path, f'llm_judge/{target_model}'))
 
-    print("\n\nSUMMARY:")
-    print("Manual Chat:", manual_res)
-    print("Offline Test:", offline_res)
+    summary_res = {"manual_chat_evaluation": manual_res, "offline_test_evaluation": offline_res,
+                   "target_model": target_model, "no_few_shot": DO_NOT_EVALUATE_FEW_SHOT}
+    print("\n\nSUMMARY:", json.dumps(summary_res, indent=4))
+    time_stamp = "_" + datetime.datetime.now().strftime("%d-%m-%Y_%H:%M:%S")
+    save_evaluation_results_json(summary_res, chats_output_dir, time_stamp)
 
 
 
