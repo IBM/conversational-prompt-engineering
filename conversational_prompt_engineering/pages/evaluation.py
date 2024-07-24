@@ -33,7 +33,7 @@ work_mode = WorkMode.REGULAR
 if hasattr(st.session_state, "config") and st.session_state["config"].getboolean("Evaluation", "dummy_prompt_mode", fallback=False):
     work_mode = WorkMode.DUMMY_PROMPT
 
-dimensions = ["dim1"]
+dimensions = [""]
 
 prompt_types = ["baseline", "zero_shot", "few_shot"] # default
 if hasattr(st.session_state, "config") and st.session_state["config"].has_option("Evaluation", "prompt_types"):
@@ -262,7 +262,11 @@ def run():
             display_text()
             st.divider()
             st.subheader(f"Generated outputs (random order) for text {st.session_state.count+1}/{len(st.session_state.generated_data)} ")
-            st.write("Below are presented the compared summaries. Please select the best and worst output in respect to the different aspects. ")
+            if len(dimensions) > 1:
+                st.write("Below are presented the compared summaries. Please select the best and worst output in respect to the different aspects. ")
+            else:
+                st.write("Below are presented the compared summaries. Please select the best and worst output")
+
             output_cols_list = st.columns(len(prompt_types))
 
             for i in range(len(prompt_types)):
@@ -274,7 +278,8 @@ def run():
             options = ["Best", "Worst"]
             radio_button_labels = [f"Output {i+1}" for i in range(len(prompt_types))]
             for dim in dimensions:
-                st.write(f"{dim}")
+                if dim != "":
+                    st.write(f"{dim}")
                 cols = st.columns(1)
                 for op in options:
                     with cols[0]:
