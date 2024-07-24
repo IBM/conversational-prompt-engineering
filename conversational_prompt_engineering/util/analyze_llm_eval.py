@@ -58,7 +58,8 @@ def llm_evaluation_stats(df):
     chisq = chisquare(list(overall_counts.values())).pvalue
     num = sum(overall_counts.values())
     print("Overall", "Chi-square:", chisq, num)
-    return (chisq, num)
+    stats_res = {"pvalue": chisq, "num": num}
+    return stats_res
 
 
 def get_manual_selection(row):
@@ -182,9 +183,8 @@ def evaluate_offline(test_split):
     print(f"\n======= Offline Evaluation {eval_llm_file}")
     df_llm_offline = pd.read_csv(eval_llm_file)
     print("Num samples", len(df_llm_offline))
-    chisq, n = llm_evaluation_stats(df_llm_offline)
+    eval_res = llm_evaluation_stats(df_llm_offline)
     print(f"\n==================================")
-    eval_res = {"pvalue": chisq, "num": n}
     return eval_res
 
 
