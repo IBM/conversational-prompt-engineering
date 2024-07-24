@@ -262,7 +262,7 @@ def run():
             display_text()
             st.divider()
             st.subheader(f"Generated outputs (random order) for text {st.session_state.count+1}/{len(st.session_state.generated_data)} ")
-            st.write("Bellow are presented the compared summaries. Please select the best and worst output in respect to the different aspects. ")
+            st.write("Below are presented the compared summaries. Please select the best and worst output in respect to the different aspects. ")
             output_cols_list = st.columns(len(prompt_types))
 
             for i in range(len(prompt_types)):
