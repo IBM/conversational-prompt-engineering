@@ -30,7 +30,7 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
                        "Space Newsgroup": {"train": "./data/public/20_newsgroup/train.csv",
                             "eval": "./data/public/20_newsgroup/test.csv",
                             "eval_llm": "./data/public/20_newsgroup/test_full.csv",
-                            "desc": "This is part of the 20 Newsgroups dataset, a collection newsgroup\ndocuments. The topic of the documents is Space."},
+                            "desc": "This is part of the 20 Newsgroups dataset, a collection of \nnewsgroup documents. The topic of the documents is Space."},
 
                        "Complaints on Credit Reporting": {"train": "./data/public/cfpb/train.csv",
                             "eval": "./data/public/cfpb/test.csv",
@@ -44,16 +44,16 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
                        "Debate Speeches": {"train": "./data/public/debate_speeches/train.csv",
                                                           "eval": "./data/public/debate_speeches/test.csv",
                                                           "eval_llm": "./data/public/debate_speeches/test_full.csv",
-                                                          "desc": "This is part of the Debate Speeches dataset.\nThe dataset contains manually-corrected transcripts of speeches recorded by expert debaters."},
+                                                          "desc": "This is part of the Debate Speeches dataset.\nThe dataset contains manually-corrected transcripts \nof speeches recorded by expert debaters."},
 
                        "Wikipedia Animal pages": {"train": "./data/public/wiki_animals/train.csv",
                             "eval": "./data/public/wiki_animals/test.csv",
                             "eval_llm": "./data/public/wiki_animals/test_full.csv",
-                            "desc": "This dataset consists of animal pages extracted from Wikipedia"},
+                            "desc": "This dataset consists of animal pages extracted from \nWikipedia"},
 
                        "Wikipedia Movie pages": {"train": "./data/public/wiki_movies/train.csv",
                             "eval": "./data/public/wiki_movies/test.csv",
                             "eval_llm": "./data/public/wiki_movies/test_full.csv",
-                            "desc": "This dataset consists of movies pages extracted from Wikipedia"},
+                            "desc": "This dataset consists of movies pages extracted from \nWikipedia"},
 
                        }
