@@ -168,7 +168,8 @@ def analyze_manual_evaluation(df):
     chisq_worst = chisquare(list(counts_worst.values())).pvalue
     num_worst = sum(counts_worst.values())
     print(col, "Chi-square:", chisq_worst, num_worst)
-    return df_res, chisq_best, chisq_worst, num_best, num_worst
+    analysis_res = {"best_pvalue": chisq_best, "worst_pvalue": chisq_worst, "num_best": num_best, "num_worst": num_worst}
+    return df_res, analysis_res
 
 
 def evaluate_offline(test_split):
@@ -200,12 +201,12 @@ def evaluate_chat():
     llm_evaluation_stats(df_chat)
 
     print(f"\n====== Manual Best Worst counts")
-    df_chat, chisq_best, chisq_worst, num_best, num_worst = analyze_manual_evaluation(df_chat)
+    df_chat, eval_res = analyze_manual_evaluation(df_chat)
     print(f"\n====== LLM Best counts")
     df_chat = analyze_llm_evaluation(df_chat)
     print(f"\n====== Manual and LLM Best agreement")
     agreement = compute_agreement(df_chat)
-    eval_res = {"agreement":agreement, "best_pvalue": chisq_best, "worst_pvalue": chisq_worst, "num_best": num_best, "num_worst": num_worst}
+    eval_res.update({"agreement": agreement})
     save_evaluation(df_chat, eval_chat_llm_file)
     return eval_res
 
@@ -227,14 +228,16 @@ if __name__ == "__main__":
     target_model = 'llama-3'
     offline_test_splits = ["eval", "test", "test_full"]
 
-    print("Don't evaluate few-shot summary:", DO_NOT_EVALUATE_FEW_SHOT)
+    print("Don't evaluate few-shot summary:", DO_NOT_EVALUATE_FEW_SHOT, "evaluated_prompt_types", actual_summary_prompt_types)
+    time_stamp = "_" + datetime.datetime.now().strftime("%d-%m-%Y_%H:%M:%S")
+    print("Evaluation analysis time stamps:", time_stamp)
 
     offline_res = {}
     manual_res = {}
     for chat_dir in chats_list:
         chat_output_path = os.path.join(chats_output_dir, chat_dir)
         print(f"Evaluating {chat_dir}")
-        manual_res.update({chat_dir:{}})
+        manual_res.update({chat_dir: {}})
         eval_result = evaluate_chat()
         manual_res[chat_dir].update(eval_result)
         offline_res.update({chat_dir: {}})
@@ -243,13 +246,12 @@ if __name__ == "__main__":
             if eval_result is None:
                 continue
             offline_res[chat_dir].update({split:eval_result})
-        chat_res = {"chat": chat_dir, "manual": manual_res[chat_dir], "offline": offline_res[chat_dir], "target_model": target_model, "no_few_shot": DO_NOT_EVALUATE_FEW_SHOT}
-        save_evaluation_results_json(chat_res, os.path.join(chat_output_path, f'llm_judge/{target_model}'))
+        chat_res = {"chat": chat_dir, "manual": manual_res[chat_dir], "offline": offline_res[chat_dir], "target_model": target_model, "evaluated_prompt_types": actual_summary_prompt_types}
+        save_evaluation_results_json(chat_res, os.path.join(chat_output_path, f'llm_judge/{target_model}'), time_stamp)
 
     summary_res = {"manual_chat_evaluation": manual_res, "offline_test_evaluation": offline_res,
-                   "target_model": target_model, "no_few_shot": DO_NOT_EVALUATE_FEW_SHOT}
+                   "target_model": target_model, "evaluated_prompt_types": actual_summary_prompt_types}
     print("\n\nSUMMARY:", json.dumps(summary_res, indent=4))
-    time_stamp = "_" + datetime.datetime.now().strftime("%d-%m-%Y_%H:%M:%S")
     save_evaluation_results_json(summary_res, chats_output_dir, time_stamp)
 
 
