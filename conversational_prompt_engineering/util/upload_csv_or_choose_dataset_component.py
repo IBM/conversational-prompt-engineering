@@ -51,7 +51,7 @@ def create_choose_dataset_component_eval(st):
     if "selected_dataset" in st.session_state:
         add_download_button(st, 'eval')
     if "csv_file_eval" in st.session_state:
-        return read_user_csv_file(st.session_state["csv_file_eval"]).text.tolist()
+        return read_user_csv_file(st.session_state["csv_file_eval"]).text.tolist()[:10]
 
 
 def add_evaluator_input(st):
