@@ -279,6 +279,10 @@ if __name__ == "__main__":
         "shai/21-07-2024 12:36:52",
     ]
 
+    chats_list = [
+        "shai/wiki_animals",
+    ]
+
     # Credentials for API
     if api == "bam":
         credentials = {"key": os.environ["BAM_APIKEY"]}

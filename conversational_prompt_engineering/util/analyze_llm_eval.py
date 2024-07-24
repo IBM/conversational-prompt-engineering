@@ -16,14 +16,14 @@ if DO_NOT_EVALUATE_FEW_SHOT:
 zero_counter = Counter({pt: 0 for pt in actual_summary_prompt_types})
 
 
-def _get_normalized_counts(type_name, counts, with_print=True):
+def get_normalized_counts(type_name, counts, with_print=True):
     c_norm = {k: v / sum(counts.values()) for k, v in sorted(counts.items(), key=lambda x: x[1], reverse=True)}
     if with_print:
         print(type_name, counts, "Normalized:", c_norm, sum(counts.values()))
     return c_norm
 
 
-def _llm_evaluation_stats(df):
+def llm_evaluation_stats(df):
     print('\nAbsolute scores (mean, var):')
     for col in df.columns:
         if DO_NOT_EVALUATE_FEW_SHOT and "few_shot" in col:
@@ -50,8 +50,8 @@ def _llm_evaluation_stats(df):
         c.subtract(zero_counter)
         print(pt, "Chi-square:", chisquare(list(c.values())).pvalue, sum(c.values()))
         overall_counts += c
-        c_norm = _get_normalized_counts(pt, c)
-    c_norm = _get_normalized_counts("\nOverall best prompt", overall_counts)
+        c_norm = get_normalized_counts(pt, c)
+    c_norm = get_normalized_counts("\nOverall best prompt", overall_counts)
     overall_counts.subtract(zero_counter)
     chisq = chisquare(list(overall_counts.values())).pvalue
     num = sum(overall_counts.values())
@@ -59,7 +59,7 @@ def _llm_evaluation_stats(df):
     return (chisq, num)
 
 
-def _get_manual_selection(row):
+def get_manual_selection(row):
     #print("Best:", row["ranked_prompt_('dim1', 'Best')"], "Worst:", row["ranked_prompt_('dim1', 'Worst')"])
     manual_best = row["ranked_prompt_('dim1', 'Best')"]
     manual_worst = row["ranked_prompt_('dim1', 'Worst')"]
@@ -81,7 +81,7 @@ def _get_manual_selection(row):
     return manual_best, manual_worst
 
 
-def _compute_agreement(df):
+def compute_agreement(df):
     print("Manual bset:\t", df["Manual_ranked_prompt_best"].tolist())
     print("LLM best:   \t", df["Best_llm_judge_rel"].tolist())
     print("LLM best score:\t", df["Best_llm_judge_rel_score"].tolist())
@@ -90,12 +90,14 @@ def _compute_agreement(df):
     df["Agreement"] = agreement
     #agreement = [a for a, s in zip(agreement, df["Best_llm_judge_rel_score"]) if s > 0.5]
     #agreement_avg = sum(agreement) / len(agreement)
-    agreement_avg = np.dot(df["Agreement"], df["Best_llm_judge_rel_score"])/sum(df["Best_llm_judge_rel_score"])
-    print("Agreement:", agreement_avg, len(agreement), len(df))
-    return (agreement_avg, len(df))
+    agreement_avg = np.dot(df["Agreement"], df["Best_llm_judge_rel_score"])/len(df)
+    num_decisions = sum([1 if s > 0.5 else 0 for s in df["Best_llm_judge_rel_score"]])
+    res = {"Weighted Agreement": agreement_avg, "Num": len(agreement), "Num decisions": num_decisions}
+    print(res)
+    return res
 
 
-def _save_evaluation(df, eval_chat_file):
+def save_evaluation(df, eval_chat_file):
     if DO_NOT_EVALUATE_FEW_SHOT:
         eval_type = ""
     else:
@@ -118,7 +120,7 @@ def analyze_llm_evaluation(df):
                 llm_selected_prompt.append(row[k])
         counts = Counter(llm_selected_prompt)
         counts.subtract(zero_counter)
-        norm_counts = _get_normalized_counts('Overall', counts, with_print=False)
+        norm_counts = get_normalized_counts('Overall', counts, with_print=False)
         max_key = max(norm_counts, key=lambda key: norm_counts[key])
         # print(max_key, len(norm_counts), norm_counts[max_key])
         llm_best_prompt.append(max_key)
@@ -134,7 +136,7 @@ def analyze_llm_evaluation(df):
 def analyze_manual_evaluation(df):
     df_dict = df.to_dict(orient='records')
     for row in df_dict:
-        manual_best, manual_worst = _get_manual_selection(row)
+        manual_best, manual_worst = get_manual_selection(row)
         print("Best Worst:", manual_best, manual_worst)
         row["Manual_ranked_prompt_best"] = manual_best
         row["Manual_ranked_prompt_worst"] = manual_worst
@@ -142,14 +144,14 @@ def analyze_manual_evaluation(df):
     col = "Manual_ranked_prompt_best"
     counts_best = Counter(df_res[col])
     counts_best.subtract(zero_counter)
-    _get_normalized_counts(col, counts_best)
+    get_normalized_counts(col, counts_best)
     chisq_best = chisquare(list(counts_best.values())).pvalue
     num_best = sum(counts_best.values())
     print(col, "Chi-square:", chisq_best, num_best)
     col = "Manual_ranked_prompt_worst"
     counts_worst = Counter(df_res[col])
     counts_worst.subtract(zero_counter)
-    _get_normalized_counts(col, counts_worst)
+    get_normalized_counts(col, counts_worst)
     chisq_worst = chisquare(list(counts_worst.values())).pvalue
     num_worst = sum(counts_worst.values())
     print(col, "Chi-square:", chisq_worst, num_worst)
@@ -166,7 +168,7 @@ def evaluate_offline(test_split):
     print(f"\n======= Offline Evaluation {eval_llm_file}")
     df_llm_offline = pd.read_csv(eval_llm_file)
     print("Num samples", len(df_llm_offline))
-    chisq, n = _llm_evaluation_stats(df_llm_offline)
+    chisq, n = llm_evaluation_stats(df_llm_offline)
     print(f"\n==================================")
     eval_res = {"pvalue": chisq, "num": n}
     return eval_res
@@ -182,16 +184,16 @@ def evaluate_chat():
     print(f"\n====== Chat Evaluation {eval_chat_llm_file}")
     df_chat = pd.read_csv(eval_chat_llm_file).dropna()
     print("Num samples", len(df_chat))
-    _llm_evaluation_stats(df_chat)
+    llm_evaluation_stats(df_chat)
 
     print(f"\n====== Manual Best Worst counts")
     df_chat, chisq_best, chisq_worst, num_best, num_worst = analyze_manual_evaluation(df_chat)
     print(f"\n====== LLM Best counts")
     df_chat = analyze_llm_evaluation(df_chat)
     print(f"\n====== Manual and LLM Best agreement")
-    agreement = _compute_agreement(df_chat)
+    agreement = compute_agreement(df_chat)
     eval_res = {"agreement":agreement, "best_pvalue": chisq_best, "worst_pvalue": chisq_worst, "num_best": num_best, "num_worst": num_worst}
-    _save_evaluation(df_chat, eval_chat_llm_file)
+    save_evaluation(df_chat, eval_chat_llm_file)
     return eval_res
 
 
@@ -202,6 +204,10 @@ if __name__ == "__main__":
         "oritht/14-07-2024 12:36:46",
         "liat/21-07-2024 12:16:37",
         "shai/21-07-2024 12:36:52",
+    ]
+
+    chats_list = [
+        "shai/wiki_animals",
     ]
 
     target_model = 'llama-3'
