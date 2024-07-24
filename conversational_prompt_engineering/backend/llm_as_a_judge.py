@@ -285,6 +285,7 @@ if __name__ == "__main__":
         "Artem_cfpb/24-07-2024 10:25:30",
         "Artem_financial_news/24-07-2024 11:09:44",
         "Artem_reddit/24-07-2024 09:45:58",
+        "CIO/24-07-2024 14:12:09",
     ]
 
     # Credentials for API

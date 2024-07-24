@@ -95,7 +95,7 @@ def compute_agreement(df):
     #agreement_avg = sum(agreement) / len(agreement)
     agreement_avg = np.dot(df["Agreement"], df["Best_llm_judge_rel_score"])/len(df)
     num_decisions = sum([1 if s > 0.5 else 0 for s in df["Best_llm_judge_rel_score"]])
-    res = {"Weighted Agreement": agreement_avg, "Num": len(agreement), "Num decisions": num_decisions}
+    res = {"weighted_agreement": agreement_avg, "num": len(agreement), "num_llm_decisions": num_decisions}
     print(res)
     return res
 
@@ -214,7 +214,7 @@ def evaluate_chat():
 
 
 if __name__ == "__main__":
-    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_24_7_2024"
+    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out"
 
     chats_list = [
         "oritht/14-07-2024 12:36:46",
@@ -228,10 +228,12 @@ if __name__ == "__main__":
     ]
 
     chats_list = [
-        "Shai_20ng_space/24-07-2024 12:33:50",
-        "Artem_cfpb/24-07-2024 10:25:30",
-        "Artem_financial_news/24-07-2024 11:09:44",
-        "Artem_reddit/24-07-2024 09:45:58",
+        "shai/wiki_animals",
+        "Evaluation_24_7_2024/Shai_20ng_space/24-07-2024 12:33:50",
+        "Evaluation_24_7_2024/Artem_cfpb/24-07-2024 10:25:30",
+        "Evaluation_24_7_2024/Artem_financial_news/24-07-2024 11:09:44",
+        "Evaluation_24_7_2024/Artem_reddit/24-07-2024 09:45:58",
+        "Evaluation_24_7_2024/CIO/24-07-2024 14:12:09",
     ]
 
     target_model = 'llama-3'
