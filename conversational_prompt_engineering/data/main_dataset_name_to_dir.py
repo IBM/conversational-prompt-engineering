@@ -51,7 +51,7 @@ dataset_name_to_dir = {"Movie Reviews" : {"train":
                             "eval_llm": "./data/public/wiki_animals/test_full.csv",
                             "desc": "This dataset consists of animal pages extracted from Wikipedia"},
 
-                       "Wikipedia Movie pages ": {"train": "./data/public/wiki_movies/train.csv",
+                       "Wikipedia Movie pages": {"train": "./data/public/wiki_movies/train.csv",
                             "eval": "./data/public/wiki_movies/test.csv",
                             "eval_llm": "./data/public/wiki_movies/test_full.csv",
                             "desc": "This dataset consists of movies pages extracted from Wikipedia"},
