@@ -272,11 +272,19 @@ if __name__ == "__main__":
     offline_test_splits = ["eval", "eval_llm"]
 
     # Chats for analysis
-    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out"
+    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_24_7_2024"
     chats_list = [
         "oritht/14-07-2024 12:36:46",
         "liat/21-07-2024 12:16:37",
         "shai/21-07-2024 12:36:52",
+        "shai/wiki_animals",
+    ]
+
+    chats_list = [
+        "Shai_20ng_space/24-07-2024 12:33:50",
+        "Artem_cfpb/24-07-2024 10:25:30",
+        "Artem_financial_news/24-07-2024 11:09:44",
+        "Artem_reddit/24-07-2024 09:45:58",
     ]
 
     # Credentials for API
@@ -298,7 +306,6 @@ if __name__ == "__main__":
             chat_params = json.load(f)
 
         # config name
-        print(chat_params)
         config_name = chat_params["config_name"]
         print(f'LLM AS A JUDGE: config name: {config_name}')
 

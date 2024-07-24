@@ -1,3 +1,5 @@
+import datetime
+import json
 import os
 
 import pandas as pd
@@ -16,14 +18,14 @@ if DO_NOT_EVALUATE_FEW_SHOT:
 zero_counter = Counter({pt: 0 for pt in actual_summary_prompt_types})
 
 
-def _get_normalized_counts(type_name, counts, with_print=True):
+def get_normalized_counts(type_name, counts, with_print=True):
     c_norm = {k: v / sum(counts.values()) for k, v in sorted(counts.items(), key=lambda x: x[1], reverse=True)}
     if with_print:
         print(type_name, counts, "Normalized:", c_norm, sum(counts.values()))
     return c_norm
 
 
-def _llm_evaluation_stats(df):
+def llm_evaluation_stats(df):
     print('\nAbsolute scores (mean, var):')
     for col in df.columns:
         if DO_NOT_EVALUATE_FEW_SHOT and "few_shot" in col:
@@ -50,16 +52,17 @@ def _llm_evaluation_stats(df):
         c.subtract(zero_counter)
         print(pt, "Chi-square:", chisquare(list(c.values())).pvalue, sum(c.values()))
         overall_counts += c
-        c_norm = _get_normalized_counts(pt, c)
-    c_norm = _get_normalized_counts("\nOverall best prompt", overall_counts)
+        c_norm = get_normalized_counts(pt, c)
+    c_norm = get_normalized_counts("\nOverall best prompt", overall_counts)
     overall_counts.subtract(zero_counter)
     chisq = chisquare(list(overall_counts.values())).pvalue
     num = sum(overall_counts.values())
     print("Overall", "Chi-square:", chisq, num)
-    return (chisq, num)
+    stats_res = {"pvalue": chisq, "num": num}
+    return stats_res
 
 
-def _get_manual_selection(row):
+def get_manual_selection(row):
     #print("Best:", row["ranked_prompt_('dim1', 'Best')"], "Worst:", row["ranked_prompt_('dim1', 'Worst')"])
     manual_best = row["ranked_prompt_('dim1', 'Best')"]
     manual_worst = row["ranked_prompt_('dim1', 'Worst')"]
@@ -81,28 +84,41 @@ def _get_manual_selection(row):
     return manual_best, manual_worst
 
 
-def _compute_agreement(df):
+def compute_agreement(df):
     print("Manual bset:\t", df["Manual_ranked_prompt_best"].tolist())
     print("LLM best:   \t", df["Best_llm_judge_rel"].tolist())
     print("LLM best score:\t", df["Best_llm_judge_rel_score"].tolist())
-    agreement = [1 if l == m else 0 for m, l in
+    agreement = [1 if manual in llm else 0 for manual, llm in
                  zip(df["Manual_ranked_prompt_best"], df["Best_llm_judge_rel"])]
     df["Agreement"] = agreement
     #agreement = [a for a, s in zip(agreement, df["Best_llm_judge_rel_score"]) if s > 0.5]
     #agreement_avg = sum(agreement) / len(agreement)
-    agreement_avg = np.dot(df["Agreement"], df["Best_llm_judge_rel_score"])/sum(df["Best_llm_judge_rel_score"])
-    print("Agreement:", agreement_avg, len(agreement), len(df))
-    return (agreement_avg, len(df))
+    agreement_avg = np.dot(df["Agreement"], df["Best_llm_judge_rel_score"])/len(df)
+    num_decisions = sum([1 if s > 0.5 else 0 for s in df["Best_llm_judge_rel_score"]])
+    res = {"Weighted Agreement": agreement_avg, "Num": len(agreement), "Num decisions": num_decisions}
+    print(res)
+    return res
 
 
-def _save_evaluation(df, eval_chat_file):
+def save_evaluation(df, eval_chat_file):
     if DO_NOT_EVALUATE_FEW_SHOT:
         eval_type = ""
     else:
         eval_type = "_with_few_shot"
     out_csv = eval_chat_file.replace('.csv', f'_analysis{eval_type}.csv')
-    print('Analysis output file:', out_csv)
+    print('Analysis output csv file:', out_csv)
     df.to_csv(out_csv)
+
+
+def save_evaluation_results_json(eval_res, eval_out_path, time_stamp=""):
+    if DO_NOT_EVALUATE_FEW_SHOT:
+        eval_type = ""
+    else:
+        eval_type = "_with_few_shot"
+    out_json = os.path.join(eval_out_path, f"evaluation_analysis{eval_type}{time_stamp}.json")
+    print('Analysis output json file:', out_json)
+    with open(out_json, 'w') as f:
+        json.dump(eval_res, f)
 
 
 def analyze_llm_evaluation(df):
@@ -118,11 +134,11 @@ def analyze_llm_evaluation(df):
                 llm_selected_prompt.append(row[k])
         counts = Counter(llm_selected_prompt)
         counts.subtract(zero_counter)
-        norm_counts = _get_normalized_counts('Overall', counts, with_print=False)
-        max_key = max(norm_counts, key=lambda key: norm_counts[key])
-        # print(max_key, len(norm_counts), norm_counts[max_key])
-        llm_best_prompt.append(max_key)
-        llm_best_prompt_score.append(norm_counts[max_key])
+        max_count = max(counts.values())
+        max_keys = [k for k in counts.keys() if counts[k] == max_count]
+        norm_counts = get_normalized_counts('Overall', counts, with_print=False)
+        llm_best_prompt.append(max_keys)
+        llm_best_prompt_score.append(norm_counts[max_keys[0]])
         llm_chisquare.append(chisquare(list(counts.values())).pvalue)
 
     df['Best_llm_judge_rel'] = llm_best_prompt
@@ -134,7 +150,7 @@ def analyze_llm_evaluation(df):
 def analyze_manual_evaluation(df):
     df_dict = df.to_dict(orient='records')
     for row in df_dict:
-        manual_best, manual_worst = _get_manual_selection(row)
+        manual_best, manual_worst = get_manual_selection(row)
         print("Best Worst:", manual_best, manual_worst)
         row["Manual_ranked_prompt_best"] = manual_best
         row["Manual_ranked_prompt_worst"] = manual_worst
@@ -142,18 +158,19 @@ def analyze_manual_evaluation(df):
     col = "Manual_ranked_prompt_best"
     counts_best = Counter(df_res[col])
     counts_best.subtract(zero_counter)
-    _get_normalized_counts(col, counts_best)
+    get_normalized_counts(col, counts_best)
     chisq_best = chisquare(list(counts_best.values())).pvalue
     num_best = sum(counts_best.values())
     print(col, "Chi-square:", chisq_best, num_best)
     col = "Manual_ranked_prompt_worst"
     counts_worst = Counter(df_res[col])
     counts_worst.subtract(zero_counter)
-    _get_normalized_counts(col, counts_worst)
+    get_normalized_counts(col, counts_worst)
     chisq_worst = chisquare(list(counts_worst.values())).pvalue
     num_worst = sum(counts_worst.values())
     print(col, "Chi-square:", chisq_worst, num_worst)
-    return df_res, chisq_best, chisq_worst, num_best, num_worst
+    analysis_res = {"best_pvalue": chisq_best, "worst_pvalue": chisq_worst, "num_best": num_best, "num_worst": num_worst}
+    return df_res, analysis_res
 
 
 def evaluate_offline(test_split):
@@ -166,9 +183,10 @@ def evaluate_offline(test_split):
     print(f"\n======= Offline Evaluation {eval_llm_file}")
     df_llm_offline = pd.read_csv(eval_llm_file)
     print("Num samples", len(df_llm_offline))
-    chisq, n = _llm_evaluation_stats(df_llm_offline)
+    eval_res = llm_evaluation_stats(df_llm_offline)
     print(f"\n==================================")
-    eval_res = {"pvalue": chisq, "num": n}
+    df_llm_offline = analyze_llm_evaluation(df_llm_offline)
+    save_evaluation(df_llm_offline, eval_llm_file)
     return eval_res
 
 
@@ -182,21 +200,21 @@ def evaluate_chat():
     print(f"\n====== Chat Evaluation {eval_chat_llm_file}")
     df_chat = pd.read_csv(eval_chat_llm_file).dropna()
     print("Num samples", len(df_chat))
-    _llm_evaluation_stats(df_chat)
+    llm_evaluation_stats(df_chat)
 
     print(f"\n====== Manual Best Worst counts")
-    df_chat, chisq_best, chisq_worst, num_best, num_worst = analyze_manual_evaluation(df_chat)
+    df_chat, eval_res = analyze_manual_evaluation(df_chat)
     print(f"\n====== LLM Best counts")
     df_chat = analyze_llm_evaluation(df_chat)
     print(f"\n====== Manual and LLM Best agreement")
-    agreement = _compute_agreement(df_chat)
-    eval_res = {"agreement":agreement, "best_pvalue": chisq_best, "worst_pvalue": chisq_worst, "num_best": num_best, "num_worst": num_worst}
-    _save_evaluation(df_chat, eval_chat_llm_file)
+    agreement = compute_agreement(df_chat)
+    eval_res.update({"agreement": agreement})
+    save_evaluation(df_chat, eval_chat_llm_file)
     return eval_res
 
 
 if __name__ == "__main__":
-    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out"
+    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_24_7_2024"
 
     chats_list = [
         "oritht/14-07-2024 12:36:46",
@@ -204,17 +222,31 @@ if __name__ == "__main__":
         "shai/21-07-2024 12:36:52",
     ]
 
+    chats_list = [
+        "liat/21-07-2024 12:16:37",
+        "shai/wiki_animals",
+    ]
+
+    chats_list = [
+        "Shai_20ng_space/24-07-2024 12:33:50",
+        "Artem_cfpb/24-07-2024 10:25:30",
+        "Artem_financial_news/24-07-2024 11:09:44",
+        "Artem_reddit/24-07-2024 09:45:58",
+    ]
+
     target_model = 'llama-3'
     offline_test_splits = ["eval", "test", "test_full"]
 
-    print("Don't evaluate few-shot summary:", DO_NOT_EVALUATE_FEW_SHOT)
+    print("Don't evaluate few-shot summary:", DO_NOT_EVALUATE_FEW_SHOT, "evaluated_prompt_types", actual_summary_prompt_types)
+    time_stamp = "_" + datetime.datetime.now().strftime("%d-%m-%Y_%H:%M:%S")
+    print("Evaluation analysis time stamps:", time_stamp)
 
     offline_res = {}
     manual_res = {}
     for chat_dir in chats_list:
         chat_output_path = os.path.join(chats_output_dir, chat_dir)
         print(f"Evaluating {chat_dir}")
-        manual_res.update({chat_dir:{}})
+        manual_res.update({chat_dir: {}})
         eval_result = evaluate_chat()
         manual_res[chat_dir].update(eval_result)
         offline_res.update({chat_dir: {}})
@@ -223,10 +255,13 @@ if __name__ == "__main__":
             if eval_result is None:
                 continue
             offline_res[chat_dir].update({split:eval_result})
+        chat_res = {"chat": chat_dir, "manual": manual_res[chat_dir], "offline": offline_res[chat_dir], "target_model": target_model, "evaluated_prompt_types": actual_summary_prompt_types}
+        save_evaluation_results_json(chat_res, os.path.join(chat_output_path, f'llm_judge/{target_model}'), time_stamp)
 
-    print("\n\nSUMMARY:")
-    print("Manual Chat:", manual_res)
-    print("Offline Test:", offline_res)
+    summary_res = {"manual_chat_evaluation": manual_res, "offline_test_evaluation": offline_res,
+                   "target_model": target_model, "evaluated_prompt_types": actual_summary_prompt_types}
+    print("\n\nSUMMARY:", json.dumps(summary_res, indent=4))
+    save_evaluation_results_json(summary_res, chats_output_dir, time_stamp)
 
 
 
