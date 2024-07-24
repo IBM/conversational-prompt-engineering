@@ -88,7 +88,7 @@ def compute_agreement(df):
     print("Manual bset:\t", df["Manual_ranked_prompt_best"].tolist())
     print("LLM best:   \t", df["Best_llm_judge_rel"].tolist())
     print("LLM best score:\t", df["Best_llm_judge_rel_score"].tolist())
-    agreement = [1 if l == m else 0 for m, l in
+    agreement = [1 if manual in llm else 0 for manual, llm in
                  zip(df["Manual_ranked_prompt_best"], df["Best_llm_judge_rel"])]
     df["Agreement"] = agreement
     #agreement = [a for a, s in zip(agreement, df["Best_llm_judge_rel_score"]) if s > 0.5]
@@ -134,11 +134,11 @@ def analyze_llm_evaluation(df):
                 llm_selected_prompt.append(row[k])
         counts = Counter(llm_selected_prompt)
         counts.subtract(zero_counter)
+        max_count = max(counts.values())
+        max_keys = [k for k in counts.keys() if counts[k] == max_count]
         norm_counts = get_normalized_counts('Overall', counts, with_print=False)
-        max_key = max(norm_counts, key=lambda key: norm_counts[key])
-        # print(max_key, len(norm_counts), norm_counts[max_key])
-        llm_best_prompt.append(max_key)
-        llm_best_prompt_score.append(norm_counts[max_key])
+        llm_best_prompt.append(max_keys)
+        llm_best_prompt_score.append(norm_counts[max_keys[0]])
         llm_chisquare.append(chisquare(list(counts.values())).pvalue)
 
     df['Best_llm_judge_rel'] = llm_best_prompt
@@ -185,6 +185,8 @@ def evaluate_offline(test_split):
     print("Num samples", len(df_llm_offline))
     eval_res = llm_evaluation_stats(df_llm_offline)
     print(f"\n==================================")
+    df_llm_offline = analyze_llm_evaluation(df_llm_offline)
+    save_evaluation(df_llm_offline, eval_llm_file)
     return eval_res
 
 
@@ -212,7 +214,7 @@ def evaluate_chat():
 
 
 if __name__ == "__main__":
-    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out"
+    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_24_7_2024"
 
     chats_list = [
         "oritht/14-07-2024 12:36:46",
@@ -223,6 +225,13 @@ if __name__ == "__main__":
     chats_list = [
         "liat/21-07-2024 12:16:37",
         "shai/wiki_animals",
+    ]
+
+    chats_list = [
+        "Shai_20ng_space/24-07-2024 12:33:50",
+        "Artem_cfpb/24-07-2024 10:25:30",
+        "Artem_financial_news/24-07-2024 11:09:44",
+        "Artem_reddit/24-07-2024 09:45:58",
     ]
 
     target_model = 'llama-3'
