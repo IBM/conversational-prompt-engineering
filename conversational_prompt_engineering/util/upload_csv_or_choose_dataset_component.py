@@ -13,7 +13,7 @@ def rander_component(st, default_value_for_droplist, split_name):
     col1, col2 = st.columns(2)
     with col1:
         list_of_datasets = list(dataset_name_to_dir.keys()) + [upload_your_csv]
-        if selected_dataset := st.selectbox('Upload your csv or choose from our datasets catalog',
+        if selected_dataset := st.selectbox('Please select a dataset',
                                             (list_of_datasets),
                                             index=default_value_for_droplist):
             if selected_dataset != upload_your_csv:

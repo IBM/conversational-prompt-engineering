@@ -143,7 +143,7 @@ def callback_cycle():
     if uploaded_file:
         manager.add_user_message_only_to_user_chat("Selected data")
 
-    static_upload_data_msg = "To begin, please upload your data, or select a dataset from our datasets catalog above."
+    static_upload_data_msg = "To begin, please select a dataset from our datasets catalog above."
     with st.chat_message(ChatRole.ASSISTANT):
         st.write(static_upload_data_msg)
 
@@ -166,7 +166,7 @@ def callback_cycle():
             with st.chat_message(msg['role']):
                 if manager.example_num is not None:
                     orig = manager.examples[manager.example_num - 1].replace('\n', '\n\n')
-                    tooltip = f"Currently discussed input example (#{manager.example_num}):\n\n{orig}"
+                    tooltip = f"**Currently discussed input example (#{manager.example_num}):\n\n{orig}**"
                     manager.user_chat[-1]["tooltip"] = tooltip
                 else:
                     tooltip=None
