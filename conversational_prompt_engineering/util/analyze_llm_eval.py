@@ -169,7 +169,8 @@ def analyze_manual_evaluation(df):
     chisq_worst = chisquare(list(counts_worst.values())).pvalue
     num_worst = sum(counts_worst.values())
     print(col, "Chi-square:", chisq_worst, num_worst)
-    analysis_res = {"best_pvalue": chisq_best, "worst_pvalue": chisq_worst, "num_best": num_best, "num_worst": num_worst}
+    analysis_res = {"best_pvalue": chisq_best, "worst_pvalue": chisq_worst, "num_best": num_best, "num_worst": num_worst,
+                    "counts_best": counts_best, "counts_worst": counts_worst}
     return df_res, analysis_res
 
 
@@ -234,6 +235,7 @@ if __name__ == "__main__":
         "Evaluation_24_7_2024/Artem_financial_news/24-07-2024 11:09:44",
         "Evaluation_24_7_2024/Artem_reddit/24-07-2024 09:45:58",
         "Evaluation_24_7_2024/CIO/24-07-2024 14:12:09",
+        "Evaluation_24_7_2024/Artem_speeches/24-07-2024 13:09:34",
     ]
 
     target_model = 'llama-3'
