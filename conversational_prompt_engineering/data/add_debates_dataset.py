@@ -8,7 +8,8 @@ import pandas as pd
 rootdir = "/Users/avishaigretz/Downloads/no_wavs/trs.txt"
 
 train_topics = ['nuclear-power', 'olympic-games', 'casinos', 'free-market', 'ban-video-games']
-test_topics = ['racial-profiling', 'compulsory-voting', 'ban-fastfood', 'sex-selection', 'student-loans']
+test_topics = ['racial-profiling', 'compulsory-voting', 'ban-fastfood', 'sex-selection', 'student-loans',
+               'electric-cars', 'organic-food', 'biofuels']
 
 topics_to_speeches = defaultdict(list)
 
@@ -38,7 +39,7 @@ random.shuffle(train_speeches)
 test_speeches = []
 for t in test_topics:
     speeches = [s for s in topics_to_speeches[t] if len(s.split()) > average]
-    test_speeches.extend(random.sample(speeches, 2))
+    test_speeches.extend(random.sample(speeches, 1))
 random.shuffle(test_speeches)
 
 test_full_speeches = []
