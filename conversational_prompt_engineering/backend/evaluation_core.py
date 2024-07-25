@@ -60,7 +60,7 @@ class Evaluation:
             for _,prompt in enumerate(tqdm(prompts)):
                 prompt_str = prompt.format(text=t)
                 resp = self.bam_client.send_messages(prompt_str)[0]
-                prompts_responses.append(resp[0].strip().replace('\n', '\\n').replace('\\n', '  \\n'))
+                prompts_responses.append(resp[0].replace("\n", " \n"))
             mixed_indices = list(range(len(prompts)))
             random.shuffle(mixed_indices)
             mixed_mapping = {}
