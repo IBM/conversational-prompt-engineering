@@ -136,6 +136,8 @@ def analyze_llm_evaluation(df):
         evaluated_instruction = df_dict[0]['llm_evaluated_instruction']
     else:
         evaluated_instruction = "N/A"
+    total_counts = Counter()
+    total_counts_all_pairs = Counter()
     llm_best_prompt = []
     llm_best_prompt_score = []
     llm_pvalue_rel = []
@@ -156,12 +158,18 @@ def analyze_llm_evaluation(df):
         llm_best_prompt_score.append(norm_counts[max_keys[0]])
         llm_pvalue_rel.append(chisquare(list(counts.values())).pvalue)
         llm_num_rel.append(sum(counts.values()))
+        total_counts += norm_counts
+        total_counts_all_pairs += counts
 
     df['Best_llm_judge_rel'] = llm_best_prompt
     df['Best_llm_judge_rel_score'] = llm_best_prompt_score
     df['Llm_pvalue_rel'] = llm_pvalue_rel
     df['Llm_num_rel'] = llm_num_rel
-    analysis_res = {"llm_evaluated_instruction": evaluated_instruction}
+    norm_total_counts = get_normalized_counts('Overall', total_counts, with_print=False)
+    analysis_res = {"llm_evaluated_instruction": evaluated_instruction, "norm_total_counts": norm_total_counts,
+                    "total_counts": total_counts, "total_num": sum(total_counts.values()),
+                    "total_counts_all_pairs": total_counts_all_pairs,
+                    "total_num_all_pairs": sum(total_counts_all_pairs.values())}
     return df, analysis_res
 
 
@@ -260,6 +268,12 @@ if __name__ == "__main__":
         "Evaluation_24_7_2024/Artem_wiki_movies/24-07-2024 15:57:47",
         "Evaluation_24_7_2024/Liat_speeches/24-07-2024 16:47:16",
         "Evaluation_24_7_2024/Liat_wiki_movies/24-07-2024 17:54:36",
+        "Evaluation_24_7_2024/Orith_wiki_movies/25-07-2024 11:52:11",
+    ]
+
+    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_CIO"
+    chats_list = [
+        "gmelino_microsoft/24-07-2024 14:17:00"
     ]
 
     target_model = 'llama-3'

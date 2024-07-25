@@ -186,6 +186,7 @@ class LlmAsAJudge(ChatManagerBase):
 
         # select the prompt for llm-as-a-judge evaluation
         prompt_to_evaluate = remove_tags_from_zero_shot_prompt(df["zero_shot_prompt"][0], target_model)
+        # prompt_to_evaluate = prompt_to_evaluate.replace("\n\nHere is a desired output of the text:", "")
         print(f'LLM AS A JUDGE: Chat results evaluation of the zero-shot prompt:\n\n {prompt_to_evaluate}')
 
         # call to LLM-as-a-judge
@@ -290,6 +291,12 @@ if __name__ == "__main__":
         "Artem_speeches/24-07-2024 13:09:34",
         "Liat_speeches/24-07-2024 16:47:16",
         "Liat_wiki_movies/24-07-2024 17:54:36",
+        "Orith_wiki_movies/25-07-2024 11:52:11",
+    ]
+
+    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_CIO"
+    chats_list = [
+        "gmelino_microsoft/24-07-2024 14:17:00"
     ]
 
     # Credentials for API
