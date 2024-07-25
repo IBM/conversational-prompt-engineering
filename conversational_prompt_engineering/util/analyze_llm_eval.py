@@ -26,12 +26,15 @@ def get_normalized_counts(type_name, counts, with_print=True):
 
 
 def llm_evaluation_stats(df):
+    stats_res = {"llm_abs": {}, "llm_rel": {}}
     print('\nAbsolute scores (mean, var):')
     for col in df.columns:
         if DO_NOT_EVALUATE_FEW_SHOT and "few_shot" in col:
             continue
         if 'llm_judge_abs_result' in col:
             print(col, f'{df[col].mean():.2f}', f'{df[col].var():.2f}', len(df[col]), df[col].tolist())
+            stats_res["llm_abs"].update({col: {"avg": f'{df[col].mean():.2f}', "var": f'{df[col].var():.2f}',
+                            "num": len(df[col]), "counts": Counter(df[col])}})
 
     print('\nRelative scores:')
     total_counts = {}
@@ -50,22 +53,28 @@ def llm_evaluation_stats(df):
     overall_counts = Counter()
     for pt, c in total_counts.items():
         c.subtract(zero_counter)
-        print(pt, "Chi-square:", chisquare(list(c.values())).pvalue, sum(c.values()))
+        print(pt, "P-value:", chisquare(list(c.values())).pvalue, sum(c.values()))
         overall_counts += c
         c_norm = get_normalized_counts(pt, c)
     c_norm = get_normalized_counts("\nOverall best prompt", overall_counts)
     overall_counts.subtract(zero_counter)
-    chisq = chisquare(list(overall_counts.values())).pvalue
+    pvalue = chisquare(list(overall_counts.values())).pvalue
     num = sum(overall_counts.values())
-    print("Overall", "Chi-square:", chisq, num)
-    stats_res = {"pvalue": chisq, "num": num}
+    print("Overall", "P-value:", pvalue, "Num:", num)
+    stats_res["llm_rel"].update({"pvalue": pvalue, "num": num, "counts": Counter(overall_counts)})
     return stats_res
 
 
 def get_manual_selection(row):
     #print("Best:", row["ranked_prompt_('dim1', 'Best')"], "Worst:", row["ranked_prompt_('dim1', 'Worst')"])
-    manual_best = row["ranked_prompt_('dim1', 'Best')"]
-    manual_worst = row["ranked_prompt_('dim1', 'Worst')"]
+    #manual_best = row["ranked_prompt_('dim1', 'Best')"]
+    #manual_worst = row["ranked_prompt_('dim1', 'Worst')"]
+    if sum([1 if "('dim1'" in k else 0 for k in row.keys()]):
+        manual_best = row["ranked_prompt_('dim1', 'Best')"]
+        manual_worst = row["ranked_prompt_('dim1', 'Worst')"]
+    else:
+        manual_best = row["ranked_prompt_('', 'Best')"]
+        manual_worst = row["ranked_prompt_('', 'Worst')"]
     for sp in summary_prompt_types:
         if sp != manual_best and sp != manual_worst:
             manual_middle = sp
@@ -122,10 +131,16 @@ def save_evaluation_results_json(eval_res, eval_out_path, time_stamp=""):
 
 
 def analyze_llm_evaluation(df):
+    df_dict = df.to_dict(orient='records')
+    if 'llm_evaluated_instruction' in df_dict[0]:
+        evaluated_instruction = df_dict[0]['llm_evaluated_instruction']
+    else:
+        evaluated_instruction = "N/A"
     llm_best_prompt = []
     llm_best_prompt_score = []
-    llm_chisquare = []
-    for row in df.to_dict(orient='records'):
+    llm_pvalue_rel = []
+    llm_num_rel = []
+    for row in df_dict:
         llm_selected_prompt = []
         for k in row.keys():
             if "_llm_judge_rel_result" in k:
@@ -139,12 +154,25 @@ def analyze_llm_evaluation(df):
         norm_counts = get_normalized_counts('Overall', counts, with_print=False)
         llm_best_prompt.append(max_keys)
         llm_best_prompt_score.append(norm_counts[max_keys[0]])
-        llm_chisquare.append(chisquare(list(counts.values())).pvalue)
+        llm_pvalue_rel.append(chisquare(list(counts.values())).pvalue)
+        llm_num_rel.append(sum(counts.values()))
 
     df['Best_llm_judge_rel'] = llm_best_prompt
     df['Best_llm_judge_rel_score'] = llm_best_prompt_score
-    df['Llm_chisquare'] = llm_chisquare
-    return df
+    df['Llm_pvalue_rel'] = llm_pvalue_rel
+    df['Llm_num_rel'] = llm_num_rel
+    analysis_res = {"llm_evaluated_instruction": evaluated_instruction}
+    return df, analysis_res
+
+
+def compute_pvalue(df, col_name):
+    counts_col = Counter(df[col_name])
+    counts_col.subtract(zero_counter)
+    get_normalized_counts(col_name, counts_col)
+    pvalue_col = chisquare(list(counts_col.values())).pvalue
+    num_col = sum(counts_col.values())
+    print(col_name, "P-value:", pvalue_col, "Num:", num_col)
+    return pvalue_col, num_col, counts_col
 
 
 def analyze_manual_evaluation(df):
@@ -155,22 +183,10 @@ def analyze_manual_evaluation(df):
         row["Manual_ranked_prompt_best"] = manual_best
         row["Manual_ranked_prompt_worst"] = manual_worst
     df_res = pd.DataFrame.from_dict(df_dict)
-    col = "Manual_ranked_prompt_best"
-    counts_best = Counter(df_res[col])
-    counts_best.subtract(zero_counter)
-    get_normalized_counts(col, counts_best)
-    chisq_best = chisquare(list(counts_best.values())).pvalue
-    num_best = sum(counts_best.values())
-    print(col, "Chi-square:", chisq_best, num_best)
-    col = "Manual_ranked_prompt_worst"
-    counts_worst = Counter(df_res[col])
-    counts_worst.subtract(zero_counter)
-    get_normalized_counts(col, counts_worst)
-    chisq_worst = chisquare(list(counts_worst.values())).pvalue
-    num_worst = sum(counts_worst.values())
-    print(col, "Chi-square:", chisq_worst, num_worst)
-    analysis_res = {"best_pvalue": chisq_best, "worst_pvalue": chisq_worst, "num_best": num_best, "num_worst": num_worst,
-                    "counts_best": counts_best, "counts_worst": counts_worst}
+    pvalue_best, num_best, counts_best = compute_pvalue(df_res, "Manual_ranked_prompt_best")
+    pvalue_worst, num_worst, counts_worst = compute_pvalue(df_res, "Manual_ranked_prompt_worst")
+    analysis_res = {"manual_eval": {"best_pvalue": pvalue_best, "worst_pvalue": pvalue_worst, "num_best": num_best, "num_worst": num_worst,
+                    "counts_best": counts_best, "counts_worst": counts_worst}}
     return df_res, analysis_res
 
 
@@ -184,10 +200,13 @@ def evaluate_offline(test_split):
     print(f"\n======= Offline Evaluation {eval_llm_file}")
     df_llm_offline = pd.read_csv(eval_llm_file)
     print("Num samples", len(df_llm_offline))
-    eval_res = llm_evaluation_stats(df_llm_offline)
+    eval_llm_stats = llm_evaluation_stats(df_llm_offline)
     print(f"\n==================================")
-    df_llm_offline = analyze_llm_evaluation(df_llm_offline)
+    df_llm_offline, eval_llm_res = analyze_llm_evaluation(df_llm_offline)
     save_evaluation(df_llm_offline, eval_llm_file)
+    eval_res = {"llm_eval": {}}
+    eval_res["llm_eval"].update(eval_llm_res)
+    eval_res["llm_eval"].update(eval_llm_stats)
     return eval_res
 
 
@@ -201,15 +220,17 @@ def evaluate_chat():
     print(f"\n====== Chat Evaluation {eval_chat_llm_file}")
     df_chat = pd.read_csv(eval_chat_llm_file).dropna()
     print("Num samples", len(df_chat))
-    llm_evaluation_stats(df_chat)
+    eval_llm_stats = llm_evaluation_stats(df_chat)
 
     print(f"\n====== Manual Best Worst counts")
     df_chat, eval_res = analyze_manual_evaluation(df_chat)
     print(f"\n====== LLM Best counts")
-    df_chat = analyze_llm_evaluation(df_chat)
+    df_chat, eval_llm_res = analyze_llm_evaluation(df_chat)
     print(f"\n====== Manual and LLM Best agreement")
     agreement = compute_agreement(df_chat)
-    eval_res.update({"agreement": agreement})
+    eval_res.update({"manual_llm_agreement": agreement, "llm_eval":{}})
+    eval_res["llm_eval"].update(eval_llm_res)
+    eval_res["llm_eval"].update(eval_llm_stats)
     save_evaluation(df_chat, eval_chat_llm_file)
     return eval_res
 
@@ -236,6 +257,9 @@ if __name__ == "__main__":
         "Evaluation_24_7_2024/Artem_reddit/24-07-2024 09:45:58",
         "Evaluation_24_7_2024/CIO/24-07-2024 14:12:09",
         "Evaluation_24_7_2024/Artem_speeches/24-07-2024 13:09:34",
+        "Evaluation_24_7_2024/Artem_wiki_movies/24-07-2024 15:57:47",
+        "Evaluation_24_7_2024/Liat_speeches/24-07-2024 16:47:16",
+        "Evaluation_24_7_2024/Liat_wiki_movies/24-07-2024 17:54:36",
     ]
 
     target_model = 'llama-3'

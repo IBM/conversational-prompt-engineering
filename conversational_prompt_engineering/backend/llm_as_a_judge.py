@@ -163,6 +163,7 @@ class LlmAsAJudge(ChatManagerBase):
         for row in summaries:
             idx += 1
             print(f'evaluate sample {idx}...')
+            row['llm_evaluated_instruction'] = prompt
             instruction_text = prompt.format(text=row["text"])
             # mode "absolute"
             for prompt_type in summary_prompt_types:
@@ -281,12 +282,14 @@ if __name__ == "__main__":
     ]
 
     chats_list = [
-        #"Shai_20ng_space/24-07-2024 12:33:50",
-        #"Artem_cfpb/24-07-2024 10:25:30",
-        #"Artem_financial_news/24-07-2024 11:09:44",
-        #"Artem_reddit/24-07-2024 09:45:58",
-        #"CIO/24-07-2024 14:12:09",
-        "Artem_speeches/24-07-2024 13:09:34"
+        "Shai_20ng_space/24-07-2024 12:33:50",
+        "Artem_cfpb/24-07-2024 10:25:30",
+        "Artem_financial_news/24-07-2024 11:09:44",
+        "Artem_reddit/24-07-2024 09:45:58",
+        "CIO/24-07-2024 14:12:09",
+        "Artem_speeches/24-07-2024 13:09:34",
+        "Liat_speeches/24-07-2024 16:47:16",
+        "Liat_wiki_movies/24-07-2024 17:54:36",
     ]
 
     # Credentials for API
