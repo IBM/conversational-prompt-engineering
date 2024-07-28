@@ -240,6 +240,7 @@ def submit_button_clicked(target_model):
     def get_secret_key(env_var_name, text_area_key):
         return getattr(st.session_state, text_area_key) if env_var_name not in os.environ else os.environ[env_var_name]
 
+
     # verify credentials
     st.session_state.cred_error = ""
     st.session_state.email_error = ""
