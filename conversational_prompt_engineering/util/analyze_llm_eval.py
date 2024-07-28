@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import re
 from collections import Counter
-from scipy.stats import chisquare
+from scipy.stats import chisquare, ttest_1samp
 import numpy as np
 
 
@@ -15,6 +15,7 @@ DO_NOT_EVALUATE_FEW_SHOT = True
 actual_summary_prompt_types = summary_prompt_types
 if DO_NOT_EVALUATE_FEW_SHOT:
     actual_summary_prompt_types = ['baseline', 'zero_shot']
+    ttest_map = {actual_summary_prompt_types[0]: 0.5, actual_summary_prompt_types[1]: -0.5}
 zero_counter = Counter({pt: 0 for pt in actual_summary_prompt_types})
 
 
@@ -61,7 +62,17 @@ def llm_evaluation_stats(df):
     pvalue = chisquare(list(overall_counts.values())).pvalue
     num = sum(overall_counts.values())
     print("Overall", "P-value:", pvalue, "Num:", num)
-    stats_res["llm_rel"].update({"pvalue": pvalue, "num": num, "counts": Counter(overall_counts)})
+    stats_res["llm_rel"].update({"chisq_pvalue": pvalue, "num_chisq": num, "counts_chisq": Counter(overall_counts)})
+
+    if len(actual_summary_prompt_types) == 2:
+        prompt1_col = f"<{actual_summary_prompt_types[0]}>-<{actual_summary_prompt_types[1]}>_llm_judge_rel_result"
+        prompt2_col = f"<{actual_summary_prompt_types[1]}>-<{actual_summary_prompt_types[0]}>_llm_judge_rel_result"
+        ttest_data = [ttest_map[p1]+ttest_map[p2] for p1, p2 in zip(df[prompt1_col], df[prompt2_col])]
+        ttest_pvalue = getattr(ttest_1samp(ttest_data, popmean=0.0), 'pvalue')
+        print("T-test", "P-value:", ttest_pvalue, "Num:", len(ttest_data))
+        stats_res["llm_rel"].update({"ttest_pvalue": ttest_pvalue, "num_ttest": len(ttest_data),
+                                     "ttest_data": ttest_data, "ttest_map": ttest_map})
+
     return stats_res
 
 
@@ -271,9 +282,16 @@ if __name__ == "__main__":
         "Evaluation_24_7_2024/Orith_wiki_movies/25-07-2024 11:52:11",
     ]
 
-    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_CIO"
+    ## Evaluation for paper: CIO
+    #chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_CIO"
+    #chats_list = [
+    #    "gmelino_microsoft/24-07-2024 14:17:00"
+    #]
+
+    ## Evaluation for paper: ISRL
+    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_ISRL"
     chats_list = [
-        "gmelino_microsoft/24-07-2024 14:17:00"
+        "eladv_wiki_movies/25-07-2024 13:22:07"
     ]
 
     target_model = 'llama-3'
@@ -305,10 +323,16 @@ if __name__ == "__main__":
     print("\n\nSUMMARY:", json.dumps(summary_res, indent=4))
     save_evaluation_results_json(summary_res, chats_output_dir, time_stamp)
 
-
-
-
-
+    for chat_dir in chats_list:
+        test_type = "manual_chat"
+        p_value = summary_res[f"{test_type}_evaluation"][chat_dir]["llm_eval"]["llm_rel"]["ttest_pvalue"]
+        num = summary_res[f"{test_type}_evaluation"][chat_dir]["llm_eval"]["llm_rel"]["num_ttest"]
+        print(chat_dir, "llm_eval", test_type, num, p_value, "\t<===" if p_value > 0.05 else "")
+        test_type = "offline_test"
+        split = "test"
+        p_value = summary_res[f"{test_type}_evaluation"][chat_dir][split]["llm_eval"]["llm_rel"]["ttest_pvalue"]
+        num = summary_res[f"{test_type}_evaluation"][chat_dir][split]["llm_eval"]["llm_rel"]["num_ttest"]
+        print(chat_dir, "llm_eval", test_type, split, num, p_value, "\t<===" if p_value > 0.05 else "")
 
 
 
