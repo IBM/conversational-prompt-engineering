@@ -120,7 +120,10 @@ class ChatManagerBase:
         def _format(msg):
             role = msg['role'].upper()
             txt = msg['content']
-            tags = str({k: msg[k] for k in (msg.keys() - {'role', 'content'})})
+            relevant_tags = {k: msg[k] for k in (msg.keys() - {'role', 'content', 'tooltip'})}
+            tags = ""
+            if relevant_tags:
+                tags = str(relevant_tags)
             return f"<p><b>{role}: </b>{txt} {tags}</p>".replace("\n", "<br>")
 
         chat_dir = os.path.join(self.out_dir, "chat")

@@ -15,7 +15,7 @@ from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_compone
 import time
 
 MIN_NUM_EXAMPLES_TO_UPLOAD = 5
-MIN_EXAMPLE_TO_EVALUATE = 3
+MIN_EXAMPLE_TO_EVALUATE = 7
 
 class WorkMode(Enum):
     REGULAR, DUMMY_PROMPT = range(2)
