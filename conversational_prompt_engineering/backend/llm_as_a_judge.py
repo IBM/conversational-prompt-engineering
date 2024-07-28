@@ -118,13 +118,13 @@ class LlmAsAJudge(ChatManagerBase):
                 if result.isdigit() and result in ["1", "2", "3", "4", "5"]:
                     return feedback, result
             elif mode == "relative":
-                result = result.split('Response')[-1].strip()
-                if result in ["A", "B"]:
-                    return (result, feedback), relative_map[result]
-                if result == "A is the better response.":
-                    return ("A", feedback), relative_map["A"]
-                if result == "B is the better response.":
-                    return ("B", feedback), relative_map["B"]
+                for result in [r.strip() for r in result.split('Response')]:
+                    if result in ["A", "B"]:
+                        return (result, feedback), relative_map[result]
+                    if result.startswith("A is the better response") or result.startswith("A is slightly better than"):
+                        return ("A", feedback), relative_map["A"]
+                    if result.startswith("B is the better response") or result.startswith("B is slightly better than"):
+                        return ("B", feedback), relative_map["B"]
         return outputs, "-1"
 
     def _generate_texts_output(self, prompt, texts, few_shot_examples=[]):
@@ -197,7 +197,7 @@ class LlmAsAJudge(ChatManagerBase):
         out_csv_file = f"{chat_csv_file.split('/')[-1].split('.')[0]}.chat.llm_judge_evaluation.csv"
         print(f'LLM AS A JUDGE: output file: {out_csv_file}')
         out_df = pd.DataFrame(generated_data)
-        out_df.to_csv(os.path.join(eval_out_dir, out_csv_file))
+        out_df.to_csv(os.path.join(eval_out_dir, out_csv_file), index=False)
 
     def offline_evaluation(self, chat_params, test_file, eval_out_dir, target_model, summary_prompt_types, max_samples_to_evaluate=50):
 
@@ -240,7 +240,7 @@ class LlmAsAJudge(ChatManagerBase):
         out_df = pd.DataFrame(generated_data)
         out_csv_file = f"{test_file.split('/')[-1].split('.')[0]}.offline.llm_judge_evaluation.csv"
         print(f'LLM AS A JUDGE: output file: {out_csv_file}')
-        out_df.to_csv(os.path.join(eval_out_dir, out_csv_file))
+        out_df.to_csv(os.path.join(eval_out_dir, out_csv_file), index=False)
 
 
 def evaluate_chat():
@@ -303,7 +303,8 @@ if __name__ == "__main__":
     ## Evaluation for paper: ISRL
     chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_ISRL"
     chats_list = [
-        "eladv_wiki_movies/25-07-2024 13:22:07"
+        "eladv_wiki_movies/25-07-2024 13:22:07",
+        "Roi.Cohen_wiki_animals/25-07-2024 12:38:25"
     ]
 
     # Credentials for API
