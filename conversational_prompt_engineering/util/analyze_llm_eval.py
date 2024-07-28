@@ -127,7 +127,7 @@ def save_evaluation(df, eval_chat_file):
         eval_type = "_with_few_shot"
     out_csv = eval_chat_file.replace('.csv', f'_analysis{eval_type}.csv')
     print('Analysis output csv file:', out_csv)
-    df.to_csv(out_csv)
+    df.to_csv(out_csv, index=False)
 
 
 def save_evaluation_results_json(eval_res, eval_out_path, time_stamp=""):
@@ -291,7 +291,8 @@ if __name__ == "__main__":
     ## Evaluation for paper: ISRL
     chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_ISRL"
     chats_list = [
-        "eladv_wiki_movies/25-07-2024 13:22:07"
+        "eladv_wiki_movies/25-07-2024 13:22:07",
+        "Roi.Cohen_wiki_animals/25-07-2024 12:38:25"
     ]
 
     target_model = 'llama-3'
