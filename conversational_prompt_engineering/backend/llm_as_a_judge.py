@@ -294,9 +294,16 @@ if __name__ == "__main__":
         "Orith_wiki_movies/25-07-2024 11:52:11",
     ]
 
+    ## Evaluation for paper: CIO
     chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_CIO"
     chats_list = [
         "gmelino_microsoft/24-07-2024 14:17:00"
+    ]
+
+    ## Evaluation for paper: ISRL
+    chats_output_dir = "/Users/oritht/Projects/conversational-prompt-engineering/conversational_prompt_engineering/_out/Evaluation_ISRL"
+    chats_list = [
+        "eladv_wiki_movies/25-07-2024 13:22:07"
     ]
 
     # Credentials for API
