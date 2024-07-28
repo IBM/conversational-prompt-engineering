@@ -75,7 +75,7 @@ class ModelPrompts:
             'You have switched to EXAMPLE_NUM. ' \
             'Look at the user comments and the accepted outputs for the previous examples, ' \
             'apply them to the model output of this example,and present the result to the user. ' \
-            'Indicate the example (number), and format the text so that the output and your text are are separated by empty lines. ' \
+            'Indicate the example (number), and format the text so that the output and your text are separated by empty lines. ' \
             'Discuss the presented output taking into account the system conclusion for this example if exists.'
 
         self.syntax_err_instruction = 'The last API call produced a syntax error. Check escaping double quotes. Try again.'
@@ -93,8 +93,8 @@ class ModelPrompts:
 
         self.analyze_discussion_continue = \
             'Continue your conversation with the user taking into account these recommendations above. ' \
-            'If the prompt should be modified based on these recommendations, then present it to the user, submit it only after the user approval. ' \
-            'If the prompt works well and needs no modifications, communicate it to user and suggest to finish the conversation.'
+            'If the prompt should be modified based on these recommendations, then present the modified prompt to the user, and submit it only after the user approve it. ' \
+            'Otherwise, if according to the recommendations above, the prompt worked well and no modifications are required, communicate it to user and suggest to finish the conversation.'
 
         self.analyze_new_prompt_task = \
             'We are working on a prompt that would produce the outputs as preferred by the user. ' \
