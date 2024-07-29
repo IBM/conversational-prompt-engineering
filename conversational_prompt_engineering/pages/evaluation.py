@@ -328,7 +328,7 @@ def run():
 
             num_of_fully_annotated_items = len([x["prompts"] for x in st.session_state.generated_data if len(x["prompts"]) == len(dimensions)*len(options)])
             st.write(f"Annotation for {num_of_fully_annotated_items} out of {len(st.session_state.generated_data)} examples is completed")
-            finish_clicked = st.button(f"Submit", disabled = num_of_fully_annotated_items < MIN_EXAMPLE_TO_EVALUATE)
+            finish_clicked = st.button(f"Submit", disabled = num_of_fully_annotated_items < min(MIN_EXAMPLE_TO_EVALUATE, len(generated_data)))
             if finish_clicked:
                 if validate_annotation():
                     # showing aggregated results
