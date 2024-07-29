@@ -70,7 +70,7 @@ DEBUG_LLM_AS_A_JUDGE = False
 
 def display_text():
     text = st.session_state.generated_data[st.session_state.count]['text']
-    add_text_area(text=text, label="text", key="", height=400)
+    add_text_area(text=text, height=400)
 
 
 def next_text():
@@ -91,7 +91,7 @@ def display_output(side):
     mixed_to_real = st.session_state.generated_data[st.session_state.count]["mixed_indices_mapping_to_prompt_type"][side]
     output = st.session_state.generated_data[st.session_state.count][f"{mixed_to_real}_output"]
     st.write(f"Output {side+1}")
-    add_text_area(label=f"output_{side}", text=output, key="", height=200)
+    add_text_area(text=output, height=200)
 
 
 def display_llm_judge(side):
@@ -154,18 +154,22 @@ def reset_evaluation():
     st.session_state.evaluate_clicked = False
 
 def validate_annotation():
-    for dim in dimensions:
-        best = st.session_state.generated_data[st.session_state.count]["sides"][(dim, "Best")]
-        worst = st.session_state.generated_data[st.session_state.count]["sides"][(dim, "Worst")]
-        if (best == worst):
-            st.error(f':heavy_exclamation_mark: You cannot select the same output as best and worst in respect to {dim}')
-            return False
-    return True
+    is_valid = True
+    for i in range(len(st.session_state.generated_data)):
+        for dim in dimensions:
+            best = st.session_state.generated_data[i]["sides"][(dim, "Best")]
+            worst = st.session_state.generated_data[i]["sides"][(dim, "Worst")]
+            if (best == worst):
+                suffix = f"in respect to {dim}"
+                if len(dimensions) == 1:
+                    suffix = ""
+                st.error(f':heavy_exclamation_mark: Illegal annotation for text {i+1}: you cannot select the same output as best and worst {suffix}')
+                is_valid = False
+    return is_valid
 
-def add_text_area(text, label, key, height):
+def add_text_area(text, height):
     #st.text_area(key=key, label=label, value=text,
     #             label_visibility="collapsed", height=height)
-    st.write(label)
     parts = text.split("**")
     res = parts[0]
     for i in range(len(parts)-1):
@@ -242,7 +246,7 @@ def run():
         for i in range(len(prompt_types)):
             with prompt_cols[i]:
                 st.write(prompt_type_metadata.get(prompt_types[i])["title"])
-                add_text_area(text=st.session_state.eval_prompts[i], label="text", key=f"prompt_{i+1}", height=200)
+                add_text_area(text=st.session_state.eval_prompts[i], height=200)
 
 
         # show summarize button
@@ -328,7 +332,7 @@ def run():
 
             num_of_fully_annotated_items = len([x["prompts"] for x in st.session_state.generated_data if len(x["prompts"]) == len(dimensions)*len(options)])
             st.write(f"Annotation for {num_of_fully_annotated_items} out of {len(st.session_state.generated_data)} examples is completed")
-            finish_clicked = st.button(f"Submit", disabled = num_of_fully_annotated_items < MIN_EXAMPLE_TO_EVALUATE)
+            finish_clicked = st.button(f"Submit", disabled = num_of_fully_annotated_items < min(MIN_EXAMPLE_TO_EVALUATE, len(st.session_state.generated_data)))
             if finish_clicked:
                 if validate_annotation():
                     # showing aggregated results
