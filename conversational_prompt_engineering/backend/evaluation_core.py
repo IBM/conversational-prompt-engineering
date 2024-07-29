@@ -38,7 +38,7 @@ class Evaluation:
             test_df = test_df.sample(n=NUM_EXAMPLES_TO_LABEL, random_state=0)
         texts = test_df['text'].tolist()
 
-        generated_data_mixed, generated_data_ordered = self.summarize(prompts, texts)
+        generated_data_mixed, generated_data_ordered = self.summarize(prompts, [f"{i}" for i in range(len(prompts))], texts)
 
         os.makedirs(out_dir, exist_ok=True)
 
@@ -52,25 +52,23 @@ class Evaluation:
 
         logging.info(f"evaluation files saved to {out_dir}")
 
-    def summarize(self, prompts, texts):
-        generated_data_ordered = []
-        generated_data_mixed = []
-        for t in texts:
-            row_data_ordered = {"text": t}
-            row_data_mixed = {"text": t}
+    def summarize(self, prompts, prompt_types, texts):
+        generated_ordered = []
+        for i, t in enumerate(texts):
+            row_data_ordered = {"text": t, "index": i}
             prompts_responses = []
-            for i, prompt in enumerate(tqdm(prompts)):
+            for _,prompt in enumerate(tqdm(prompts)):
                 prompt_str = prompt.format(text=t)
                 resp = self.bam_client.send_messages(prompt_str)[0]
-                prompts_responses.append(resp)
-            for i in range(len(prompts)):
-                row_data_ordered[str(i) + "_prompt"] = prompts[i]
-                row_data_ordered[str(i)] = prompts_responses[i]
+                prompts_responses.append(resp[0].replace("\n", " \n"))
             mixed_indices = list(range(len(prompts)))
             random.shuffle(mixed_indices)
-            for i in range(len(mixed_indices)):
-                row_data_mixed[str(i) + "_prompt"] = prompts[mixed_indices[i]]
-                row_data_mixed[str(i)] = prompts_responses[mixed_indices[i]]
-            generated_data_ordered.append(row_data_ordered)
-            generated_data_mixed.append(row_data_mixed)
-        return generated_data_mixed, generated_data_ordered
+            mixed_mapping = {}
+            for i in range(len(prompts)):
+                row_data_ordered[f"{prompt_types[i]}_prompt"] = prompts[i]
+                row_data_ordered[f"{prompt_types[i]}_output"] = prompts_responses[i]
+                mixed_mapping[mixed_indices[i]] = prompt_types[i]
+            row_data_ordered["mixed_indices_mapping_to_prompt_type"] = mixed_mapping
+            generated_ordered.append(row_data_ordered)
+        random.shuffle((generated_ordered))
+        return generated_ordered

@@ -1,9 +1,625 @@
 text
-"From: aws@iti.org (Allen W. Sherzer) Subject: Re: Shuttle 0-Defects & Bizarre? DC-X? Organization: Evil Geniuses for a Better Tomorrow Lines: 92 In article <1sp513$beo@hsc.usc.edu> khayash@hsc.usc.edu (Ken Hayashida) writes: >Well, Spenz...what can I say? 8-) >You've attacked my beloved vehicle! ;-) If I may offer a constructive criticism, perhaps you should decide if you love vehicles or the use they are put to. I, myself, think the F-86 is a beautiful aircraft, but rest assured, I wouldn't even think of flying it in combat today. Most of us want access to space and judge vehicles on how they perform. >We see ""zero-defects operation"" in many area|s of life. Not to this degree. >Calling shuttle flight characteristics *bizarre* in the same post >as touting DC-X is interesting. Why? >DC-X will also have similar ""zero-defects"" issues (am I wrong?). Your wrong. The DC approach is very tollerent of failure. It also has the advantage of far greater reliability do to its reusable nature (Shuttle isn't reusable, it's salvagable). >I am thinking of how DC-X will deploy a chute or reverse orientation at >supersonic speeds. The flip over happens at a very low speed, not supersonic. If the DC-X shows the flip over works, it will work unless the laws of physics change. >How much in DC-X is redundant? That's the real question. The final DC-1 will have fully intact abort throughout the entire flight envelop. Upon re-entry for example, it can loose about 80% of available thrust and still land safely. >Everything we do in life has zero-defects issues at times (agree?). Everything can suffer from catastrophic failure but that's not the same thing. Shuttle simply isn't a fault tolerent design, SSTO is. >As a doctor, I can not error in my diagnosis and treatment recommendations. You don't put your patients in conditions where there is no way out. You wouldn't for example, give a patient a drug and not monitor them for harmful side effects would you? >While DC-X's R&D program makes good sense, I am less optimistic about DC-X >as you (and apparently others) are. You are very much in the minority. If the DC series fails to make orbit, it will still be a very worthwhile effort. It will show us EXACTLY what we do need to do to build SSTO. >But, DC-X will still have failures. It is the nature of aerospace R&D. Again, refering to the DC-1, it will provide fully intact abort theroughout the flight envelop. Shuttle doesn't. DC is fault tollerent, Shuttle isn't. >It's successors are not slated to be passenger carrying. Not true. Build a passenger pallet (a fairly easy thing to do) and it will carry passengers. >The impression I had >when I visited MacDac Huntington Beach's Open House was that the payload space >was limited and the man-ratable version was decades away. I would suggest you talk to the DC-X crew themselves. Their original schedule had an operational DC-1 flying in 96. >Shuttle is the only method in the free world of orbiting large life sciences >and medical related packages. As for now, it is our only ticket into space >and has my support. Your ignoring the dammage it does. Mannes space has a reputation for being unreliable and hugely expensive. Shuttle supporters only make it easy for opponents of manned space to kill it. >You could change my view on DC-X if you could prove the following: The only way to prove those things is to build it. Allen -- +---------------------------------------------------------------------------+ | Lady Astor: ""Sir, if you were my husband I would poison your coffee!"" | | W. Churchill: ""Madam, if you were my wife, I would drink it."" | +----------------------35 DAYS TO FIRST FLIGHT OF DCX-----------------------+"
-"From: Wales.Larrison@ofa123.fidonet.org Subject: Boeing TSTO (Was: Words from Chairman of Boeing) X-Sender: newtout 0.08 Feb 23 1993 Lines: 83 games@max.u.washington.edu writes: Re; Response from CoB of Boeing on SSTO ... >""As far as single stage to orbit technology, we think that we have >a better answer in a two stage approach, and we are talking to some >of our customers about that. As far as commercialization, that is >a long ways off. ... > Anybody know anything further? Is this really news? Does this >threaten further work on DC-? ? Boeing has been looking at several TSTO vehicles and has carried out extensive conceptual studies of advanced launch systems for some time. A good reference on this might be: ""Comparison of Propulsion Options for Advanced Earth-To-Orbit (ETO) Applications (IAF-92- 0639)."" by V.A. Weldon and L.E. Fink from Boeing. The paper describes a propane-fueled TSTO launch system claimed to achieve aircraft-like operational efficiencies without the problems associated with liquid hydrogen fuel. Basically, it's a high-speed airplane launching a Hermes-type spaceplane The design (the concept is also called ""Beta"") as laid out in the paper can launch at least 10,000 pounds into polar orbit, or 20,000 pounds to space station orbit including a crew of eight persons and life support. System design reliability is .9995. Beta is a 360-foot-long first stage powered by two large ramjets and 12 high- speed civil transport (HSCT) turbofans. A 108-foot- long reusable orbiter is trapeze-mounted in the belly of the first- stage aircraft, which also could accommodate a longer and heavy payload on an expendable second stage. To launch the orbital vehicle, the first stage takes off like a normal HSCT and accelerates to Mach 3. At that point the turbofans, modified to burn catalyzed JP-7, would shut off and the ramjets, would take over. At Mach 5.5 the orbiter or the ELV would swing out, ignite and proceed to orbit. Both vehicles would land like aircraft at the conclusion of their respective missions. Estimated total weight of the combined configuration at takeoff is about 1.5 M lbs, roughly equivalanet to a fully loaded An-225. The orbiter stages weighs about 400,Klbs including 335 Klbs of LOX and subcooled propane to power two 250 Klbs vacuum thrust rocket engines. Propellants would be stored at 91 degrees Kelvin, with the propane in a spherical tank mounted forward of the 15-by- 25-foot cargo bay and the two-seat orbiter crew station. LOX would be stored aft. Weldon and Fink claim the key to this design's success is the structurally efficient airframe and the compact tankage allowed by the high-density supercooled hydrocarbon fuel. The paper compares TSTO design to SSTO design. They conclude while a SSTO has a slightly lower recurring cost, a TSTO is easier, cheaper, and less risky to develop, simpler to build, has greater safety and mission versatility and doesn't carry the hard-to-handle and bulky hydrogen fuel. The conlcude ""In conjunction with its major use of airplane type engines and fuel, as well as its inherent self- ferry capability, it is probably the system most likely to provide as close to airline-like operations as possible with a practical configuration, until a single stage airbreather/rocket concept can be shown to be operationally viable."" >Is this really news? Does this threaten further work on DC-? Weldon and others at Boeing have been working on TSTO designs for some time. I expect this, or a similar concept (perhaps the HTHL SSTO they proposed for the SDIO SSTO first phase) is being re- examined as a basis for a bid on the first phase of SpaceLifter. Does it threaten DC-???. Possibly -- There is a set of on-going studies trying straighten out the government's future space transportation strategy. MDC and Boeing (as well as other firms) are providing data to a joint study team back in DC. There are various factions and options vying for attention -- including shuttle upgrades, shuttle replacement (what was called the ""4-2-3"" architecture), SpaceLifter, ELV upgrades, and various advanced vehicles (ALES, Beta, DC-??, NASP, FSTS, SSTOs of several types, etc.) NASA/DOD/DOT are trying to put together a coherent strategy for future US gov't space transportation systems, and trying to juggle near-term launch needs (like for DoD and NASA) against medium-term needs (including commercial considerations), and against the investment and risk of going to ""leap frog"" new technologies like SDIO/SSTO and NASP and Beta. It's a heck of a problem. The worst part of the problem isn't that there aren't promising ideas and concepts -- there are dozens of them -- but how they balance cost and risk versus real needs in the near term. They should have a draft report in mid-June, with a final report coming by the end of the fiscal year. ------------------------------------------------------------------ Wales Larrison Space Technology Investor --- Maximus 2.01wb"
-"From: henry@zoo.toronto.edu (Henry Spencer) Subject: Re: I want that Billion Organization: U of Toronto Zoology Lines: 35 In article <1rh4rqINNi7o@mojo.eng.umd.edu> sysmgr@king.eng.umd.edu writes: >>>You'd need to launch HLVs to send up large amounts of stuff. Do you know >>>of a private Titan pad? >>Nobody who is interested in launching things cheaply will buy Titans. It >>doesn't take many Titan pricetags to pay for a laser launcher or a large >>gas gun or a development program for a Big Dumb Booster, all of which >>would have far better cost-effectiveness. > >Henry, I made the assumption that he who gets there firstest with the mostest >wins. Only if he doesn't spend more than a billion dollars doing it, since the prize is not going to be scaled up to match the level of effort. You can spend a billion pretty quickly buying Titan launches. What's more, if you buy Titans, the prize money is your entire return on investment. If you develop a new launch system, it has other uses, and the prize is just the icing on the cake. I doubt very much that a billion-dollar prize is going to show enough return to justify the investment if you are constrained to use current US launchers. (There would surely be a buy-American clause in the rules for such a prize, since it would pretty well have to be government-funded.) You're going to *have* to invest your front money in building a new launch system rather than pissing it away on existing ones. Being there first is of no importance if you go bankrupt doing it. >... could I get a couple of CanadARMs tuned for the lunar environment? I >wanna do some teleoperated prospecting while I'm up there... I'm sure Spar would offer to develop such a lunar-tuned system and deliver a couple of them to you for only a couple of hundred million dollars. -- SVR4 resembles a high-speed collision | Henry Spencer @ U of Toronto Zoology between SVR3 and SunOS. - Dick Dunn | henry@zoo.toronto.edu utzoo!henry"
-"From: jbh55289@uxa.cso.uiuc.edu (Josh Hopkins) Subject: Re: Long term Human Missions Organization: University of Illinois at Urbana Lines: 46 jgladu@bcm.tmc.edu (grungy) writes: >ward@pashosh.wisdom.weizmann.ac.il (Ward Paul) wrote: >> >1. Calculators >> >2. Teflon (So your eggs don't stick in the pan) >> >3. Pacemakers (Kept my grandfather alive from 1976 until 1988) >> >> I don't think touting contributions is a good idea. World War II produced >> many many beneficial spinoffs. Eg. Radar, jet aeroplanes, rocket technology. >> I don't think anyone would argue that World War II was, in and of itself, >> a good thing. >> >> If you want people to back the space program it must be a good thing in >> and of itself. >I disagree with what to tout, although I agree that the space program is >inherently a good thing. Most people today only care about ""what will it >cost me?"" and ""what's in it for me?"" and could care less about whether >something is simply worthwhile in and of itself. Our society has become >increasingly geared toward the short-term (which you could read as NOW!). >They couldn't care less about next week, much less next century. They want >something to show for the expenditure and they want it *now*. I think to some extent this is a case of stooping to their level. You assume that the general public ""can't handle the truth"" and then, based on this assumption, go for the fluff arguments. Then someone, who can understand a good argument, comes along and asks ""why don't you just develop the spinoffs?"" or ""why can't we just get our spinoffs from some other program, like the military?"" There are some good arguments for space development without relying on its side effects. I'm not ignoring the value of spinoffs. I simply think that the general public deserves more credit than you give them. >BTW: don't forget Velcro... And if you're going to use spinoffs you better make darn sure you are right. Teflon has been around since before NASA. As I understand it, Velcro was conceptualized by a french doctor who went walking in the woods and took the trouble to wonder how burrs stick to your clothes. Certainly velcro was available on hiking equipment by the early to mid sixties. I would need to see some good evidence before I believe that either of these would not be here today without NASA. -- Josh Hopkins jbh55289@uxa.cso.uiuc.edu ""Find a way or make one."" -attributed to Hannibal"
-"From: khayash@hsc.usc.edu (Ken Hayashida) Subject: Re: Long Term Space Voyanges and Effect NEwsgroup? Organization: University of Southern California, Los Angeles, CA Lines: 40 NNTP-Posting-Host: hsc.usc.edu tstroup@force.ssd.lmsc.lockheed.com writes in response to my original post: >First you need to do the literature search. There is a lot of information >out there. Maybe we should just pick a specific area of long term habitation. >This could be useful, especially if we make it available on the net. Then >we can look at methods of analyzing the technologies. >>Such a detailed literature search would be of interest to >>ourselves as space advocates >>and clearly important to existing space programs. >>In essence, we would be dividing the space life science issues into >>various technical problems which could be solved with various technologies. >>This database of acceptable solutions to various problems could form the >>basis of detailed discussions involving people from the bionet, isunet, >>and any other source! >Unless there is an unbelievable outpouring of interest on this on the net, >I think we should develop a detailed data base of the literature search >first. Then if we accomplish that we can go on to real analysis. The data >base itself could be useful for future engineers. >That's my response Ken, what do you think? >Tim Well, I agree. I hope others chime in with suggestions on specific technologies which could be applied towards the maintenance of an Earth like atmosphere on a long-duration spacecraft. Tim et al: I think we should try looking at atmosphere first. This seems to be the single most fundamental issue in keeping anyone alive. We're all taught that when supporting a patient you look for maintaining airway. So, in keeping with my trauma training (and keeping my emergency medicine professor happy), I suggest that we look at the issues surrounding a regenerable atmospheric circuit. Howz that Tim? Ken"
-"From: kjenks@gothamcity.jsc.nasa.gov Subject: Re: ASTRONAUTS---What does weightlessness feel like? Organization: NASA/JSC/GM2, Space Shuttle Program Office X-Newsreader: TIN [version 1.1 PL8] X-Posted-From: algol.jsc.nasa.gov NNTP-Posting-Host: sol.ctr.columbia.edu Lines: 81 : In article <1993Apr29.121501@is.morgan.com>, jlieb@is.morgan.com (Jerry Liebelson) writes... : > I want to know what weightlessness actually FEELS like. For example, is : >there a constant sensation of falling? Ron Baalke (baalke@kelvin.jpl.nasa.gov) replied: : Yes, weightlessness does feel like falling. It may feel strange at first, : but the body does adjust. The feeling is not too different from that : of sky diving. I'm no astronaut, but I've flown in the KC-135 several times. I'll tell you about my first flight. At the on-set of weightlessness, my shoulders lifted and my spine straightened. I felt a momentary panic, and my hands tried to grab onto something (like the strap keeping me firmly against the floor) to prevent me from falling; I remember conciously over-ruling my involuntary motions. My ears felt (not heard) a rush and I could feel fluid moving in my head (like when you get up from bed while you have a cold). At that point, I ceased to concentrate on my physiological response, since I had some science to do. I was busy keeping my experiment going and keeping track of all the parts during the ""return"" of gravity and subsequent 1.8-G pull-out, so I didn't really pay attention to physiology at that time. After about 5 parabolas, I discovered that I was performing one of the tricks I've discovered to keep myself from getting motion sickness; I was keeping my head very still and moving very slowly -- all except my hands and arms, which needed to be in rapid, concious motion for my experiment. During the pull-out to parabola 5, my queasiness finally started to get to me, and I had to use one of those air-sickness bags. I was basically useless for the rest of that flight, so I went to the seats in the back of the plane while my partner (whom I drafted for just this purpose) kept working on the experiment while I was ill. (He was a vetran Vomit Comet rider, one of those anomalous people who don't get sick on the thing.) I didn't think of it as a ""constant sensation of falling"" so much as like swimming in air. It's very close to the sensations I feel when I'm scuba diving and I turn my head down and fins up. Jerry: : >And what is the motion sickness : >that some astronauts occasionally experience? Ron: : It is the body's reaction to a strange environment. It appears to be : induced partly to physical discomfort and part to mental distress. : Some people are more prone to it than others, like some people are more : prone to get sick on a roller coaster ride than others. The mental : part is usually induced by a lack of clear indication of which way is : up or down, ie: the Shuttle is normally oriented with its cargo bay : pointed towards Earth, so the Earth (or ground) is ""above"" the head of : the astronauts. About 50% of the astronauts experience some form of : motion sickness, and NASA has done numerous tests in space to try to : see how to keep the number of occurances down. I'm a volunteer in JSC's Space Biomedical Laboratory where they do, among other things, some of the tests Ron mentions. I was in one called the Pre-flight Adaptation Trainer, which consisted of a chair on a several-degree-of-freedom motion base with moving geometric visual aids. The goal was to measure the victim's^H^H^H^H^H^H^H^H subject's responses and subjective physiological descriptions and see if repeated exposure to this environment could reduce future motion sickness symptoms. Jerry -- I don't know of any former or active-duty astronauts who personally read this group. I know that Bruce McCandless's office had been waiting anxiously for the Space Station Redesign option I posted last week, but I don't think Bruce reads the group himself. -- Ken Jenks, NASA/JSC/GM2, Space Shuttle Program Office kjenks@gothamcity.jsc.nasa.gov (713) 483-4368 ""The man who makes no mistakes does not usually make anything."" -- Edward John Phelps, American Diplomat/Lawyer (1825-1895)"
-"From: richmond@spiff.Princeton.EDU (Stupendous Man) Subject: Re: temperature of the dark sky Originator: news@nimaster Nntp-Posting-Host: spiff.princeton.edu Organization: Princeton University Lines: 35 (Henry Spencer) writes: > Does anyone have a reference (something I can look up, not just your own > recollections -- I have a few of those myself) on the temperature of the > (night) sky as seen from space? > > Note, I am *not* talking about the temperature of the Microwave Background > Radiation. There are more things in the sky than just the MBR; what I'm > after is total blackbody temperature -- what a thermal radiator would see, > disregarding (or shielding against) the Sun and nearby large warm objects. Henry, if I read you correctly, you may be asking ""If I put a blackbody in interstellar space ('disregarding the Sun and nearby large warm objects'), what termperature will it reach in thermal equilibrium with the ambient radiation field?"" If that's the case, let me point out that interstellar dust and molecules provide many instances of things that are, well, not-too-far from being blackbodies. Many different observations, including IRAS and COBE, have determined that interstellar dust grain temperatures can range from 40K to 150K. You might look in a conference proceedings ""Interstellar Processes"", ed. D. J. Hollenbach and H. A. Thronson, Jr., published in 1987. Try the articles by Tielens et al., Seab, and Black. Inside the disk of the galaxy, the temperature varies quite a bit from place to place (how close are you to the nearest OB association, I would guess). Outside the galaxy, of course, things aren't so varied. I hope this is what you were looking for.... -- ----- Michael Richmond ""This is the heart that broke my finger."" richmond@astro.princeton.edu"
-"From: sysmgr@king.eng.umd.edu (Doug Mohney) Subject: Re: I want that Billion Organization: Computer Aided Design Lab, U. of Maryland College Park Lines: 54 Reply-To: sysmgr@king.eng.umd.edu NNTP-Posting-Host: queen.eng.umd.edu In article <C63vvG.4J9@zoo.toronto.edu>, henry@zoo.toronto.edu (Henry Spencer) writes: >Only if he doesn't spend more than a billion dollars doing it, since the >prize is not going to be scaled up to match the level of effort. You can >spend a billion pretty quickly buying Titan launches. Fine. I'll buy from George. GEORGEEE!!!! That assumes I can't weasel out a cooperative venture of some sort (cut me a break on the launcher, I'll cut you in on the proceeds if it works). Only the government pays higher-than-list price. >What's more, if you buy Titans, the prize money is your entire return on >investment. If you develop a new launch system, it has other uses, and >the prize is just the icing on the cake. Unless you're Martin Marietta, since (as I recall) they bought out the GD line of aerospace products. If MM/GD does it as an in-house project, their costs would look much better than buying at ""list price."" Does anyone REALLY know the profit margins built in to the Titan? C'mon. Allen is telling us how cheap we can get improved this or that... >I doubt very much that a billion-dollar prize is going to show enough >return to justify the investment if you are constrained to use current >US launchers. Oh please. How much of a profit do you want? Pulling $100-150 million after all is said and done wouldn't be too shabby. Not to mention the other goodies I'll collect in: a) Movie & TV rights (say $100-150 million conservatively) b) Advertising (""Look Mommie, they're drinking Coke!"") c) Intangibles (Name recognization, experience & data acculumated) >You're going to *have* to invest your front money in building a new launch >system rather than pissing it away on existing ones. Being there first is >of no importance if you go bankrupt doing it. If you want lean, fine. A $500 million prize would be more than adequate for a prize. Maybe Wales would be kind enough to define what a company would consider a decent profit. If you want R&D done, you'll have to write in R&D clauses. I suppose you could make it a SBIR set-aside :) Software engineering? That's like military intelligence, isn't it? -- > SYSMGR@CADLAB.ENG.UMD.EDU < --"
+"From: baalke@kelvin.jpl.nasa.gov (Ron Baalke)
+Subject: Stephen Hawking Tours JPL
+
+From the ""JPL Universe""
+April 23, 1993
+
+Cosmologist Stephen Hawking tours Lab
+
+By Karre Marino
+     Some 15 years after his first visit to JPL, Prof. Stephen
+Hawking, Lucasian professor of mathematics at Cambridge
+University and author of ""A Brief History of Time,"" returned to
+the Lab April 5.
+     On a tour hosted by JPL Chief Scientist Dr. Moustafa Chahine
+and Merle McKenzie, manager of the International Affairs Office,
+Hawking visited a variety of facilities, met with Lab Director
+Dr. Edward Stone and various project scientists and managers, and
+felt ""like royalty,"" he said. Hawking, whose theories attempt to
+explain the origin of distant galaxies, black holes and alternate
+dimensions, wanted to re-visit JPL, he explained, ""because while
+I'm most interested in those things in space that are farther
+away, I know that here is where the first steps are taken.""
+     Hawking, who was accompanied by his family, two graduate
+students and his aides, began the tour in von Karman Auditorium,
+as David Evans, deputy assistant Lab director in the Office of
+Flight Projects, and Dr. Arden Albee, Mars Observer's project
+scientist, briefed him on current and past flight projects.
+     Voyager was pointed out to him, with special attention paid
+to a gold plate with a series of engraved images. Should
+extraterrestrial life stumble upon the spacecraft, Evans noted,
+they would find a variety of images that would explain something
+of Earth. The professor asked if we were still communicating with
+the spacecraft, and Evans affirmed that we are.
+     Using a model of Mars Observer, Albee spent several minutes
+describing the project and the spacecraft's features. In answer
+to a question from Hawking, Chahine described a proposed
+drag-free satellite, but confirmed that at this point, ""it's only
+a concept."" Chahine, who had met Hawking at Caltech about five
+years before, described the professor as ""a living miracle of the
+power of the brain. He's miraculous, and he has such a good sense
+of humor.""
+     The next stop, a demonstration on scientific data
+visualization in Section 384's Digital Image Animation Lab,
+entertained and delighted the group, as everyone donned goggles
+to view 3-D images of Mars. Project Scientist Dr. Eric De Jong
+showed off the latest data -- a comet that had only recently been
+discovered in orbit close to Jupiter. Hawking was curious about
+its composition, and as he was shown how images are developed, he
+asked several questions on their interpretation.
+     Norman Haynes, ALD, Office of Telecommunications and Data
+Acquisition, briefed the professor on the Space Flight Operations
+Facility, and then Hawking spoke with Stone.
+     The day ended with two technical discussions of particular
+interest to the professor. Technical Group Leader Dr. Frank
+Estabrook and Senior Research Scientist Hugo Wahlquist described
+a three-spacecraft gravity wave experiment, currently under way.
+Then planetary astronomer Dr. Richard Terrile explained the
+philosophy and plans for extra solar system planetary detection.
+     The Hawking party, which had been visiting Southern
+California for five weeks, was headquartered at Caltech, and
+planned to leave for England within a few weeks after the Lab
+tour. Upon departing, the Cambridge-based scientist promised
+Chahine that he would return to JPL for another visit.
+                          ###
+     ___    _____     ___
+    /_ /|  /____/ \  /_ /|     Ron Baalke         | baalke@kelvin.jpl.nasa.gov
+    | | | |  __ \ /| | | |     Jet Propulsion Lab |
+ ___| | | | |__) |/  | | |__   M/S 525-3684 Telos | The aweto from New Zealand
+/___| | | |  ___/    | |/__ /| Pasadena, CA 91109 | is part caterpillar and
+|_____|/  |_|/       |_____|/                     | part vegetable.
+
+"
+"From: games@max.u.washington.edu
+Subject: SSTO Senatorial (aide) breifing recollections.
+
+The following are my thoughts on a meeting that I, Hugh Kelso, and Bob Lilly
+had with an aide of Sen. Patty Murrays.  We were there to discuss SSTO, and
+commercial space.  This is how it went...
+
+
+
+After receiving a packet containing a presentation on the benifits of SSTO,
+I called and tried to schedule a meeting with our local Senator (D) Patty
+Murray, Washington State.  I started asking for an hour, and when I heard
+the gasp on the end of the phone, I quickly backed off to 1/2 an hour.
+Later in that conversation, I learned that a standard appointment is 15 minutes.
+
+We got the standard bozo treatment.  That is, we were called back by an aide,
+who scheduled a meeting with us, in order to determine that we were not
+bozos, and to familiarize himself with the material, and to screen it, to 
+make sure that it was appropriate to take the senators time with that material.
+
+Well, I got allocated 1/2 hour with Sen. Murrays aide, and we ended up talking
+to him for 45 minutes, with us ending the meeting, and him still listening.
+We covered a lot of ground, and only a little tiny bit was DCX specific.  
+Most of it was a single stage reusable vehicle primer.  There was another
+woman there who took copius quantities of notes on EVERY topic that
+we brought up.
+
+But, with Murray being new, we wanted to entrench ourselves as non-corporate
+aligned (I.E. not speaking for boeing) local citizens interentested in space.
+So, we spent a lot of time covering the benifits of lower cost access to
+LEO.  Solar power satellites are a big focus here, so we hit them as becoming 
+feasible with lower cost access, and we hit the environmental stand on that.
+We hit the tourism angle, and I left a copy of the patric Collins Tourism
+paper, with side notes being that everyone who goes into space, and sees the
+atmosphere becomes more of an environmentalist, esp. after SEEING the smog
+over L.A.  We hit on the benifits of studying bone decalcification (which is 
+more pronounced in space, and said that that had POTENTIAL to lead to 
+understanding of, and MAYBE a cure for osteoporosis.  We hit the education 
+whereby kids get enthused by space, but as they get older and find out that
+they havent a hop in hell of actually getting there, they go on to other
+fields, with low cost to orbit, the chances they might get there someday 
+would provide greater incentive to hit the harder classes needed.
+
+We hit a little of the get nasa out of the operational launch vehicle business
+angle.  We hit the lower cost of satellite launches, gps navigation, personal
+communicators, tellecommunications, new services, etc...  Jobs provided
+in those sectors.
+
+Jobs provided building the thing, balance of trade improvement, etc..
+We mentioned that skypix would benifit from lower launch costs.
+
+We left the paper on what technologies needed to be invested in in order
+to make this even easier to do.  And he asked questions on this point.
+
+We ended by telling her that we wanted her to be aware that efforts are
+proceeding in this area, and that we want to make sure that the
+results from these efforts are not lost (much like condor, or majellan),
+and most importantly, we asked that she help fund further efforts along
+the lines of lowering the cost to LEO.
+
+In the middle we also gave a little speal about the Lunar Resource Data 
+Purchase act, and the guy filed it separately, he was VERY interested in it.
+He asked some questions about it, and seemed like he wanted to jump on it,
+and contact some of the people involved with it, so something may actually
+happen immediatly there.
+
+The last two things we did were to make sure that they knew that we
+knew a lot of people in the space arena here in town, and that they
+could feel free to call us any time with questions, and if we didn't know
+the answers, that we would see to it that they questions got to people who
+really did know the answers.
+
+Then finally, we asked for an appointment with the senator herself.  He
+said that we would get on the list, and he also said that knowing her, this
+would be something that she would be very interested in, although they
+do have a time problem getting her scheduled, since she is only in the
+state 1 week out of 6 these days.
+
+All in all we felt like we did a pretty good job.
+
+			John.
+"
+"From: daviss@sweetpea.jsc.nasa.gov (S.F. Davis)
+Subject: Re: japanese moon landing/temporary orbit
+
+In article <pgf.735012282@srl03.cacs.usl.edu>, pgf@srl03.cacs.usl.edu (Phil G. Fraering) writes:
+|> rls@uihepa.hep.uiuc.edu (Ray Swartz (Oh, that guy again)) writes:
+|> 
+|> >The gravity maneuvering that was used was to exploit 'fuzzy regions'.  These
+|> >are described by the inventor as exploiting the second-order perturbations in a
+|> >three body system.  The probe was launched into this region for the
+|> >earth-moon-sun system, where the perturbations affected it in such a way as to
+|> >allow it to go into lunar orbit without large expenditures of fuel to slow
+|> >down. The idea is that 'natural objects sometimes get captured without
+|> >expending fuel, we'll just find the trajectory that makes it possible"". The
+|> >originator of the technique said that NASA wasn't interested, but that Japan
+|> >was because their probe was small and couldn't hold a lot of fuel for
+|> >deceleration.
+|> 
+|> 
+|> I should probably re-post this with another title, so that
+|> the guys on the other thread would see that this is a practical
+|> use of ""temporary orbits...""
+|> 
+|> Another possible temporary orbit:
+|> 
+|> --
+|> Phil Fraering         |""Seems like every day we find out all sorts of stuff.
+|> pgf@srl02.cacs.usl.edu|Like how the ancient Mayans had televison."" Repo Man
+|> 
+|> 
+
+If you are really interested in these orbits and how they are obtained
+you should try and find the following paper:
+
+     Hiroshi Yamakawa, Jun'ichiro Kawaguchi, Nobuaki Ishii, 
+     and Hiroki Matsuo, ""A Numerical Study of Gravitational Capture
+     Orbit in the Earth-Moon System,"" AAS-92-186, AAS/AIAA Spaceflight
+     Mechanics Meeting, Colorado Springs, Colorado, 1992.
+
+The references included in this paper are quite interesting also and 
+include several that are specific to the HITEN mission itself. 
+
+|--------------------------------- ******** -------------------------|
+|                                 * _!!!!_ *                         |
+| Steven Davis                   * /  \   \ *                        |
+| daviss@sweetpea.jsc.nasa.gov  *  (<o><o>)  *                       |  
+|                               *  \>_db_</  *  McDonnell Douglas    |
+|  - I don't represent           *   |vv|   *   Space Systems Company| 
+|    anybody but myself. -        *  (__)  *    Houston Division     |
+|--------------------------------- ******** -------------------------|
+"
+"From: dbm0000@tm0006.lerc.nasa.gov (David B. Mckissock)
+Subject: Re: Space Station Redesign, JSC Alternative #4
+
+In article <1993Apr23.184732.1105@aio.jsc.nasa.gov>, kjenks@gothamcity.jsc.nasa.gov writes...
+
+   {Description of ""External Tank"" option for SSF redesign deleted}
+
+>Mark proposed this design at Joe Shea's committee in Crystal City,
+>and he reports that he was warmly received.  However, the rumors
+>I hear say that a design based on a wingless Space Shuttle Orbiter
+>seems more likely.
+
+Yo Ken, let's keep on-top of things! Both the ""External Tank"" and
+""Wingless Orbiter"" options have been deleted from the SSF redesign
+options list. Today's (4/23) edition of the New York Times reports
+that O'Connor told the panel that some redesign proposals have
+been dropped, such as using the ""giant external fuel tanks used
+in launching space shuttles,"" and building a ""station around
+an existing space shuttle with its wings and tail removed.""
+
+Currently, there are three options being considered, as presented
+to the advisory panel meeting yesterday (and as reported in
+today's Times).
+
+Option ""A"" - Low Cost Modular Approach
+This option is being studied by a team from MSFC. {As an aside,
+there are SSF redesign teams at MSFC, JSC, and LaRC supporting
+the SRT (Station Redesign Team) in Crystal City. Both LeRC and
+Reston folks are also on-site at these locations, helping the respective
+teams with their redesign activities.} Key features of this
+option are:
+  -  Uses ""Bus-1"", a modular bus developed by Lockheed that's
+     qualified for STS and ELV's. The bus provides propulsion, GN&C
+     Communications, & Data Management. Lockheed developed this
+     for the Air Force.
+  -  A ""Power Station Capability"" is obtained in 3 Shuttle Flights.
+     SSF Solar arrays are used to provide 20 kW of power. The vehicle
+     flies in an ""arrow mode"" to optimize the microgravity environment.
+     Shuttle/Spacelab missions would utilize the vehilce as a power
+     source for 30 day missions.
+  -  Human tended capability (as opposed to the old SSF sexist term
+     of man-tended capability) is achieved by the addition of the
+     US Common module. This is a modified version of the existing
+     SSF Lab module (docking ports are added for the International
+     Partners' labs, taking the place of the nodes on SSF). The
+     Shuttle can be docked to the station for 60 day missions.
+     The Orbiter would provide crew habitability & EVA capability.
+  -  International Human Tended. Add the NASDA & ESA modules, and
+     add another 20 kW of power
+  -  Permanent Human Presence Capability. Add a 3rd power module,
+     the U.S. habitation module, and an ACRV (Assured Crew Return
+     Vehicle).
+
+Option ""B"" - Space Station Freedom Derived
+The Option ""B"" team is based at LaRC, and is lead by Mike Griffin.
+This option looks alot like the existing SSF design, which we
+have all come to know and love :)
+
+This option assumes a lightweight external tank is available for
+use on all SSF assembly flights (so does option ""A""). Also, the 
+number of flights is computed for a 51.6 inclination orbit,
+for both options ""A"" and ""B"".
+
+The build-up occurs in six phases:
+  -  Initial Research Capability reached after 3 flights. Power
+     is transferred from the vehicle to the Orbiter/Spacelab, when
+     it visits.
+  -  Man-Tended Capability (Griffin has not yet adopted non-sexist
+     language) is achieved after 8 flights. The U.S. Lab is
+     deployed, and 1 solar power module provides 20 kW of power.
+  -  Permanent Human Presence Capability occurs after 10 flights, by
+     keeping one Orbiter on-orbit to use as an ACRV (so sometimes
+     there would be two Orbiters on-orbit - the ACRV, and the
+     second one that comes up for Logistics & Re-supply).
+  -  A ""Two Fault Tolerance Capability"" is achieved after 14 flights,
+     with the addition of a 2nd power module, another thermal
+     control system radiator, and more propulsion modules.
+  -  After 20 flights, the Internationals are on-board. More power,
+     the Habitation module, and an ACRV are added to finish the
+     assembly in 24 flights.
+
+Most of the systems currently on SSF are used as-is in this option, 
+with the exception of the data management system, which has major
+changes.
+
+Option C - Single Core Launch Station.
+This is the JSC lead option. Basically, you take a 23 ft diameter
+cylinder that's 92 ft long, slap 3 Space Shuttle Main Engines on
+the backside, put a nose cone on the top, attached it to a 
+regular shuttle external tank and a regular set of solid rocket
+motors, and launch the can. Some key features are:
+  - Complete end-to-end ground integration and checkout
+  - 4 tangentially mounted fixed solar panels
+  - body mounted radiators (which adds protection against
+    micrometeroid & orbital debris)
+  - 2 centerline docking ports (one on each end)
+  - 7 berthing ports
+  - a single pressurized volume, approximately 26,000 cubic feet
+    (twice the volume of skylab).
+  - 7 floors, center passageway between floors
+  - 10 kW of housekeeping power
+  - graceful degradation with failures (8 power channels, 4 thermal
+    loops, dual environmental control & life support system)
+  - increased crew time for utilization
+  - 1 micro-g thru out the core module
+"
+"From: Wales.Larrison@ofa123.fidonet.org
+Subject: Space Advertising (1 of 2)
+
+Brian Yamauchi asks: [Regarding orbital billboards...]
+>And does anyone have any more details other than what was in the WN
+>news blip?  How serious is this project?  Is this just in the ""wild
+>idea"" stage or does it have real funding?
+  
+    Well, I had been collecting data for next edition of the
+Commercial Space News/Space Technology Investor... To summarize:
+  
+SPACE ADVERTISING
+    First, advertising on space vehicles is not new -- it is very
+common practice to put the cooperating organization's logos on the
+space launch vehicle.  For example, the latest GPS launcher had the
+(very prominent) logos on its side of
+   - McDonnell Douglas (the Delta launcher)
+   - Rockwell International (who built the GPS satellite)
+   - USAF (who paid for the satellite and launch), and
+   - the GPS/Navstar program office
+   This has not been considered ""paid advertising"" but rather
+""public relations"", since the restrictions have been such that only
+organizations involved in the launch could put their logos on the
+side, and there was no money exchanged for this.  [However, putting
+a 10' high logo on the side of the launch vehicle facing the cameras
+is ""advertising"" as much as it is ""public relations"", in my
+opinion.]  [And by the way, I note that the DC-X test vehicle has
+rather prominent McDonnell-Douglas and SDIO logos on the side...]
+   There have been several studies looking at the revenue potentials
+for use of space vehicles for advertising, or placing large
+advertising signs in orbit.  On the shuttle, for example, I know of
+several serious studies in the early and mid 1980's which looked at
+putting logos on the external tank, or on the sides of the payload
+bay.  These ventures would be different than ""public relations"", in
+that the logos or displays would not be restricted to the firms
+participating on that flight, and would involve payment of sums for
+the right to fly the logos in a prominent organization.  (For
+example, painting the ET to look like a Pepsi can, or putting a
+Disneyworld logo on the inside of the payload bay where the cameras
+would scan past it.)
+  
+ADVERTS ON LAUNCH VEHICLES
+   The first paid advertising was done on a Soviet launcher in about
+1990, when several non-involved foreign organizations were allowed
+to pay to put their logos on a Proton launch.  (An Italian shoe
+company was one of the first advertisers, I remember.)  Similarly,
+Soviet cosmonauts on Mir made a paid advertisement for the last
+Olympic games, and have gleefully shown banners and other items from
+participating firms and organizations.  Mars candy bars, for
+example, got a plug from orbit as a sponsor of the launch of the
+British visiting cosmonaut to Mir.
+   Now US firms are starting to put paid advertisements on launch
+vehicles.  The upcoming Conestoga launch (in June) putting the COMET
+recoverable payload capsule into orbit will have paid advertisements
+on the side, for Arnold Schwarzenegger's upcoming movie ""The Last
+Action Hero"".  Besides the usual logos of the participating
+organizations, Columbia pictures has paid $500,000 to put ads on the
+main fuselage of the mission's Conestoga rocket, its booster
+rockets, and on the COMET payload, which will orbit the Earth for
+one month.  A concept for this advertising display was published in
+Space News magazine a couple of months ago.
+   (As a side note: Robert Lorsch, an advertising executive, is
+talking about suing NASA.  He charges NASA with appropriating an idea he
+created with the space agency in 1981 to form corporate advertising
+sponsorships on NASA spacecraft as a way to get funding for the
+space program.  Lorsch contends that in selling advertising space on
+the upcoming COMET, NASA violated an agreement that it ""would not use
+his idea without him being the exclusive representative for NASA and
+receiving compensation.""   This is being disputed, since the launch
+is a ""commercial launch"" and NASA is receiving none of the
+advertising revenues, but the funding for the COMET program is
+coming from NASA.)
+  
+ORBITAL ""BILLBOARDS""
+   Orbital ""billboards"" have been the staple of science fiction for
+some time.  Arthur C. Clarke wrote about one example, and Robert
+Heinlein described another in ""The Man Who Sold the Moon"".  Several
+different potential projects have been developed, although none have
+been implemented, but the most real prior to 1993 being the ""Eiffel
+II"" project, which would have placed a large inflatable sculpture in
+orbit to celebrate the French Republic's Bi-centennial.
+                                                (cont)
+
+--- Maximus 2.01wb
+"
+"From: keithley@apple.com (Craig Keithley)
+Subject: Re: Why not give $1 billion to first year-lo
+
+In article <1993Apr21.150545.24058@iti.org>, aws@iti.org (Allen W. Sherzer)
+wrote:
+> 
+> In article <C5sJDp.F23@zoo.toronto.edu> henry@zoo.toronto.edu (Henry Spencer) writes:
+> 
+> >>This prize isn't big enough to warrent developing a SSTO, but it is
+> >>enough to do it if the vehicle exists.
+> 
+> >Actually, there are people who will tell you that it *would* be enough
+> >to do SSTO development, if done privately as a cut-rate operation.  Of
+> >course, they may be over-optimistic.
+> 
+> In spite of my great respect for the people you speak of, I think their
+> cost estimates are a bit over-optimistic. If nothing else, a working SSTO
+> is at least as complex as a large airliner and has a smaller experience
+> base. It therefore seems that SSTO development should cost at least as
+> much as a typical airliner development. That puts it in the $3G to $5G
+> range.
+> 
+
+For the purpose of a contest, I'd bet some things could be cut.  Like fuel
+for re-entry, any kind of heat shielding, etc., etc.  Even still, if the
+contest participants had to fund DC-1 development, it probably wouldn't be
+worth it to develop DC-1 (just for the contest).  Just give me the cheapest
+heaviest lift man rated (or at least under 6 or so Gs) booster...  If I
+don't have to pay for DC-1 development, great!, I'll use it.
+
+But back to the contest goals, there was a recent article in AW&ST about a
+low cost (it's all relative...) manned return to the moon.  A General
+Dynamics scheme involving a Titan IV & Shuttle to lift a Centaur upper
+stage, LEV, and crew capsule.  The mission consists of delivering two
+unmanned payloads to the lunar surface, followed by a manned mission. 
+Total cost:  US was $10-$13 billion.  Joint ESA(?)/NASA project was $6-$9
+billion for the US share.
+
+I didn't find a mention of how long the crew could stay, but I'd bet that
+its  around 30 days.  And the total payload delivered was about 30 metric
+tonnes.  So if you ignore the scientific payload, hitch a ride in the crew
+habitation module (no return trip...), and toss in a few more tonnes for
+the additional consumables to last another 11 months, then you *might* be
+able to get a year visit out of 15 tonnes (and in case its not obvious,
+that's a wild ass guess).  A pretty boring visit, since every trip outdoors
+eats up a bit of LOX.  And I'm not certain if a home brewed (or
+college-brewed) life support system could last a year.  But let's round
+this up to 19.4 tonnes (convient, since the GD plan talks about 9.7 ton
+payloads delivered to the lunar surface.  This adds up to two Centaurs, two
+LEVs, two Shuttle flights... All to put a single man on the moon for a
+year.   Hmmm.  Not really practical.  Anyone got a cheaper/better way of
+delivering 15-20 tonnes to the lunar surface within the decade?  Anyone
+have a more precise guess about how much a year's supply of consumables and
+equipment would weigh?
+
+And I was wondering about the GD LEV.  Is it reusable?  Or is it discarded
+to burn up on return to LEO?  If its not discarded, could it be refueled? 
+Henry: Do you know anything about the GD LEV?  I noted that it uses RL-10
+engines.  Aren't they reusable/restartable?  Would a LEV fit in a DC-1? 
+I've forgotten (if I ever knew) what the cargo bay dimensions are for the
+DC-1.
+
+All in all, I'm not certain that the single goal/prize of staying on the
+moon for a year is wise and/or useful.  How about:  A prize for the first
+non-government sponsered unmanned moon landing, then another for a manned
+moon landing, then yet another for a system to extract consumables from
+lunar soil, another for a reusable earth/moon shuttle, and so forth.  Find
+some way to build civilian moonbase infrastructure...  Having a single goal
+might result in a bunch of contestents giving up after one person appeared
+to win.  And for those that didn't give up, I find something a little scary
+about a half dozen people huddling in rickety little moon shelters.  I'd
+like to see as much a reward for co-operation as for competition.
+
+Lastly, about ten or fifteen years back I seem to recall that there was an
+English space magazine that had an on-going discussion about moonbases on
+the cheap.  I recalled it discussed things like how much heat the human
+body produced, how much lunar material it'd need for protection from solar
+flares, etc.  Unfortunately I don't remember the name of this magazine. 
+Does this ring a bell to anyone?
+
+Craig Keithley                    |""I don't remember, I don't recall, 
+Apple Computer, Inc.              |I got no memory of anything at all""
+keithley@apple.com                |Peter Gabriel, Third Album (1980)
+"
+"From: prb@access.digex.com (Pat)
+Subject: Re: Keeping Spacecraft on after Funding Cuts.
+
+In article <1993Apr22.003719.101323@zeus.calpoly.edu> jgreen@trumpet.calpoly.edu (James Thomas Green) writes:
+>prb@access.digex.com (Pat) Pontificated: 
+>>
+>>
+>
+>I heard once that the voyagers had a failsafe routine built in
+>that essentially says ""If you never hear from Earth again,
+>here's what to do.""  This was a back up in the event a receiver
+>burnt out but the probe could still send data (limited, but
+>still some data).  
+>
+
+Voyager  has the unusual  luck to be on a stable trajectory out of the
+solar system.   All it's doing is collecting  fields  data,  and routinely
+squirting it down.  One of the mariners is also in stable
+solar orbit,  and still providing similiar  solar data.  
+
+Something  in a planetary orbit,  is subject to much more complex forces.
+
+Comsats, in ""stable "" geosynch  orbits,  require  almost daily
+stationkeeping operations.   
+
+For the occasional  deep space bird,  like PFF  after pluto,  sure
+it could be left on  ""auto-pilot"".  but things like  galileo or
+magellan,  i'd suspect they need enough  housekeeping that
+even untended they'd  end up unusable after a while.
+
+The better question  should be.
+
+Why not transfer  O&M of all birds to a separate agency with continous funding
+to support these kind of ongoing science missions.
+
+pat
+
+	When ongoing ops are mentioned,  it seems to  always quote  Operations
+and Data analysis.  how much would it cost to collect the data
+and let it be analyzed  whenever.  kinda like all that landsat data
+that sat around for 15 years before someone analyzed it for the ozone hole.
+
+>>Even if you let teh bird drift,  it may  get hosed by some
+>>cosmic phenomena.   
+>>
+>Since this would be a shutdown that may never be refunded for
+>startup, if some type of cosmic BEM took out the probe, it might
+>not be such a big loss.  Obviously you can't plan for
+>everything, but the most obvious things can be considered.
+>
+>
+>/~~~(-: James T. Green :-)~~~~(-: jgreen@oboe.calpoly.edu :-)~~~\ 
+>| ""I know you believe you understand what it is that you        |   
+>| think I said.  But I am not sure that you realize that        |
+>| what I said is not what I meant.""                             |
+
+
+"
+"From: Wales.Larrison@ofa123.fidonet.org
+Subject: Boeing TSTO (Was: Words from Chairman of Boeing)
+
+games@max.u.washington.edu  writes:
+Re; Response from CoB of Boeing on SSTO ...
+>""As far as single stage to orbit technology, we think that we have
+>a better answer in a two stage approach, and we are talking to some
+>of our customers about that.  As far as commercialization, that is
+>a long ways off.  ...
+> Anybody know anything further? Is this really news? Does this
+>threaten further work on DC-? ?
+  
+   Boeing has been looking at several TSTO vehicles and has carried
+out extensive conceptual studies of advanced launch systems for some
+time.  A good reference on this might be: ""Comparison of Propulsion
+Options for Advanced Earth-To-Orbit (ETO) Applications (IAF-92-
+0639)."" by V.A. Weldon and L.E. Fink from Boeing.   The paper
+describes a propane-fueled TSTO launch system claimed to achieve
+aircraft-like operational efficiencies without the problems
+associated with liquid hydrogen fuel.  Basically, it's a high-speed
+airplane launching a Hermes-type spaceplane
+   The design (the concept is also called ""Beta"") as laid out in the
+paper can launch at least 10,000 pounds into polar orbit, or 20,000
+pounds to space station orbit including a crew of eight persons and
+life support.  System design reliability is .9995.
+   Beta is a 360-foot-long first stage powered by two large ramjets
+and 12 high- speed civil transport (HSCT) turbofans.  A 108-foot-
+long reusable orbiter is trapeze-mounted in the belly of the first-
+stage aircraft, which also could accommodate a longer and heavy
+payload on an expendable second stage.
+   To launch the orbital vehicle, the first stage takes off like a
+normal HSCT and accelerates to Mach 3.  At that point the turbofans,
+modified to burn catalyzed JP-7, would shut off and the ramjets,
+would take over.  At Mach 5.5 the orbiter or the ELV would swing
+out, ignite and proceed to orbit. Both vehicles would land like
+aircraft at the conclusion of their respective missions.
+   Estimated total weight of the combined configuration at takeoff
+is about 1.5 M lbs, roughly equivalanet to a fully loaded An-225.
+The orbiter stages weighs about 400,Klbs including 335 Klbs
+of LOX and subcooled propane to power two 250 Klbs vacuum thrust
+rocket engines. Propellants would be stored at 91 degrees Kelvin,
+with the propane in a spherical tank mounted forward of the 15-by-
+25-foot cargo bay and the two-seat orbiter crew station. LOX would
+be stored aft.  Weldon and Fink claim the key to this design's
+success is the structurally efficient airframe and the compact
+tankage allowed by the high-density supercooled hydrocarbon fuel.
+     The paper compares TSTO design to SSTO design.  They conclude
+while a SSTO has a slightly lower recurring cost, a TSTO is easier,
+cheaper, and less risky to develop, simpler to build, has greater
+safety and mission versatility and doesn't carry the hard-to-handle
+and bulky hydrogen fuel. The conlcude ""In conjunction with its major
+use of airplane type engines and fuel, as well as its inherent self-
+ferry capability, it is probably the system most likely to provide
+as close to airline-like operations as possible with a practical
+configuration, until a single stage airbreather/rocket concept can
+be shown to be operationally viable.""
+  
+>Is this really news? Does this threaten further work on DC-?
+   Weldon and others at Boeing have been working on TSTO designs for
+some time.  I expect this, or a similar concept (perhaps the HTHL
+SSTO they proposed for the SDIO SSTO first phase) is being re-
+examined as a basis for a bid on the first phase of SpaceLifter.
+   Does it threaten DC-???.  Possibly -- There is a set of on-going
+studies trying straighten out the government's future space
+transportation strategy.  MDC and Boeing (as well as other firms)
+are providing data to a joint study team back in DC.  There are
+various factions and options vying for attention -- including
+shuttle upgrades, shuttle replacement (what was called the ""4-2-3""
+architecture), SpaceLifter, ELV upgrades, and various advanced
+vehicles (ALES, Beta, DC-??, NASP, FSTS, SSTOs of several types,
+etc.)  NASA/DOD/DOT are trying to put together a coherent strategy
+for future US gov't space transportation systems, and trying to
+juggle near-term launch needs (like for DoD and NASA) against
+medium-term needs (including commercial considerations), and against
+the investment and risk of going to ""leap frog"" new technologies
+like SDIO/SSTO and NASP and Beta.
+   It's a heck of a problem.  The worst part of the problem isn't
+that there aren't promising ideas and concepts -- there are dozens
+of them -- but how they balance cost and risk versus real needs in
+the near term.  They should have a draft report in mid-June, with a
+final report coming by the end of the fiscal year.
+ ------------------------------------------------------------------
+ Wales Larrison                           Space Technology Investor
+  
+
+--- Maximus 2.01wb
+"

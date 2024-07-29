@@ -29,31 +29,67 @@ def extract_delimited_text(txt, delims):
         return txt
 
 
+def create_model_client(credentials, model_name, api):
+    with open("backend/model_params.json", "r") as f:
+        params = json.load(f)
+    model_params = {x: y for x, y in params['models'][model_name].items()}
+    model_params.update({'api_key' if x == 'key' else x: y for x, y in credentials.items()})
+    model_params['api_endpoint'] = params[f'{api}_api_endpoint']
+
+    if api == "watsonx":
+        return WatsonXGenerate(model_params)
+    elif api == "bam":
+        return BamGenerate(model_params)
+    else:
+        raise ValueError(f'Invalid api: {api}. Should be either watsonx or bam')
+
+
+def format_chat(chat, model_id):
+    if any([name in model_id for name in ['mixtral', 'prometheus']]):
+        bos_token = '<s>'
+        eos_token = '</s>'
+        chat_for_mixtral = []
+        prev_role = None
+        for m in chat:
+            if m["role"] == prev_role:
+                chat_for_mixtral[-1]["content"] += "\n" + m["content"]
+            else:
+                chat_for_mixtral.append(m)
+            prev_role = m["role"]
+
+        for m in chat_for_mixtral:
+            if m["role"] == 'user':
+                m["content"] = 'user: ' + m["content"]
+            elif m["role"] == 'system':
+                m["role"] = 'user'
+                m["content"] = 'system: ' + m["content"]
+
+        prompt = bos_token
+        for m in chat_for_mixtral:
+            if m['role'] == 'user':
+                prompt += '[INST] ' + m['content'] + ' [/INST] '
+            else:
+                prompt += m['content'] + eos_token + ' '
+        return prompt
+    elif 'llama' in model_id:
+        msg_str = LLAMA_START_OF_INPUT
+        for m in chat:
+            msg_str += _get_llama_header(m['role']) + "\n\n" + m['content'] + LLAMA_END_OF_MESSAGE
+        msg_str += _get_llama_header(ChatRole.ASSISTANT)
+        return msg_str
+    else:
+        raise ValueError(f"model {model_id} not supported")
+
+
 class ChatManagerBase:
     def __init__(self, credentials, model, conv_id, target_model, api, email_address, output_dir, config_name) -> None:
-        with open("backend/model_params.json", "r") as f:
-            params = json.load(f)
         logging.info(f"selected {model}")
         logging.info(f"conv id: {conv_id}")
         logging.info(f"credentials from environment variables: {credentials}")
         logging.info(f"user email address: {email_address}")
 
-        def create_mode_param(model_name, api):
-            model_params = {x: y for x, y in params['models'][model_name].items()}
-            model_params.update({'api_key' if x == 'key' else x: y for x, y in credentials.items()})
-            model_params['api_endpoint'] = params[f'{api}_api_endpoint']
-            return model_params
-
-        if api == "watsonx":
-            generator = WatsonXGenerate
-        else:
-            generator = BamGenerate
-
-        main_model_params = create_mode_param(model, api)
-        target_model_params = create_mode_param(target_model, api)
-
-        self.bam_client = generator(main_model_params)
-        self.target_bam_client = generator(target_model_params)
+        self.bam_client = create_model_client(credentials, model, api)
+        self.target_bam_client = create_model_client(credentials, target_model, api)
         self.conv_id = conv_id
         self.dataset_name = None
         self.state = None
@@ -77,14 +113,17 @@ class ChatManagerBase:
             json.dump(approved_prompts, f)
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
             json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name,
-                       "baseline_prompts": self.baseline_prompts,
+                      "baseline_prompts": self.baseline_prompts,
                        "config_name": self.config_name}, f)
 
     def save_chat_html(self, chat, file_name):
         def _format(msg):
             role = msg['role'].upper()
             txt = msg['content']
-            tags = str({k: msg[k] for k in (msg.keys() - {'role', 'content'})})
+            relevant_tags = {k: msg[k] for k in (msg.keys() - {'role', 'content', 'tooltip'})}
+            tags = ""
+            if relevant_tags:
+                tags = str(relevant_tags)
             return f"<p><b>{role}: </b>{txt} {tags}</p>".replace("\n", "<br>")
 
         chat_dir = os.path.join(self.out_dir, "chat")
@@ -99,42 +138,6 @@ class ChatManagerBase:
 
     def _add_msg(self, chat, role, msg):
         chat.append({'role': role, 'content': msg})
-
-    def _format_chat(self, chat):
-        if 'mixtral' in self.bam_client.parameters['model_id']:
-            bos_token = '<s>'
-            eos_token = '</s>'
-            chat_for_mixtral = []
-            prev_role = None
-            for m in chat:
-                if m["role"] == prev_role:
-                    chat_for_mixtral[-1]["content"] += "\n" + m["content"]
-                else:
-                    chat_for_mixtral.append(m)
-                prev_role = m["role"]
-
-            for m in chat_for_mixtral:
-                if m["role"] == 'user':
-                    m["content"] = 'user: ' + m["content"]
-                elif m["role"] == 'system':
-                    m["role"] = 'user'
-                    m["content"] = 'system: ' + m["content"]
-
-            prompt = bos_token
-            for m in chat_for_mixtral:
-                if m['role'] == 'user':
-                    prompt += '[INST] ' + m['content'] + ' [/INST] '
-                else:
-                    prompt += m['content'] + eos_token + ' '
-            return prompt
-        elif 'llama' in self.bam_client.parameters['model_id']:
-            msg_str = LLAMA_START_OF_INPUT
-            for m in chat:
-                msg_str += _get_llama_header(m['role']) + "\n\n" + m['content'] + LLAMA_END_OF_MESSAGE
-            msg_str += _get_llama_header(ChatRole.ASSISTANT)
-            return msg_str
-        else:
-            raise Exception(f"model {self.bam_client.parameters['model_id']} not supported")
 
     def print_timing_report(self):
         df = pd.DataFrame(self.timing_report)
@@ -157,11 +160,11 @@ class ChatManagerBase:
     def _generate_output(self, prompt_str):
         generated_texts = self._generate_output_and_log_stats(prompt_str, client=self.target_bam_client)
         agent_response = generated_texts[0]
-        logging.info(f"got summary from model: {agent_response}")
+        logging.info(f"got response from model: {agent_response}")
         return agent_response.strip()
 
     def _get_assistant_response(self, chat, max_new_tokens=None):
-        conversation = self._format_chat(chat)
+        conversation = format_chat(chat, self.bam_client.parameters['model_id'])
         generated_texts = self._generate_output_and_log_stats(conversation, client=self.bam_client,
                                                               max_new_tokens=max_new_tokens)
         agent_response = ''

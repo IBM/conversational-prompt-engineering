@@ -17,7 +17,7 @@ from conversational_prompt_engineering.backend.double_chat_manager import Double
 from conversational_prompt_engineering.backend.manager import Manager, Mode
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
-    create_choose_dataset_component_train
+    create_choose_dataset_component_train,add_evaluator_input
 from configs.config_names import load_config
 from conversational_prompt_engineering.data.dataset_utils import load_dataset_mapping
 
@@ -33,6 +33,10 @@ show_pages(
         Page("pages/evaluation.py", "Evaluate", ""),
     ]
 )
+
+
+MUST_HAVE_UPLOADED_DATA_TO_START = True
+USE_ONLY_LLAMA = True
 
 
 class APIName(Enum):
@@ -133,23 +137,26 @@ def callback_cycle():
     with st.chat_message(ChatRole.ASSISTANT):
         st.write(static_welcome_msg)
 
+    add_evaluator_input(st)
+
     uploaded_file = create_choose_dataset_component_train(st=st, manager=manager)
-
-    static_upload_data_msg = "To begin, please upload your data, or select a dataset from our datasets catalog above."
-    with st.chat_message(ChatRole.ASSISTANT):
-        st.write(static_upload_data_msg)
-
     if uploaded_file:
         manager.add_user_message_only_to_user_chat("Selected data")
 
-    if user_msg := st.chat_input("Write your message here"):
-        manager.add_user_message(user_msg)
+    static_upload_data_msg = "To begin, please select a dataset from our datasets catalog above."
+    with st.chat_message(ChatRole.ASSISTANT):
+        st.write(static_upload_data_msg)
+
+    dataset_is_selected = "selected_dataset" in st.session_state or "csv_file_train" in st.session_state
+    if not MUST_HAVE_UPLOADED_DATA_TO_START or dataset_is_selected:
+        if user_msg := st.chat_input("Write your message here"):
+            manager.add_user_message(user_msg)
 
     for msg in manager.user_chat[:manager.user_chat_length]:
         with st.chat_message(msg['role']):
-            st.write(msg['content'])
+            st.markdown(msg['content'], help = msg['tooltip'] if "tooltip" in msg else None)
 
-    # generate and render the agent response
+        # generate and render the agent response
     with st.spinner("Thinking..."):
         if uploaded_file:
             manager.process_examples(read_user_csv_file(st.session_state["csv_file_train"]), st.session_state[
@@ -157,7 +164,14 @@ def callback_cycle():
         messages = manager.generate_agent_messages()
         for msg in messages:
             with st.chat_message(msg['role']):
-                st.write(msg['content'])
+                if manager.example_num is not None:
+                    orig = manager.examples[manager.example_num - 1].replace('\n', '\n\n')
+                    tooltip = f"**Currently discussed input example (#{manager.example_num}):\n\n{orig}**"
+                    manager.user_chat[-1]["tooltip"] = tooltip
+                else:
+                    tooltip=None
+                st.markdown(msg['content'], help=tooltip)
+
 
     if manager.few_shot_prompt is not None:
         btn = st.download_button(
@@ -226,6 +240,7 @@ def submit_button_clicked(target_model):
     def get_secret_key(env_var_name, text_area_key):
         return getattr(st.session_state, text_area_key) if env_var_name not in os.environ else os.environ[env_var_name]
 
+
     # verify credentials
     st.session_state.cred_error = ""
     st.session_state.email_error = ""
@@ -258,6 +273,38 @@ def submit_button_clicked(target_model):
 
 def verify_email(email_address):
     return "@" in email_address and "ibm" in email_address and email_address.index("@") != 0
+
+
+instructions_for_user =  {
+    "main_instructions_for_user":
+
+         "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n" \
+                "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.\n" \
+                "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.\n" \
+                "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).\n"\
+                "This assistant system uses BAM or CWatsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share." ,
+
+    "eval_instructions_for_user" :
+            "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n\n" \
+            "This service is intended to help users build an effective prompt, personalized to their specific summarization use case, through a simple chat with an LLM.\n\n" \
+            f"The *prompts* built by CPE are comprised of two parts: an instruction, describing to the LLM in natural language how to generate the summaries; and up to 3 text-summary pairs, exemplifying how summaries should look like.\n\n" \
+            "To use and evaluate CPE, proceed according to the following steps:\n\n" \
+            "1.	Select a summarization dataset from our catalog. " \
+            "Please select the dataset that is most related to your daily work, or if none exists, select the dataset which interests you most. \n\n" \
+            "2.	Dedicate a few moments to consider your preferences for generating a summary. " \
+            "It may be helpful to download the dataset and go over a few text inputs in order to obtain a better understanding of the task. \n\n" \
+            "3.	Follow the chat with the system. \n\n" \
+            "4.	Once the system notifies you that the final prompt is ready, please click on the Survey tab to answer a few short questions about your interaction.\n\n" \
+            "5.	Finally, click on the Evaluate tab. In this stage we ask you to compare between summaries generated by 3 prompts: " \
+            "one comprised of a generic summarization instruction, and two built with the CPE system, with and without text-summary examples. \n\n" \
+            "Stages 1-4 typically takes around 15 minutes. Please complete these stages in a single session without interruption, if possible.\n\n" \
+            "Generating the summaries for stage 5 could take several minutes, so this stage can be done at a later time.\n\n" \
+            "Do not include PII or confidential information in your responses, nor in the data you share.\n\n" \
+            "Thank you for your time!"
+
+}
+
+
 
 
 def load_environment_variables():
@@ -300,11 +347,6 @@ def set_credentials():
     if hasattr(st.session_state, "cred_error") and st.session_state.cred_error != "":
         st.error(st.session_state.cred_error)
 
-instructions_for_user = "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n" \
-            "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.\n" \
-            "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.\n" \
-            "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).\n"\
-            "This assistant system uses BAM or CWatsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share."
 
 def init_set_up_page():
     st.title(":blue[IBM Research Conversational Prompt Engineering]")
@@ -325,7 +367,8 @@ def init_set_up_page():
 
     else:
         st.empty()
-        st.write(instructions_for_user)
+        # with entry_page.form("my_form"):
+        st.write(instructions_for_user.get(st.session_state["config"].get("General", "welcome_instruction")))
 
         only_watsonx = st.session_state["config"].getboolean("General", "only_watsonx")
         if not only_watsonx:
@@ -341,13 +384,16 @@ def init_set_up_page():
 
         set_credentials()
 
-        target_model = st.radio(
-            label="Select the target model. The prompt that you will build will be formatted for this model.",
-            options=["llama-3", "mixtral", "granite"],
-            key="target_model_radio",
-            captions=["llama-3-70B-instruct",
-                      "mixtral-8x7B-instruct-v01",
-                      "granite-13b-chat-v2 (Beta version)"])
+        if USE_ONLY_LLAMA:
+            target_model = 'llama-3'
+        else:
+            target_model = st.radio(
+                label="Select the target model. The prompt that you will build will be formatted for this model.",
+                options=["llama-3", "mixtral", "granite"],
+                key="target_model_radio",
+                captions=["llama-3-70B-instruct. ",
+                          "mixtral-8x7B-instruct-v01. ",
+                          "granite-13b-chat-v2  (Beta version)"])
 
         st.text_input(label="Organization email address", key="email_address_input")
         if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
@@ -377,3 +423,4 @@ if __name__ == "__main__":
     set_up_is_done = init_set_up_page()
     if set_up_is_done:
         callback_cycle()
+

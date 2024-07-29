@@ -13,7 +13,7 @@ def rander_component(st, default_value_for_droplist, split_name):
     col1, col2 = st.columns(2)
     with col1:
         list_of_datasets = list(dataset_name_to_dir.keys()) + [upload_your_csv]
-        if selected_dataset := st.selectbox('Upload your csv or choose from our datasets catalog',
+        if selected_dataset := st.selectbox('Please select a dataset',
                                             (list_of_datasets),
                                             index=default_value_for_droplist):
             if selected_dataset != upload_your_csv:
@@ -51,6 +51,11 @@ def create_choose_dataset_component_eval(st):
     if "selected_dataset" in st.session_state:
         add_download_button(st, 'eval')
     if "csv_file_eval" in st.session_state:
-        return read_user_csv_file(st.session_state["csv_file_eval"]).text.tolist()
+        return read_user_csv_file(st.session_state["csv_file_eval"]).text.tolist()[:10]
 
 
+def add_evaluator_input(st):
+    #provide_your_instruction_label = "(Optional) You can override baseline instruction for summarization. "\
+    #                "This instruction will be compared to the prompt you build in this session at the evaluation phase."
+    #user_default_prompt = st.text_input(label=provide_your_instruction_label, value="Summarize this text.", key="user_instruction")
+    st.session_state.manager.baseline_prompts["user_baseline_prompt"] = "Summarize this text." #This is temporary
