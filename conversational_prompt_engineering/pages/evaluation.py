@@ -1,11 +1,11 @@
 import json
 import logging
 import os
-from collections import Counter
 
 import streamlit as st
 import pandas as pd
 import ast
+from streamlit.components.v1 import html
 
 from enum import Enum
 from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
@@ -70,7 +70,7 @@ DEBUG_LLM_AS_A_JUDGE = False
 
 def display_text():
     text = st.session_state.generated_data[st.session_state.count]['text']
-    st.text_area(label="text", value=text, label_visibility="collapsed", height=400)
+    add_text_area(text=text, label="text", key="", height=400)
 
 
 def next_text():
@@ -91,7 +91,7 @@ def display_output(side):
     mixed_to_real = st.session_state.generated_data[st.session_state.count]["mixed_indices_mapping_to_prompt_type"][side]
     output = st.session_state.generated_data[st.session_state.count][f"{mixed_to_real}_output"]
     st.write(f"Output {side+1}")
-    st.text_area(label=f"output_{side}", value=output, label_visibility="collapsed", height=200)
+    add_text_area(label=f"output_{side}", text=output, key="", height=200)
 
 
 def display_llm_judge(side):
@@ -162,6 +162,26 @@ def validate_annotation():
             return False
     return True
 
+def add_text_area(text, label, key, height):
+    #st.text_area(key=key, label=label, value=text,
+    #             label_visibility="collapsed", height=height)
+    st.write(label)
+    parts = text.split("**")
+    res = parts[0]
+    for i in range(len(parts)-1):
+        if i % 2 == 0:
+            res += "<b>" + parts[i+1]
+        else:
+            res += "</b>" + parts[i+1]
+
+    pre_text = f""" 
+        <body style="background: {st._config.get_option('theme.secondaryBackgroundColor')};">
+            <pre style="white-space: break-spaces; font-family: sans serif; font-size: 0.98em">{res}</pre>
+        </body>
+    """
+
+    html(pre_text, scrolling=True, height=height)
+
 
 def run():
     num_prompts = 0
@@ -170,7 +190,7 @@ def run():
         num_prompts = len(st.session_state.manager.approved_prompts)
 
         if work_mode == WorkMode.DUMMY_PROMPT and num_prompts < 2:
-            st.session_state.manager.prompts = ["output the line: we all live in a yellow submarine", "output the line: the long and winding road"]
+            st.session_state.manager.prompts = ["output the line: **we** all live in a yellow submarine", "output the line: the long and winding road"]
             num_prompts = len(st.session_state.manager.approved_prompts)
             if "model_baseline_prompt" not in st.session_state.manager.baseline_prompts:
                 st.session_state.manager.baseline_prompts["model_baseline_prompt"] = "summarize the following text"
@@ -222,7 +242,7 @@ def run():
         for i in range(len(prompt_types)):
             with prompt_cols[i]:
                 st.write(prompt_type_metadata.get(prompt_types[i])["title"])
-                st.text_area(key=f"prompt_{i+1}", label="text", value=st.session_state.eval_prompts[i], label_visibility="collapsed", height=200)
+                add_text_area(text=st.session_state.eval_prompts[i], label="text", key=f"prompt_{i+1}", height=200)
 
 
         # show summarize button
