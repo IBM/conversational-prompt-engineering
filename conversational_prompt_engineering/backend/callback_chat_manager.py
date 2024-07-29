@@ -192,7 +192,7 @@ class CallbackChatManager(ChatManagerBase):
 
     def submit_model_chat_and_process_response(self):
         while len(self.model_chat) > self.model_chat_length:
-            self._save_chat_transcripts()
+            self._save_chat_state()
             resp = self._get_assistant_response(self._filtered_model_chat)
             self.model_chat_length = len(self.model_chat)
             self.calls_queue += self._parse_model_response(resp)
@@ -203,13 +203,23 @@ class CallbackChatManager(ChatManagerBase):
                               example_num=self.example_num, prompt_iteration=self.prompt_iteration)
                 self.model_chat_length += 1
                 self._execute_api_call(call)
-                self._save_chat_transcripts()
+                self._save_chat_state()
 
-    def _save_chat_transcripts(self):
+    def _save_chat_state(self):
         self.save_chat_html(self.user_chat, "user_chat.html")
         self.save_chat_html(self.model_chat, "model_chat.html")
         if self.example_num is not None:
             self.save_chat_html(self._filtered_model_chat, f'model_chat_example_{self.example_num}.html')
+
+        chat_dir = os.path.join(self.out_dir, "chat")
+        with open(os.path.join(chat_dir, "output_discussion_state.json"), "w") as f:
+            json.dump(self.output_discussion_state, f)
+        with open(os.path.join(chat_dir, "outputs.json"),
+                  "w") as f:
+            json.dump(self.outputs, f)
+        if self.prompts:
+            self.save_prompts_and_config(self.approved_prompts, self.approved_outputs)
+
 
     def _parse_model_response(self, resp, max_attempts=2):
         err = ''
@@ -281,8 +291,8 @@ class CallbackChatManager(ChatManagerBase):
                     agent_messages.append(msg)
             self.user_chat_length = len(self.user_chat)
 
-        if self.outputs:
-            self.save_prompts_and_config(self.approved_prompts, self.approved_outputs)
+        self._save_chat_state()
+            # self.save_prompts_and_config(self.approved_prompts, self.approved_outputs)
         return agent_messages
 
     def submit_message_to_user(self, message):

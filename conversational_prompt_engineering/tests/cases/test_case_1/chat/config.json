@@ -1,0 +1,1 @@
+{"model": "meta-llama/llama-3-70b-instruct", "dataset": "Restaurant reviews", "example_num": null, "model_chat_length": 24, "user_chat_length": 8}

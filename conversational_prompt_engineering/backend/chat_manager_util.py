@@ -30,7 +30,7 @@ def extract_delimited_text(txt, delims):
 
 
 def create_model_client(credentials, model_name, api):
-    with open("backend/model_params.json", "r") as f:
+    with open(os.path.join(os.path.dirname(__file__),"model_params.json"), "r") as f:
         params = json.load(f)
     model_params = {x: y for x, y in params['models'][model_name].items()}
     model_params.update({'api_key' if x == 'key' else x: y for x, y in credentials.items()})
@@ -113,8 +113,8 @@ class ChatManagerBase:
             json.dump(approved_prompts, f)
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
             json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name,
-                      "baseline_prompts": self.baseline_prompts,
-                       "config_name": self.config_name}, f)
+                       "example_num": self.example_num, "model_chat_length": self.model_chat_length,
+                       "user_chat_length": self.user_chat_length}, f)
 
     def save_chat_html(self, chat, file_name):
         def _format(msg):

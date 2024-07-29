@@ -1,0 +1,9 @@
+role,content
+user,Selected data
+assistant,"What would you like to do with these texts? Would you like to summarize them, extract specific information, or something else?"
+user,summarize
+assistant,"I see that the texts are reviews of a restaurant. Would you like the summaries to focus on the overall sentiment, the food, the service, or something else?"
+user,I would like to find one good thing and one bad thing (if exists)
+assistant,"So, you'd like the summaries to highlight one positive aspect and one negative aspect (if mentioned) of the restaurant in each review. Is that correct? If so, I'll suggest a prompt for the model."
+user,yes
+assistant,Here's a suggested prompt for the model: **Extract one positive and one negative point (if mentioned) from each restaurant review.** Does this look good to you?
