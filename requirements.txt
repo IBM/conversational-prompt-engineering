@@ -7,5 +7,5 @@ python-calamine
 chardet
 ibm_watsonx_ai==1.0.9
 scipy
-
-
+# wikipediaapi # for downloading wiki pages
+# openpyxl # for downloading wiki pages
