@@ -1,3 +1,4 @@
+from conversational_prompt_engineering.backend.prompt_building_util import BASELINE_SUMMARIZATION_INSTRUCTION
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 
 
@@ -58,4 +59,4 @@ def add_evaluator_input(st):
     #provide_your_instruction_label = "(Optional) You can override baseline instruction for summarization. "\
     #                "This instruction will be compared to the prompt you build in this session at the evaluation phase."
     #user_default_prompt = st.text_input(label=provide_your_instruction_label, value="Summarize this text.", key="user_instruction")
-    st.session_state.manager.baseline_prompts["user_baseline_prompt"] = "Summarize this text." #This is temporary
+    st.session_state.manager.baseline_prompts["user_baseline_prompt"] = BASELINE_SUMMARIZATION_INSTRUCTION #This is temporary
