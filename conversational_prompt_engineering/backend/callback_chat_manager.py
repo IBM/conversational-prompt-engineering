@@ -2,11 +2,12 @@ import json
 import logging
 import os.path
 from concurrent.futures import ThreadPoolExecutor
-
+import pandas as pd
 from genai.schema import ChatRole
 
 from conversational_prompt_engineering.backend.chat_manager_util import ChatManagerBase
 from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
+from conversational_prompt_engineering.data.main_dataset_name_to_dir import dataset_name_to_dir
 
 
 class ModelPrompts:
@@ -460,3 +461,35 @@ class CallbackChatManager(ChatManagerBase):
         if self.prompt_conv_end:
             with open(os.path.join(self.out_dir, "prompt_conv_end.Done"), "w"):
                 pass
+
+    @classmethod
+    def _read_chat_outputs(self, path):
+        model_chat_df = pd.read_csv(os.path.join(f"{path}/chat/", "model_chat.csv"))
+        model_chat_list = model_chat_df.to_dict("records")
+        model_chat_list = [{k: v for k, v in record.items() if pd.notna(v)} for record in model_chat_list]
+        user_chat_df = pd.read_csv(os.path.join(f"{path}/chat/", "user_chat.csv"))
+        user_chat_list = user_chat_df.to_dict("records")
+        user_chat_list = [{k: v for k, v in record.items() if pd.notna(v)} for record in user_chat_list]
+
+        with open(os.path.join(os.path.join(f"{path}/chat/", "prompts.json")), "r") as f:
+            prompts = [x['prompt'] for x in json.load(f)]
+        with open(os.path.join(f"{path}/chat/", "config.json"), "r") as f:
+            config = json.load(f)
+        with open(os.path.join(f"{path}/chat/", "output_discussion_state.json"), "r") as f:
+            discussion_state = json.load(f)
+        return model_chat_list, user_chat_list, prompts, discussion_state, config
+
+    def load_chat_to_manager(self, path):
+        model_chat, user_chat, prompts, discussion_state, config = self._read_chat_outputs(path)
+        dataset_dirs = dataset_name_to_dir[config['dataset']]
+        data_df = pd.read_csv(os.path.join(os.path.dirname(__file__), "..", dataset_dirs["train"]))
+        self.process_examples(data_df, config['dataset'])
+        self.model_chat = model_chat
+        self.model_chat_length = config["model_chat_length"]
+        self.user_chat = user_chat
+        self.user_chat_length = config["user_chat_length"]
+        self.prompts = prompts
+        self.output_discussion_state = discussion_state
+        self.example_num = config["example_num"]
+        self.enable_upload_file = False
+        return self, config['dataset']
