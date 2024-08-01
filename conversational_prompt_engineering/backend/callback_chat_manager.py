@@ -41,7 +41,7 @@ class ModelPrompts:
             'self.task_is_defined()': 'call this function when the user has defined the task and it\'s clear to you. You should only use this callback once. '
         }
 
-        self.examples_intro = 'The user has provided some text examples. Here are few of them that you will use through the conversation:'
+        self.examples_intro = 'The user has provided some text examples. I\'ve selected a few of them that you will use through the conversation:'
 
         self.task_definition_instruction = \
             'Start with asking the user which task they would like to perform on the texts. ' \
@@ -79,7 +79,10 @@ class ModelPrompts:
             'Indicate the example (number), and format the text so that the output and your text are separated by empty lines. ' \
             'Discuss the presented output taking into account the system conclusion for this example if exists.'
 
-        self.syntax_err_instruction = 'The last API call produced a syntax error. Check escaping double quotes. Try again.'
+        self.syntax_err_instruction = \
+            'The last API call produced syntax error: ERROR. Try again and fix it. ' \
+            'Points to note: the call parameter must be a single string; double quotes within the string should be escaped.'
+
         self.api_only_instruction = \
             'Your last response is invalid because it contains some plain text or non-existing API. ' \
             'All the communications should be done as plain API calls. Try again.'
@@ -92,9 +95,9 @@ class ModelPrompts:
             'Analyze the conversation above, and share the comments made by the user on Examples 1-3. ' \
             'Any comment should be shared, even if minor. If no comment has been made, accept the prompt. ' \
             'If any comment has been made, recommend how to improve the prompt so it would produce the accepted outputs directly.'
-            # 'Analyze the conversation above. Did the prompt work well and all the generated outputs were accepted as-is? ' \
-            # 'If it did, the prompt should be accepted. ' \
-            # 'If not, recommend how to improve the prompt so that it would produce the accepted outputs directly.'
+        # 'Analyze the conversation above. Did the prompt work well and all the generated outputs were accepted as-is? ' \
+        # 'If it did, the prompt should be accepted. ' \
+        # 'If not, recommend how to improve the prompt so that it would produce the accepted outputs directly.'
 
         self.analyze_discussion_continue = \
             'Continue your conversation with the user. Do the recommendations above suggest improvements to the prompt? ' \
@@ -113,7 +116,7 @@ class ModelPrompts:
         self.conversation_end_instruction = \
             'This is the end of conversation. Say goodbye to the user, ' \
             'and inform that the final prompt that includes few-shot examples and is formatted for the *TARGET_MODEL* ' \
-            'can be downloaded via **Download few shot prompt** button below. '\
+            'can be downloaded via **Download few shot prompt** button below. ' \
             'Also, kindly refer the user to the survey tab that is now available, and let the user know that we will appreciate any feedback.'
 
 
@@ -222,7 +225,6 @@ class CallbackChatManager(ChatManagerBase):
         if self.prompts:
             self.save_prompts_and_config(self.approved_prompts, self.approved_outputs)
 
-
     def _parse_model_response(self, resp, max_attempts=2):
         err = ''
         for num_attempt in range(max_attempts):
@@ -265,10 +267,11 @@ class CallbackChatManager(ChatManagerBase):
             try:
                 exec(call)
                 return
-            except SyntaxError:
+            except SyntaxError as e:
                 err += f'\nattempt {num_attempt + 1}: {call}'
                 tmp_chat = self._filtered_model_chat
-                self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.syntax_err_instruction)
+                self._add_msg(tmp_chat, ChatRole.SYSTEM,
+                              self.model_prompts.syntax_err_instruction.replace('ERROR', str(e)))
                 resp = self._get_assistant_response(tmp_chat)
                 call = self._parse_model_response(resp)[0]
 
@@ -294,7 +297,7 @@ class CallbackChatManager(ChatManagerBase):
             self.user_chat_length = len(self.user_chat)
 
         self._save_chat_state()
-            # self.save_prompts_and_config(self.approved_prompts, self.approved_outputs)
+        # self.save_prompts_and_config(self.approved_prompts, self.approved_outputs)
         return agent_messages
 
     def submit_message_to_user(self, message):
