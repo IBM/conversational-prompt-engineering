@@ -307,12 +307,19 @@ def run():
                 cols = st.columns(1)
                 for op in options:
                     with cols[0]:
+                        key = f"radio_{st.session_state.count}_{dim}_{op}"
+                        default_value = None
+                        if hasattr(st.session_state, key) and getattr(st.session_state, key):
+                            default_value = radio_button_labels.index(getattr(st.session_state, key))
+                        else:
+                            default_value = st.session_state.generated_data[st.session_state.count]['sides'].get((dim, op))
+
                         selected_value = st.radio(
                                 f"{op} output:",
                             # add dummy option to make it the default selection
                                 options = radio_button_labels,
-                                horizontal=True, key=f"radio_{st.session_state.count}_{dim}_{op}",
-                                index=st.session_state.generated_data[st.session_state.count]['sides'].get((dim,op))
+                                horizontal=True, key=key,
+                                index=default_value
                                 )
                         if selected_value:
                             logging.info(f"selected {selected_value} for ({dim},{op}) for item {st.session_state.count}. ")

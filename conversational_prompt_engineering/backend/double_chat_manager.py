@@ -367,14 +367,21 @@ class DoubleChatManager(ChatManagerBase):
         with open(os.path.join(chat_dir, "final_prompts.json"), "w") as f:
             approved_prompts = self.approved_prompts
             if self.state == ConversationState.CONFIRM_PROMPT:
-                approved_prompts = approved_prompts[:-1] #the last prompt is not confirmed yet
+                approved_prompts = approved_prompts[:-1]  # the last prompt is not confirmed yet
             for p in self.approved_prompts:
                 p['prompt_with_format'] = build_few_shot_prompt(p['prompt'], [], self.bam_client.parameters['model_id'])
                 p['prompt_with_format_and_few_shots'] = build_few_shot_prompt(p['prompt'], self.approved_summaries[:self.validated_example_idx],
                                                                               self.bam_client.parameters['model_id'])
             json.dump(self.approved_prompts, f)
+
+        with open(os.path.join(chat_dir, "output_discussion_state.json"), "w") as f:
+            json.dump(self.output_discussion_state, f)
+        with open(os.path.join(chat_dir, "outputs.json"), "w") as f:
+            json.dump(self.outputs, f)
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
-            json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name}, f)
+            json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name,
+                       "example_num":self.example_num, "model_chat_length":self.model_chat_length,
+                       "user_chat_length":self.user_chat_length}, f)
         df = pd.DataFrame(self.user_chat)
         df.to_csv(os.path.join(chat_dir, "user_chat.csv"), index=False)
         df = pd.DataFrame(self.hidden_chat)
