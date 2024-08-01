@@ -40,7 +40,7 @@ class ModelPrompts:
             'self.task_is_defined()': 'call this function when the user has defined the task and it\'s clear to you. You should only use this callback once. '
         }
 
-        self.examples_intro = 'Here are some examples of the input texts provided by the user: '
+        self.examples_intro = 'The user has provided some text examples. Here are few of them that you will use through the conversation:'
 
         self.task_definition_instruction = \
             'Start with asking the user which task they would like to perform on the texts. ' \
