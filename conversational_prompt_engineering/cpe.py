@@ -232,11 +232,11 @@ instructions_for_user = {
 
 def load_environment_variables():
     if "API" not in st.session_state:  # do it only once
-        if "BAM_APIKEY" in os.environ:
+        if "BAM_APIKEY" in os.environ and os.environ["BAM_APIKEY"] != "":
             st.session_state.credentials = {}
             st.session_state.API = APIName.BAM
             st.session_state.credentials["key"] = os.environ["BAM_APIKEY"]
-        elif "WATSONX_APIKEY" in os.environ:
+        elif "WATSONX_APIKEY" in os.environ  and os.environ["WATSONX_APIKEY"] != "":
             st.session_state.credentials = {}
             st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
             st.session_state.API = APIName.Watsonx
