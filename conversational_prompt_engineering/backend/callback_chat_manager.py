@@ -483,10 +483,12 @@ class CallbackChatManager(ChatManagerBase):
             config = json.load(f)
         with open(os.path.join(f"{path}/chat/", "output_discussion_state.json"), "r") as f:
             discussion_state = json.load(f)
-        return model_chat_list, user_chat_list, prompts, discussion_state, config
+        with open(os.path.join(f"{path}/chat/", "outputs.json"), "r") as f:
+            outputs = json.load(f)
+        return model_chat_list, user_chat_list, prompts, discussion_state, outputs, config
 
     def load_chat_to_manager(self, path):
-        model_chat, user_chat, prompts, discussion_state, config = self._read_chat_outputs(path)
+        model_chat, user_chat, prompts, discussion_state, outputs, config = self._read_chat_outputs(path)
         dataset_dirs = dataset_name_to_dir[config['dataset']]
         data_df = pd.read_csv(os.path.join(os.path.dirname(__file__), "..", dataset_dirs["train"]))
         self.process_examples(data_df, config['dataset'])
@@ -498,4 +500,5 @@ class CallbackChatManager(ChatManagerBase):
         self.output_discussion_state = discussion_state
         self.example_num = config["example_num"]
         self.enable_upload_file = False
+        self.outputs = outputs
         return self, config['dataset']
