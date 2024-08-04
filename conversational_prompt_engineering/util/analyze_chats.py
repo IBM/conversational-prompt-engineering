@@ -21,7 +21,7 @@ df[[c for c in df.columns if c != 'q_5']].mean().to_csv(os.path.join(out_dir, "s
 pval = ttest_ind(a=df['Satisfaction from baseline prompt'].tolist(), b=df['Satisfaction from CPE prompt'].tolist(), equal_var=False).pvalue
 print(f"Pvalue between baseline and CPE prompt: {pval}")
 
-
+# avg. number of turns
 chat_files = []
 for subdir, dirs, files in os.walk(chat_dir):
     if subdir.endswith('chat'):
@@ -29,6 +29,7 @@ for subdir, dirs, files in os.walk(chat_dir):
 number_of_turns = [len(pd.read_csv(uc)['role'].tolist()) for uc in chat_files]
 print(f"avg. number of turns: {np.mean(number_of_turns)}, min number of turns: {np.min(number_of_turns)}, max number of turns {np.max(number_of_turns)}, std dev: {np.std(number_of_turns)}")
 
+# avg. number of prompts
 prompts = []
 chat_results_files = []
 chat_dir = '_out/paper_dirs'
