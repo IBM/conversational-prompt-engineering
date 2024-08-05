@@ -192,6 +192,7 @@ def submit_button_clicked(target_model):
     if st.session_state["config"].getboolean("General", "reviewers_mode", fallback=False):
         if verify_reviewer_key(st.session_state.reviewers_key):
             st.session_state.email_address = "anonymous_reviewer@il.ibm.com"
+            st.session_state.API = APIName.Watsonx
         else:
             st.session_state.reviewer_key_error = ':heavy_exclamation_mark: Key error. Please try another key or contact the authors'
     else:
@@ -303,6 +304,7 @@ def init_set_up_page():
     email_is_set = hasattr(st.session_state, "email_address")
     OK_to_proceed_to_chat = credentials_are_set and email_is_set
     if reviewers_mode and not OK_to_proceed_to_chat:
+        st.session_state.API = APIName.Watsonx
         st.write(instructions_for_user.get(st.session_state["config"].get("General", "welcome_instruction")))
         st.text_input(label="Reviewer API key", key="reviewers_key")
         if hasattr(st.session_state, "reviewer_key_error") and st.session_state.reviewer_key_error != "":
