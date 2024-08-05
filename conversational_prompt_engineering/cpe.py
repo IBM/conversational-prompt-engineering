@@ -121,7 +121,7 @@ def callback_cycle():
         st.write(static_upload_data_msg)
 
     if ("existing_chat_path" in st.session_state and st.session_state["existing_chat_path"] != "") and not \
-    st.session_state['existing_chat_loaded']:
+            st.session_state['existing_chat_loaded']:
         manager, dataset = manager.load_chat_to_manager(st.session_state["existing_chat_path"])
 
         if 'selected_dataset' not in st.session_state:
@@ -189,11 +189,21 @@ def submit_button_clicked(target_model):
     else:
         st.session_state.cred_error = ':heavy_exclamation_mark: Please provide your credentials'
 
-    # verify email:
-    if verify_email(st.session_state.email_address_input):  # check text area
-        st.session_state.email_address = st.session_state.email_address_input
+    if st.session_state["config"].getboolean("General", "reviewers_mode", fallback=False):
+        if verify_reviewer_key(st.session_state.reviewers_key):
+            st.session_state.email_address = "anonymous_reviewer@il.ibm.com"
+        else:
+            st.session_state.reviewer_key_error = ':heavy_exclamation_mark: Key error. Please try another key or contact the authors'
     else:
-        st.session_state.email_error = ':heavy_exclamation_mark: Please provide your email address'
+        # verify email:
+        if verify_email(st.session_state.email_address_input):  # check text area
+            st.session_state.email_address = st.session_state.email_address_input
+        else:
+            st.session_state.email_error = ':heavy_exclamation_mark: Please provide your email address'
+
+
+def verify_reviewer_key(key):
+    return key in {"b9b8b564-20a7-40ce-a96b-df5a0f539752"}
 
 
 def verify_email(email_address):
@@ -207,7 +217,13 @@ instructions_for_user = {
         "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.\n" \
         "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.\n" \
         "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).\n" \
-        "This assistant system uses BAM or CWatsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.",
+        "This assistant system uses BAM or Watsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.",
+
+    "main_instructions_for_reviewer":
+        "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n" \
+        "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.\n" \
+        "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.\n" \
+        "For more information feel free to contact us by mail at liate@il.ibm.com or lenad@il.ibm.com.\n",
 
     "eval_instructions_for_user":
         "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n\n" \
@@ -236,7 +252,7 @@ def load_environment_variables():
             st.session_state.credentials = {}
             st.session_state.API = APIName.BAM
             st.session_state.credentials["key"] = os.environ["BAM_APIKEY"]
-        elif "WATSONX_APIKEY" in os.environ  and os.environ["WATSONX_APIKEY"] != "":
+        elif "WATSONX_APIKEY" in os.environ and os.environ["WATSONX_APIKEY"] != "":
             st.session_state.credentials = {}
             st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
             st.session_state.API = APIName.Watsonx
@@ -275,54 +291,64 @@ def set_credentials():
 
 def init_set_up_page():
     st.title(":blue[IBM Research Conversational Prompt Engineering]")
-
+    REVIEWR_MODEL = "llama-3"
     # default setting
     st.session_state.model = 'llama-3'
     if not hasattr(st.session_state, "target_model"):
         st.session_state.target_model = 'llama-3'
 
     load_environment_variables()
-
+    reviewers_mode = st.session_state["config"].getboolean("General", "reviewers_mode", fallback=False)
     credentials_are_set = 'credentials' in st.session_state and 'key' in st.session_state['credentials']
     email_is_set = hasattr(st.session_state, "email_address")
     OK_to_proceed_to_chat = credentials_are_set and email_is_set
-
-    if OK_to_proceed_to_chat:
-        return True
-
-    else:
-        st.empty()
-        # with entry_page.form("my_form"):
+    if reviewers_mode and not OK_to_proceed_to_chat:
         st.write(instructions_for_user.get(st.session_state["config"].get("General", "welcome_instruction")))
+        st.text_input(label="Reviewer API key", key="reviewers_key")
+        if hasattr(st.session_state, "reviewer_key_error") and st.session_state.reviewer_key_error != "":
+            st.error(st.session_state.reviewer_key_error)
 
-        only_watsonx = st.session_state["config"].getboolean("General", "only_watsonx")
-        if not only_watsonx:
-            api = st.radio(
-                "",
-                # add dummy option to make it the default selection
-                options=["BAM", "Watsonx"],
-                horizontal=True, key=f"bam_watsonx_radio",
-                index=0 if st.session_state.API == APIName.BAM else 1)
+        st.button("Submit", on_click=submit_button_clicked, args=[REVIEWR_MODEL])
+        if OK_to_proceed_to_chat:
+            st.write(instructions_for_user.get(st.session_state["config"].get("General", "welcome_instruction")))
+            return True
+    else:
+        if OK_to_proceed_to_chat:
+            return True
+
         else:
-            api = APIName.Watsonx
-        st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
+            st.empty()
+            # with entry_page.form("my_form"):
+            st.write(instructions_for_user.get(st.session_state["config"].get("General", "welcome_instruction")))
 
-        set_credentials()
+            only_watsonx = st.session_state["config"].getboolean("General", "only_watsonx")
+            if not only_watsonx:
+                api = st.radio(
+                    "",
+                    # add dummy option to make it the default selection
+                    options=["BAM", "Watsonx"],
+                    horizontal=True, key=f"bam_watsonx_radio",
+                    index=0 if st.session_state.API == APIName.BAM else 1)
+            else:
+                api = APIName.Watsonx
+            st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
 
-        if USE_ONLY_LLAMA:
-            target_model = 'llama-3'
-        else:
-            target_model = st.radio(
-                label="Select the target model. The prompt that you will build will be formatted for this model.",
-                options=["llama-3", "mixtral", "granite"],
-                key="target_model_radio",
-                captions=["llama-3-70B-instruct. ",
-                          "mixtral-8x7B-instruct-v01. ",
-                          "granite-13b-chat-v2  (Beta version)"])
+            set_credentials()
 
-        st.text_input(label="Organization email address", key="email_address_input")
-        if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
-            st.error(st.session_state.email_error)
+            if USE_ONLY_LLAMA:
+                target_model = 'llama-3'
+            else:
+                target_model = st.radio(
+                    label="Select the target model. The prompt that you will build will be formatted for this model.",
+                    options=["llama-3", "mixtral", "granite"],
+                    key="target_model_radio",
+                    captions=["llama-3-70B-instruct. ",
+                              "mixtral-8x7B-instruct-v01. ",
+                              "granite-13b-chat-v2  (Beta version)"])
+
+            st.text_input(label="Organization email address", key="email_address_input")
+            if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
+                st.error(st.session_state.email_error)
 
         st.button("Submit", on_click=submit_button_clicked, args=[target_model])
         return False
