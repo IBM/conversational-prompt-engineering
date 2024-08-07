@@ -1,18 +1,12 @@
 import configparser
-
-config_name_to_file = {"main": "configs/main_config.conf",
-                       "TLS": "configs/TLS_config.conf",
-                       "eval": "configs/eval_config.conf",
-                       "debug": "configs/debug_config.conf",
-                       "reviewer": "configs/reviewers_config.conf",
-                       }
+import os
 
 
 def load_config(config_name):
-    if config_name not in config_name_to_file:
-        raise ValueError(f"Provided config name is: {config_name} is invalid!")
-
-    config_file_name = config_name_to_file.get(config_name)
+    config_file_name = os.path.join("configs", f"{config_name}_config.conf")
     config = configparser.ConfigParser()
-    config.read(config_file_name)
+    try:
+        config.read(config_file_name)
+    except:
+        raise ValueError(f"Can't load {config}. Check if {config_file_name} exists.")
     return config
