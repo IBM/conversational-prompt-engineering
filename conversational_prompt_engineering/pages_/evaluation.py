@@ -15,7 +15,7 @@ from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_compone
 import time
 
 MIN_NUM_EXAMPLES_TO_UPLOAD = 5
-MIN_EXAMPLE_TO_EVALUATE = 7
+
 
 class WorkMode(Enum):
     REGULAR, DUMMY_PROMPT = range(2)
@@ -156,7 +156,8 @@ def validate_annotation():
     is_valid = True
     for i in range(len(st.session_state.generated_data)):
         for dim in dimensions:
-            best = st.session_state.generated_data[i]["sides"][(dim, "Best")]
+            best = st.session_state.generated_data[i]["sides"].get((dim, "Best"))
+            worst = st.session_state.generated_data[i]["sides"].get((dim, "Worst"))
             # fill in "worst" annotation in case we only annotated "best"
             if len(prompt_types) == 2:
                 worst_index = 1 - best
@@ -168,7 +169,7 @@ def validate_annotation():
                 st.session_state.generated_data[st.session_state.count]['prompts'][(dim, "Worst")] = real_prompt_type
 
             worst = st.session_state.generated_data[i]["sides"][(dim, "Worst")]
-            if (best == worst):
+            if best is not None and (best == worst):
                 suffix = f"in respect to {dim}"
                 if len(dimensions) == 1:
                     suffix = ""
@@ -268,7 +269,7 @@ def run():
         if st.session_state.evaluate_clicked:
             with st.spinner('Generating outputs...'):
                 generated_data = \
-                    st.session_state.evaluation.summarize(st.session_state.eval_prompts, prompt_types,
+                    st.session_state.evaluation.generate_evaluation_examples(st.session_state.eval_prompts, prompt_types,
                                                           test_texts)
                 if "llm_judge" in st.session_state:
                     assert "zero_shot" in prompt_types, "cannot run llm as a judge without a zero shot prompt!"
@@ -351,7 +352,9 @@ def run():
 
             num_of_fully_annotated_items = len([x["prompts"] for x in st.session_state.generated_data if len(x["prompts"]) == len(dimensions)*len(options)])
             st.write(f"Annotation for {num_of_fully_annotated_items} out of {len(st.session_state.generated_data)} examples is completed")
-            finish_clicked = st.button(f"Submit", disabled = num_of_fully_annotated_items < min(MIN_EXAMPLE_TO_EVALUATE, len(st.session_state.generated_data)))
+            min_examples_to_evaluate = st.session_state["config"].getint("Evaluation", "min_examples_to_evaluate", fallback=0)
+            finish_clicked = st.button(f"Submit", disabled = num_of_fully_annotated_items < max(1, min(min_examples_to_evaluate, len(st.session_state.generated_data))) # we must annotate at least one example
+                                                             )
             if finish_clicked:
                 if validate_annotation():
                     # showing aggregated results
@@ -359,12 +362,14 @@ def run():
                     st.write(f"Submitted annotations for {num_of_examples} examples")
                     save_results("")
                     #st.write(f"Compared between {len(st.session_state.eval_prompts)} prompts")
-                    #for dim in dimensions:
-                    #    st.write(f"{dim}:")
-                    #    for prompt_type in results:
-                    #        num_of_time_prompt_is_best = results[prompt_type].get((dim, "Best"), 0)
-                    #        pct_val = '{0:.2f}'.format(100*num_of_time_prompt_is_best/num_of_examples)
-                    #        st.write(f"{prompt_type} prompt was chosen {num_of_time_prompt_is_best} {'times' if num_of_time_prompt_is_best != 1 else 'time'} ({pct_val}%) ")
+                    for dim in dimensions:
+                        if len(dimensions) > 1:
+                            st.write(f"{dim}:")
+                        for prompt_type in results:
+                            num_of_time_prompt_is_best = results[prompt_type].get((dim, "Best"), 0)
+                            pct_val = '{0:.2f}'.format(100*num_of_time_prompt_is_best/num_of_examples)
+                            prompt_title = prompt_type_metadata.get(prompt_type).get("title")
+                            st.write(f"{prompt_title} : chosen as best {num_of_time_prompt_is_best}/{num_of_examples} {'times' if num_of_time_prompt_is_best != 1 else 'time'} ({pct_val}%) ")
                     st.write("Your annotation is saved. Thank you for contributing to the CPE project!")
 
 if __name__ == "__main__":
