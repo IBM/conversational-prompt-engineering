@@ -128,7 +128,7 @@ def calculate_results():
     return prompts, len(ranked_elements)
 
 
-def save_results():
+def save_results(output_suffix):
     out_path = os.path.join(st.session_state.manager.out_dir, "eval")
     os.makedirs(out_path, exist_ok=True)
     #reorder shuffled data:
@@ -140,7 +140,7 @@ def save_results():
             df[f"ranked_prompt_{(dim,rank)}"] = df["prompts"].apply(lambda x: x.get((dim, rank)))
             df[f"sides_{(dim,rank)}"] = df["sides"].apply(lambda x: x.get((dim, rank)))
     df = df.drop(["sides", "prompts"], axis=1)
-    df.to_csv(os.path.join(out_path, f"eval_results.csv"))
+    df.to_csv(os.path.join(out_path, f"eval_results{output_suffix}.csv"))
     with open(os.path.join(out_path, f"metadata.json"), "w") as f:
         prompts_dict = {}
         res_dict = {"dataset": st.session_state["selected_dataset"], "prompts" : prompts_dict}
@@ -337,6 +337,7 @@ def run():
                             selected_prompt = st.session_state.generated_data[st.session_state.count][f"{real_prompt_type}_prompt"]
                             st.session_state.generated_data[st.session_state.count]['sides'][(dim,op)] = side_index
                             st.session_state.generated_data[st.session_state.count]['prompts'][(dim,op)] = real_prompt_type
+                            save_results("_partial")
                 st.divider()
 
             num_of_fully_annotated_items = len([x["prompts"] for x in st.session_state.generated_data if len(x["prompts"]) == len(dimensions)*len(options)])
@@ -347,7 +348,7 @@ def run():
                     # showing aggregated results
                     results, num_of_examples = calculate_results()
                     st.write(f"Submitted annotations for {num_of_examples} examples")
-                    save_results()
+                    save_results("")
                     #st.write(f"Compared between {len(st.session_state.eval_prompts)} prompts")
                     #for dim in dimensions:
                     #    st.write(f"{dim}:")

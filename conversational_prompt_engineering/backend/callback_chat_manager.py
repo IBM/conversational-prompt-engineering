@@ -2,11 +2,12 @@ import json
 import logging
 import os.path
 from concurrent.futures import ThreadPoolExecutor
-
+import pandas as pd
 from genai.schema import ChatRole
 
 from conversational_prompt_engineering.backend.chat_manager_util import ChatManagerBase
 from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
+from conversational_prompt_engineering.data.main_dataset_name_to_dir import dataset_name_to_dir
 
 
 class ModelPrompts:
@@ -20,7 +21,7 @@ class ModelPrompts:
             'You will interact with the user to gather information regarding their preferences and needs. ' \
             'I will send the prompts you suggest to the dedicated model to generate outputs, and pass them back to you, ' \
             'so that you could discuss them with the user and get feedback. ' \
-            'User time is valuable, keep the conversation pragmatic. Make the obvious decisions by yourself.' \
+            'User time is valuable, keep the conversation pragmatic. Make the obvious decisions by yourself. ' \
             'Don\'t greet the user at your first interaction.'
 
         self.api_instruction = \
@@ -40,7 +41,10 @@ class ModelPrompts:
             'self.task_is_defined()': 'call this function when the user has defined the task and it\'s clear to you. You should only use this callback once. '
         }
 
-        self.examples_intro = 'Here are some examples of the input texts provided by the user: '
+        self.examples_intro = \
+            'The user has provided some text examples. ' \
+            'I\'ve selected a few of them that you will use in the conversation. ' \
+            'Note that your goal to build a generic prompt, and not for these specific examples.'
 
         self.task_definition_instruction = \
             'Start with asking the user which task they would like to perform on the texts. ' \
@@ -78,7 +82,10 @@ class ModelPrompts:
             'Indicate the example (number), and format the text so that the output and your text are separated by empty lines. ' \
             'Discuss the presented output taking into account the system conclusion for this example if exists.'
 
-        self.syntax_err_instruction = 'The last API call produced a syntax error. Check escaping double quotes. Try again.'
+        self.syntax_err_instruction = \
+            'The last API call produced syntax error: ERROR. Try again and fix it. ' \
+            'Points to note: the call parameter must be a single string; double quotes within the string should be escaped.'
+
         self.api_only_instruction = \
             'Your last response is invalid because it contains some plain text or non-existing API. ' \
             'All the communications should be done as plain API calls. Try again.'
@@ -91,9 +98,9 @@ class ModelPrompts:
             'Analyze the conversation above, and share the comments made by the user on Examples 1-3. ' \
             'Any comment should be shared, even if minor. If no comment has been made, accept the prompt. ' \
             'If any comment has been made, recommend how to improve the prompt so it would produce the accepted outputs directly.'
-            # 'Analyze the conversation above. Did the prompt work well and all the generated outputs were accepted as-is? ' \
-            # 'If it did, the prompt should be accepted. ' \
-            # 'If not, recommend how to improve the prompt so that it would produce the accepted outputs directly.'
+        # 'Analyze the conversation above. Did the prompt work well and all the generated outputs were accepted as-is? ' \
+        # 'If it did, the prompt should be accepted. ' \
+        # 'If not, recommend how to improve the prompt so that it would produce the accepted outputs directly.'
 
         self.analyze_discussion_continue = \
             'Continue your conversation with the user. Do the recommendations above suggest improvements to the prompt? ' \
@@ -112,7 +119,7 @@ class ModelPrompts:
         self.conversation_end_instruction = \
             'This is the end of conversation. Say goodbye to the user, ' \
             'and inform that the final prompt that includes few-shot examples and is formatted for the *TARGET_MODEL* ' \
-            'can be downloaded via **Download few shot prompt** button below. '\
+            'can be downloaded via **Download few shot prompt** button below. ' \
             'Also, kindly refer the user to the survey tab that is now available, and let the user know that we will appreciate any feedback.'
 
 
@@ -221,7 +228,6 @@ class CallbackChatManager(ChatManagerBase):
         if self.prompts:
             self.save_prompts_and_config(self.approved_prompts, self.approved_outputs)
 
-
     def _parse_model_response(self, resp, max_attempts=2):
         err = ''
         for num_attempt in range(max_attempts):
@@ -264,10 +270,11 @@ class CallbackChatManager(ChatManagerBase):
             try:
                 exec(call)
                 return
-            except SyntaxError:
+            except SyntaxError as e:
                 err += f'\nattempt {num_attempt + 1}: {call}'
                 tmp_chat = self._filtered_model_chat
-                self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.syntax_err_instruction)
+                self._add_msg(tmp_chat, ChatRole.SYSTEM,
+                              self.model_prompts.syntax_err_instruction.replace('ERROR', str(e)))
                 resp = self._get_assistant_response(tmp_chat)
                 call = self._parse_model_response(resp)[0]
 
@@ -293,7 +300,7 @@ class CallbackChatManager(ChatManagerBase):
             self.user_chat_length = len(self.user_chat)
 
         self._save_chat_state()
-            # self.save_prompts_and_config(self.approved_prompts, self.approved_outputs)
+        # self.save_prompts_and_config(self.approved_prompts, self.approved_outputs)
         return agent_messages
 
     def submit_message_to_user(self, message):
@@ -317,7 +324,7 @@ class CallbackChatManager(ChatManagerBase):
         self.add_system_message(self.model_prompts.analyze_examples)
 
     def switch_to_example(self, example_num):
-        self.model_chat[-1]['example_num'] = None
+        self.model_chat[-1]['example_num'] = None #this is the call to switch to example - we want it to be in the general chat
 
         example_num = int(example_num)
         self.example_num = example_num
@@ -353,6 +360,7 @@ class CallbackChatManager(ChatManagerBase):
                                     example_num=example_num, prompt_iteration=self.prompt_iteration)
             self.output_discussion_state['model_outputs'][i] = output
 
+        #side chat - generated output of new prompt vs. the outputs that were accepted outputs
         if len(self.prompts) > 1 and prev_discussion_cot is not None:
             tmp_chat = [{'role': ChatRole.SYSTEM, 'content': '\n'.join([
                 self.model_prompts.analyze_new_prompt_task,
@@ -460,3 +468,38 @@ class CallbackChatManager(ChatManagerBase):
         if self.prompt_conv_end:
             with open(os.path.join(self.out_dir, "prompt_conv_end.Done"), "w"):
                 pass
+
+    @classmethod
+    def _read_chat_outputs(self, path):
+        model_chat_df = pd.read_csv(os.path.join(f"{path}/chat/", "model_chat.csv"))
+        model_chat_list = model_chat_df.to_dict("records")
+        model_chat_list = [{k: v for k, v in record.items() if pd.notna(v)} for record in model_chat_list]
+        user_chat_df = pd.read_csv(os.path.join(f"{path}/chat/", "user_chat.csv"))
+        user_chat_list = user_chat_df.to_dict("records")
+        user_chat_list = [{k: v for k, v in record.items() if pd.notna(v)} for record in user_chat_list]
+
+        with open(os.path.join(os.path.join(f"{path}/chat/", "prompts.json")), "r") as f:
+            prompts = [x['prompt'] for x in json.load(f)]
+        with open(os.path.join(f"{path}/chat/", "config.json"), "r") as f:
+            config = json.load(f)
+        with open(os.path.join(f"{path}/chat/", "output_discussion_state.json"), "r") as f:
+            discussion_state = json.load(f)
+        with open(os.path.join(f"{path}/chat/", "outputs.json"), "r") as f:
+            outputs = json.load(f)
+        return model_chat_list, user_chat_list, prompts, discussion_state, outputs, config
+
+    def load_chat_to_manager(self, path):
+        model_chat, user_chat, prompts, discussion_state, outputs, config = self._read_chat_outputs(path)
+        dataset_dirs = dataset_name_to_dir[config['dataset']]
+        data_df = pd.read_csv(os.path.join(os.path.dirname(__file__), "..", dataset_dirs["train"]))
+        self.process_examples(data_df, config['dataset'])
+        self.model_chat = model_chat
+        self.model_chat_length = config["model_chat_length"]
+        self.user_chat = user_chat
+        self.user_chat_length = config["user_chat_length"]
+        self.prompts = prompts
+        self.output_discussion_state = discussion_state
+        self.example_num = config["example_num"]
+        self.enable_upload_file = False
+        self.outputs = outputs
+        return self, config['dataset']
