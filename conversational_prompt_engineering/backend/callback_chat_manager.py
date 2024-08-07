@@ -21,7 +21,7 @@ class ModelPrompts:
             'You will interact with the user to gather information regarding their preferences and needs. ' \
             'I will send the prompts you suggest to the dedicated model to generate outputs, and pass them back to you, ' \
             'so that you could discuss them with the user and get feedback. ' \
-            'User time is valuable, keep the conversation pragmatic. Make the obvious decisions by yourself.' \
+            'User time is valuable, keep the conversation pragmatic. Make the obvious decisions by yourself. ' \
             'Don\'t greet the user at your first interaction.'
 
         self.api_instruction = \
@@ -324,7 +324,7 @@ class CallbackChatManager(ChatManagerBase):
         self.add_system_message(self.model_prompts.analyze_examples)
 
     def switch_to_example(self, example_num):
-        self.model_chat[-1]['example_num'] = None
+        self.model_chat[-1]['example_num'] = None #this is the call to switch to example - we want it to be in the general chat
 
         example_num = int(example_num)
         self.example_num = example_num
@@ -360,6 +360,7 @@ class CallbackChatManager(ChatManagerBase):
                                     example_num=example_num, prompt_iteration=self.prompt_iteration)
             self.output_discussion_state['model_outputs'][i] = output
 
+        #side chat - generated output of new prompt vs. the outputs that were accepted outputs
         if len(self.prompts) > 1 and prev_discussion_cot is not None:
             tmp_chat = [{'role': ChatRole.SYSTEM, 'content': '\n'.join([
                 self.model_prompts.analyze_new_prompt_task,
