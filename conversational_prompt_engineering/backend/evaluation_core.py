@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import random
+from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 from tqdm import tqdm
@@ -52,9 +53,8 @@ class Evaluation:
 
         logging.info(f"evaluation files saved to {out_dir}")
 
-    def summarize(self, prompts, prompt_types, generated_output, index):
+    def summarize(self, prompts, prompt_types, row_data_for_text):
         prompts_responses = []
-        row_data_for_text = generated_output[index]
         for _, prompt in enumerate(tqdm(prompts)):
             prompt_str = prompt.format(text=row_data_for_text["text"])
             resp = self.bam_client.send_messages(prompt_str)[0]
@@ -67,12 +67,19 @@ class Evaluation:
             row_data_for_text[f"{prompt_types[i]}_output"] = prompts_responses[i]
             mixed_mapping[mixed_indices[i]] = prompt_types[i]
         row_data_for_text["mixed_indices_mapping_to_prompt_type"] = mixed_mapping
+        return row_data_for_text
 
     def generate_evaluation_examples(self, prompts, prompt_types, texts):
         generated_ordered = []
-        for i, t in enumerate(texts):
-            row_data_ordered = {"text": t, "index": i}
-            generated_ordered.append(row_data_ordered)
-            self.summarize(prompts, prompt_types, generated_ordered, i)
+        futures = {}
+        with ThreadPoolExecutor(max_workers=len(texts)) as executor:
+            for i, t in enumerate(texts):
+                row_data_ordered = {"text": t, "index": i}
+                generated_ordered.append(row_data_ordered)
+                futures[i] = executor.submit(self.summarize, prompts, prompt_types, generated_ordered[i])
+
+        for i, f in futures.items():
+            output = f.result()
+            generated_ordered[i] = output
         random.shuffle((generated_ordered))
         return generated_ordered
