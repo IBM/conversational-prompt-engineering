@@ -21,18 +21,11 @@ from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_compone
 from configs.config_names import load_config
 from conversational_prompt_engineering.data.dataset_utils import load_dataset_mapping
 
-from st_pages import Page, show_pages, hide_pages
+from st_pages import Page, show_pages
 
 version = "callback manager v1.0.7"
-st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"})
 
-show_pages(
-    [
-        Page("cpe.py", "Chat", ""),
-        Page("pages/survey.py", "Survey", ""),
-        Page("pages/evaluation.py", "Evaluate", ""),
-    ]
-)
+st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"})
 
 MUST_HAVE_UPLOADED_DATA_TO_START = True
 USE_ONLY_LLAMA = True
@@ -368,12 +361,24 @@ def init_config():
     st.session_state["config_name"] = config_name
     st.session_state["config"] = config
     st.session_state["dataset_name_to_dir"] = load_dataset_mapping(config)
+    if config.has_option("General", "backgroundColor"):
+        st._config._set_option("theme.secondaryBackgroundColor", config.get("General", "backgroundColor"), where_defined=None)
+
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     if not "config" in st.session_state:
         init_config()
+        st.rerun()
+    show_pages(
+        [
+            Page("cpe.py", "Chat", ""),
+            Page("pages_/survey.py", "Survey", ""),
+            Page("pages_/evaluation.py", "Evaluate", ""),
+        ]
+    )
+
     set_up_is_done = init_set_up_page()
     if set_up_is_done:
         callback_cycle()

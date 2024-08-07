@@ -27,7 +27,7 @@ class WorkMode(Enum):
     def __hash__(self):
         return hash((type(self).__qualname__, self.name))
 
-
+annotation_options = ["Best", "Worst"]
 
 work_mode = WorkMode.REGULAR
 if hasattr(st.session_state, "config") and st.session_state["config"].getboolean("Evaluation", "dummy_prompt_mode", fallback=False):
@@ -38,7 +38,6 @@ dimensions = [""]
 prompt_types = ["baseline", "zero_shot", "few_shot"] # default
 if hasattr(st.session_state, "config") and st.session_state["config"].has_option("Evaluation", "prompt_types"):
     prompt_types = ast.literal_eval(st.session_state["config"].get("Evaluation", "prompt_types"))
-
 
 
 def build_baseline_prompt():
@@ -134,7 +133,7 @@ def save_results(output_suffix):
 
     df = pd.DataFrame(ordered_generate_data)
     for dim in dimensions:
-        for rank in ["Best", "Worst"]:
+        for rank in annotation_options:
             df[f"ranked_prompt_{(dim,rank)}"] = df["prompts"].apply(lambda x: x.get((dim, rank)))
             df[f"sides_{(dim,rank)}"] = df["sides"].apply(lambda x: x.get((dim, rank)))
     df = df.drop(["sides", "prompts"], axis=1)
@@ -158,6 +157,16 @@ def validate_annotation():
     for i in range(len(st.session_state.generated_data)):
         for dim in dimensions:
             best = st.session_state.generated_data[i]["sides"][(dim, "Best")]
+            # fill in "worst" annotation in case we only annotated "best"
+            if len(prompt_types) == 2:
+                worst_index = 1 - best
+                st.session_state.generated_data[st.session_state.count]["sides"][
+                    (dim, "Worst")] = worst_index  # (sides are only 1 and 0)
+                real_prompt_type = \
+                st.session_state.generated_data[st.session_state.count]["mixed_indices_mapping_to_prompt_type"][
+                    worst_index]
+                st.session_state.generated_data[st.session_state.count]['prompts'][(dim, "Worst")] = real_prompt_type
+
             worst = st.session_state.generated_data[i]["sides"][(dim, "Worst")]
             if (best == worst):
                 suffix = f"in respect to {dim}"
@@ -170,6 +179,7 @@ def validate_annotation():
 def add_text_area(text, height):
     #st.text_area(key=key, label=label, value=text,
     #             label_visibility="collapsed", height=height)
+#    st.write(label)
     parts = text.split("**")
     res = parts[0]
     for i in range(len(parts)-1):
@@ -299,7 +309,9 @@ def run():
                     if "llm_judge" in st.session_state:
                         display_llm_judge(i)
             add_next_buttons("bellow_summaries")
-            options = ["Best", "Worst"]
+            options = annotation_options
+            if len(prompt_types) == 2:
+                options = annotation_options[:1] #skip the worst
             radio_button_labels = [f"Output {i+1}" for i in range(len(prompt_types))]
             for dim in dimensions:
                 if dim != "":
@@ -332,7 +344,6 @@ def run():
                             real_prompt_type = st.session_state.generated_data[st.session_state.count]["mixed_indices_mapping_to_prompt_type"][side_index]
                             logging.info(f"\treal prompt type = {real_prompt_type}")
                             logging.info(f"\treal example index = {st.session_state.generated_data[st.session_state.count]['index']}")
-                            selected_prompt = st.session_state.generated_data[st.session_state.count][f"{real_prompt_type}_prompt"]
                             st.session_state.generated_data[st.session_state.count]['sides'][(dim,op)] = side_index
                             st.session_state.generated_data[st.session_state.count]['prompts'][(dim,op)] = real_prompt_type
                             save_results("_partial")

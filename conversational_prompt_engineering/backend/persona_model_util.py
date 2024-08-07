@@ -12,7 +12,7 @@ from conversational_prompt_engineering.backend.callback_chat_manager import Call
 from conversational_prompt_engineering.backend.chat_manager_util import create_model_client, format_chat
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
 from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
-from conversational_prompt_engineering.pages.evaluation import prompt_types, dimensions
+from conversational_prompt_engineering.pages_.evaluation import prompt_types, dimensions
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 
 
