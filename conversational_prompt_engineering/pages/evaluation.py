@@ -69,6 +69,8 @@ DEBUG_LLM_AS_A_JUDGE = False
 
 
 def display_text():
+    if not 'mixed_indices_mapping_to_prompt_type' in st.session_state.generated_data[st.session_state.count]:
+        st.session_state.evaluation.summarize(st.session_state.eval_prompts, prompt_types, st.session_state.generated_data, st.session_state.count)
     text = st.session_state.generated_data[st.session_state.count]['text']
     add_text_area(text=text, height=400)
 
@@ -258,7 +260,7 @@ def run():
         if st.session_state.evaluate_clicked:
             with st.spinner('Generating outputs...'):
                 generated_data = \
-                    st.session_state.evaluation.summarize(st.session_state.eval_prompts, prompt_types,
+                    st.session_state.evaluation.generate_evaluation_examples(st.session_state.eval_prompts, prompt_types,
                                                           test_texts)
                 if "llm_judge" in st.session_state:
                     assert "zero_shot" in prompt_types, "cannot run llm as a judge without a zero shot prompt!"

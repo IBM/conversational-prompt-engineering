@@ -52,23 +52,27 @@ class Evaluation:
 
         logging.info(f"evaluation files saved to {out_dir}")
 
-    def summarize(self, prompts, prompt_types, texts):
+    def summarize(self, prompts, prompt_types, generated_output, index):
+        prompts_responses = []
+        row_data_for_text = generated_output[index]
+        for _, prompt in enumerate(tqdm(prompts)):
+            prompt_str = prompt.format(text=row_data_for_text["text"])
+            resp = self.bam_client.send_messages(prompt_str)[0]
+            prompts_responses.append(resp[0].replace("\n", " \n"))
+        mixed_indices = list(range(len(prompts)))
+        random.shuffle(mixed_indices)
+        mixed_mapping = {}
+        for i in range(len(prompts)):
+            row_data_for_text[f"{prompt_types[i]}_prompt"] = prompts[i]
+            row_data_for_text[f"{prompt_types[i]}_output"] = prompts_responses[i]
+            mixed_mapping[mixed_indices[i]] = prompt_types[i]
+        row_data_for_text["mixed_indices_mapping_to_prompt_type"] = mixed_mapping
+
+    def generate_evaluation_examples(self, prompts, prompt_types, texts):
         generated_ordered = []
         for i, t in enumerate(texts):
             row_data_ordered = {"text": t, "index": i}
-            prompts_responses = []
-            for _,prompt in enumerate(tqdm(prompts)):
-                prompt_str = prompt.format(text=t)
-                resp = self.bam_client.send_messages(prompt_str)[0]
-                prompts_responses.append(resp[0].replace("\n", " \n"))
-            mixed_indices = list(range(len(prompts)))
-            random.shuffle(mixed_indices)
-            mixed_mapping = {}
-            for i in range(len(prompts)):
-                row_data_ordered[f"{prompt_types[i]}_prompt"] = prompts[i]
-                row_data_ordered[f"{prompt_types[i]}_output"] = prompts_responses[i]
-                mixed_mapping[mixed_indices[i]] = prompt_types[i]
-            row_data_ordered["mixed_indices_mapping_to_prompt_type"] = mixed_mapping
             generated_ordered.append(row_data_ordered)
+            self.summarize(prompts, prompt_types, generated_ordered, i)
         random.shuffle((generated_ordered))
         return generated_ordered
