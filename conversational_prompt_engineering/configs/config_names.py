@@ -3,7 +3,9 @@ import configparser
 config_name_to_file = {"main": "configs/main_config.conf",
                        "TLS": "configs/TLS_config.conf",
                        "eval": "configs/eval_config.conf",
-                       "debug": "configs/debug_config.conf"}
+                       "debug": "configs/debug_config.conf",
+                       "reviewer": "configs/reviewers_config.conf",
+                       }
 
 
 def load_config(config_name):

@@ -17,7 +17,7 @@ from conversational_prompt_engineering.backend.double_chat_manager import Double
 from conversational_prompt_engineering.backend.manager import Manager, Mode
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
-    create_choose_dataset_component_train,add_evaluator_input
+    create_choose_dataset_component_train, add_evaluator_input, StartType
 from configs.config_names import load_config
 from conversational_prompt_engineering.data.dataset_utils import load_dataset_mapping
 
@@ -34,13 +34,13 @@ show_pages(
     ]
 )
 
-
 MUST_HAVE_UPLOADED_DATA_TO_START = True
 USE_ONLY_LLAMA = True
 
 
 class APIName(Enum):
     BAM, Watsonx = "bam", "watsonx"
+
     def __eq__(self, other):
         if type(self).__qualname__ != type(other).__qualname__:
             return NotImplemented
@@ -48,7 +48,6 @@ class APIName(Enum):
 
     def __hash__(self):
         return hash((type(self).__qualname__, self.name))
-
 
 
 def old_reset_chat():
@@ -60,44 +59,6 @@ def reset_chat():
     streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
 
-def new_cycle():
-    # 1. create the manager if necessary
-    if "manager" not in st.session_state:
-        sha1 = hashlib.sha1()
-        sha1.update(st.session_state.key.encode('utf-8'))
-        st.session_state.conv_id = sha1.hexdigest()[:16]  # deterministic hash of 16 characters
-        st.session_state.manager = DoubleChatManager(bam_api_key=st.session_state.key, model=st.session_state.model,
-                                                     conv_id=st.session_state.conv_id)
-    manager = st.session_state.manager
-
-    # 2. hide evaluation option in sidebar
-    # prompts = manager.get_prompts()
-
-    # if len(prompts) < 2:
-    #     hide_pages(["Evaluate"])
-
-    # 3. layout reset and upload buttons in 3 columns
-    if st.button("Reset chat"):
-        streamlit_js_eval(js_expressions="parent.window.location.reload()")
-
-    create_choose_dataset_component_train(st=st, manager=manager)
-
-    # 4. user input
-    if user_msg := st.chat_input("Write your message here"):
-        manager.add_user_message(user_msg)
-
-    # 5. render the existing messages
-    for msg in manager.user_chat:
-        with st.chat_message(msg['role']):
-            st.write(msg['content'])
-
-    # 6. generate and render the agent response
-    msg = manager.generate_agent_message()
-    if msg is not None:
-        with st.chat_message(msg['role']):
-            st.write(msg['content'])
-
-
 def set_output_dir():
     subfolder = st.session_state.email_address.split("@")[0]  # default is self.conv_id
     out_folder = f'_out/{subfolder}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
@@ -107,6 +68,17 @@ def set_output_dir():
 
 def callback_cycle():
     # create the manager if necessary
+
+    if 'existing_chat_loaded' not in st.session_state:
+        st.session_state['existing_chat_loaded'] = False
+
+    # if not st.session_state['existing_chat_loaded']:
+    #     with st.popover("load existing chat (debug)"):
+    #         st.markdown("Local path to an existing chat 👋")
+    #         existing_chat_path = st.text_input("path")
+    # else:
+    #     existing_chat_path = ""
+
     if "manager" not in st.session_state:
         sha1 = hashlib.sha1()
         sha1.update(st.session_state.credentials["key"].encode('utf-8'))
@@ -138,27 +110,36 @@ def callback_cycle():
         st.write(static_welcome_msg)
 
     add_evaluator_input(st)
-
-    uploaded_file = create_choose_dataset_component_train(st=st, manager=manager)
-    if uploaded_file:
+    if not "csv_file_train" in st.session_state:
+        st.session_state[f"csv_file_train"] = None
+    start_type = create_choose_dataset_component_train(st=st, manager=manager)
+    if start_type == StartType.Uploaded:
         manager.add_user_message_only_to_user_chat("Selected data")
 
     static_upload_data_msg = "To begin, please select a dataset from our datasets catalog above."
     with st.chat_message(ChatRole.ASSISTANT):
         st.write(static_upload_data_msg)
 
+    if ("existing_chat_path" in st.session_state and st.session_state["existing_chat_path"] != "") and not \
+            st.session_state['existing_chat_loaded']:
+        manager, dataset = manager.load_chat_to_manager(st.session_state["existing_chat_path"])
+
+        if 'selected_dataset' not in st.session_state:
+            st.session_state['selected_dataset'] = dataset
+        st.session_state['existing_chat_loaded'] = True
+
     dataset_is_selected = "selected_dataset" in st.session_state or "csv_file_train" in st.session_state
-    if not MUST_HAVE_UPLOADED_DATA_TO_START or dataset_is_selected:
+    if not MUST_HAVE_UPLOADED_DATA_TO_START or dataset_is_selected or start_type == StartType.Loaded:
         if user_msg := st.chat_input("Write your message here"):
             manager.add_user_message(user_msg)
 
     for msg in manager.user_chat[:manager.user_chat_length]:
         with st.chat_message(msg['role']):
-            st.markdown(msg['content'], help = msg['tooltip'] if "tooltip" in msg else None)
+            st.markdown(msg['content'], help=msg['tooltip'] if "tooltip" in msg else None)
 
         # generate and render the agent response
     with st.spinner("Thinking..."):
-        if uploaded_file:
+        if start_type == StartType.Uploaded:
             manager.process_examples(read_user_csv_file(st.session_state["csv_file_train"]), st.session_state[
                 "selected_dataset"] if "selected_dataset" in st.session_state else "user")
         messages = manager.generate_agent_messages()
@@ -169,9 +150,8 @@ def callback_cycle():
                     tooltip = f"**Currently discussed input example (#{manager.example_num}):\n\n{orig}**"
                     manager.user_chat[-1]["tooltip"] = tooltip
                 else:
-                    tooltip=None
+                    tooltip = None
                 st.markdown(msg['content'], help=tooltip)
-
 
     if manager.few_shot_prompt is not None:
         btn = st.download_button(
@@ -182,80 +162,25 @@ def callback_cycle():
         )
 
 
-def old_cycle():
-    def show_and_call(prompt, show_message=True):
-        st.session_state.messages.append({"role": "user", "content": prompt, "show": show_message})
-        if show_message:
-            with st.chat_message("user"):
-                st.markdown(prompt)
-
-        with st.chat_message("assistant"):
-            response = st.session_state.manager.call(
-                messages=[
-                    {"role": m["role"], "content": m["content"]}
-                    for m in st.session_state.messages
-                ]
-            )
-            st.write(response)
-        st.session_state.messages.append({"role": "assistant", "content": response, "show": True})
-
-    if "key" in st.session_state:
-        if st.button("Reset chat"):
-            reset_chat()
-
-        mode = st.radio(label="Mode", options=["Basic", "Advanced"],
-                        captions=["basic zero-shot -> few-shot (default)",
-                                  "basic zero-shot -> custom zero-shot -> few-shot"])
-
-        if "mode" not in st.session_state:
-            st.session_state.mode = Mode.Basic
-
-        old_mode = st.session_state.mode
-        if mode == "Basic":
-            st.session_state.mode = Mode.Basic
-        else:
-            st.session_state.mode = Mode.Advanced
-        new_mode = st.session_state.mode
-        if old_mode != new_mode:
-            old_reset_chat()
-
-        if "manager" not in st.session_state:
-            st.session_state.manager = Manager(st.session_state.mode, st.session_state.key)
-
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-
-        for message in st.session_state.messages:
-            if message["show"]:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
-        if 'messages' in st.session_state and len(st.session_state.messages) == 0:
-            show_and_call(f"hi", show_message=False)  # {threading.get_ident()}
-        # st.write("Hi, please provide your BAM API key")
-        if prompt := st.chat_input("What is up?"):
-            show_and_call(prompt)
-
-
 def submit_button_clicked(target_model):
     def get_secret_key(env_var_name, text_area_key):
         return getattr(st.session_state, text_area_key) if env_var_name not in os.environ else os.environ[env_var_name]
-
 
     # verify credentials
     st.session_state.cred_error = ""
     st.session_state.email_error = ""
     creds_are_ok = False
     if st.session_state.API == APIName.BAM:
-        api_key = get_secret_key("BAM_APIKEY","bam_api_key")
+        api_key = get_secret_key("BAM_APIKEY", "bam_api_key")
         if api_key != "":
             st.session_state.credentials = {'key': api_key}
             creds_are_ok = True
     elif st.session_state.API == APIName.Watsonx:
-        api_key = get_secret_key("WATSONX_APIKEY","watsonx_api_key")
-        project_id = get_secret_key("PROJECT_ID","project_id")
+        api_key = get_secret_key("WATSONX_APIKEY", "watsonx_api_key")
+        project_id = get_secret_key("PROJECT_ID", "project_id")
         if api_key != "" and project_id != "":
             st.session_state.credentials = {'key': api_key,
-                                                'project_id': project_id}
+                                            'project_id': project_id}
             creds_are_ok = True
 
     if creds_are_ok:
@@ -264,56 +189,71 @@ def submit_button_clicked(target_model):
     else:
         st.session_state.cred_error = ':heavy_exclamation_mark: Please provide your credentials'
 
-    # verify email:
-    if verify_email(st.session_state.email_address_input):  # check text area
-        st.session_state.email_address = st.session_state.email_address_input
+    if st.session_state["config"].getboolean("General", "reviewers_mode", fallback=False):
+        if verify_reviewer_key(st.session_state.reviewers_key):
+            st.session_state.email_address = "anonymous_reviewer@il.ibm.com"
+            st.session_state.API = APIName.Watsonx
+        else:
+            st.session_state.reviewer_key_error = ':heavy_exclamation_mark: Key error. Please try another key or contact the authors'
     else:
-        st.session_state.email_error = ':heavy_exclamation_mark: Please provide your email address'
+        # verify email:
+        if verify_email(st.session_state.email_address_input):  # check text area
+            st.session_state.email_address = st.session_state.email_address_input
+        else:
+            st.session_state.email_error = ':heavy_exclamation_mark: Please provide your email address'
+
+
+def verify_reviewer_key(key):
+    return key in {"b9b8b564-20a7-40ce-a96b-df5a0f539752"}
 
 
 def verify_email(email_address):
     return "@" in email_address and "ibm" in email_address and email_address.index("@") != 0
 
 
-instructions_for_user =  {
+instructions_for_user = {
     "main_instructions_for_user":
 
-         "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n" \
-                "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.\n" \
-                "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.\n" \
-                "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).\n"\
-                "This assistant system uses BAM or CWatsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share." ,
+        "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n" \
+        "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.\n" \
+        "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.\n" \
+        "For more information feel free to contact us in slack via [#foundation-models-lm-utilization](https://ibm.enterprise.slack.com/archives/C04KBRUDR8R).\n" \
+        "This assistant system uses BAM or Watsonx to serve LLMs. Do not include PII or confidential information in your responses, nor in the data you share.",
 
-    "eval_instructions_for_user" :
-            "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n\n" \
-            "This service is intended to help users build an effective prompt, personalized to their specific summarization use case, through a simple chat with an LLM.\n\n" \
-            f"The *prompts* built by CPE are comprised of two parts: an instruction, describing to the LLM in natural language how to generate the summaries; and up to 3 text-summary pairs, exemplifying how summaries should look like.\n\n" \
-            "To use and evaluate CPE, proceed according to the following steps:\n\n" \
-            "1.	Select a summarization dataset from our catalog. " \
-            "Please select the dataset that is most related to your daily work, or if none exists, select the dataset which interests you most. \n\n" \
-            "2.	Dedicate a few moments to consider your preferences for generating a summary. " \
-            "It may be helpful to download the dataset and go over a few text inputs in order to obtain a better understanding of the task. \n\n" \
-            "3.	Follow the chat with the system. \n\n" \
-            "4.	Once the system notifies you that the final prompt is ready, please click on the Survey tab to answer a few short questions about your interaction.\n\n" \
-            "5.	Finally, click on the Evaluate tab. In this stage we ask you to compare between summaries generated by 3 prompts: " \
-            "one comprised of a generic summarization instruction, and two built with the CPE system, with and without text-summary examples. \n\n" \
-            "Stages 1-4 typically takes around 15 minutes. Please complete these stages in a single session without interruption, if possible.\n\n" \
-            "Generating the summaries for stage 5 could take several minutes, so this stage can be done at a later time.\n\n" \
-            "Do not include PII or confidential information in your responses, nor in the data you share.\n\n" \
-            "Thank you for your time!"
+    "main_instructions_for_reviewer":
+        "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n" \
+        "This service is intended to help users build an effective prompt, tailored to their specific use case, through a simple chat with an LLM.\n" \
+        "To make the most out of this service, it would be best to prepare in advance at least 3 input examples that represent your use case in a simple csv file. Alternatively, you can use sample data from our data catalog.\n" \
+        "For more information feel free to contact us by mail at liate@il.ibm.com or lenad@il.ibm.com.\n",
+
+    "eval_instructions_for_user":
+        "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n\n" \
+        "This service is intended to help users build an effective prompt, personalized to their specific summarization use case, through a simple chat with an LLM.\n\n" \
+        f"The *prompts* built by CPE are comprised of two parts: an instruction, describing to the LLM in natural language how to generate the summaries; and up to 3 text-summary pairs, exemplifying how summaries should look like.\n\n" \
+        "To use and evaluate CPE, proceed according to the following steps:\n\n" \
+        "1.	Select a summarization dataset from our catalog. " \
+        "Please select the dataset that is most related to your daily work, or if none exists, select the dataset which interests you most. \n\n" \
+        "2.	Dedicate a few moments to consider your preferences for generating a summary. " \
+        "It may be helpful to download the dataset and go over a few text inputs in order to obtain a better understanding of the task. \n\n" \
+        "3.	Follow the chat with the system. \n\n" \
+        "4.	Once the system notifies you that the final prompt is ready, please click on the Survey tab to answer a few short questions about your interaction.\n\n" \
+        "5.	Finally, click on the Evaluate tab. In this stage we ask you to compare between summaries generated by 3 prompts: " \
+        "one comprised of a generic summarization instruction, and two built with the CPE system, with and without text-summary examples. \n\n" \
+        "Stages 1-4 typically takes around 15 minutes. Please complete these stages in a single session without interruption, if possible.\n\n" \
+        "Generating the summaries for stage 5 could take several minutes, so this stage can be done at a later time.\n\n" \
+        "Do not include PII or confidential information in your responses, nor in the data you share.\n\n" \
+        "Thank you for your time!"
 
 }
 
 
-
-
 def load_environment_variables():
-    if "API" not in st.session_state: #do it only once
-        if "BAM_APIKEY" in os.environ:
+    if "API" not in st.session_state:  # do it only once
+        if "BAM_APIKEY" in os.environ and os.environ["BAM_APIKEY"] != "":
             st.session_state.credentials = {}
             st.session_state.API = APIName.BAM
             st.session_state.credentials["key"] = os.environ["BAM_APIKEY"]
-        elif "WATSONX_APIKEY" in os.environ:
+        elif "WATSONX_APIKEY" in os.environ and os.environ["WATSONX_APIKEY"] != "":
             st.session_state.credentials = {}
             st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
             st.session_state.API = APIName.Watsonx
@@ -332,17 +272,19 @@ def set_credentials():
         is_disabled = False
         val = "" if not hasattr(st.session_state, text_area_key) else getattr(st.session_state, text_area_key)
         if env_var_name in os.environ:
-            val = "****" #hidden
+            val = "****"  # hidden
             is_disabled = True
         st.text_input(label=text_area_label, key=text_area_key, disabled=is_disabled, value=val)
 
-
-    #st.session_state.API = APIName.Watsonx if api == "Watsonx" else APIName.BAM
+    # st.session_state.API = APIName.Watsonx if api == "Watsonx" else APIName.BAM
     if st.session_state.API == APIName.Watsonx:
-        handle_secret_key(cred_key='key', env_var_name='WATSONX_APIKEY', text_area_key="watsonx_api_key", text_area_label="Watsonx API key")
-        handle_secret_key(cred_key='project_id', env_var_name='PROJECT_ID',text_area_key="project_id", text_area_label="project ID" )
+        handle_secret_key(cred_key='key', env_var_name='WATSONX_APIKEY', text_area_key="watsonx_api_key",
+                          text_area_label="Watsonx API key")
+        handle_secret_key(cred_key='project_id', env_var_name='PROJECT_ID', text_area_key="project_id",
+                          text_area_label="project ID")
     else:
-        handle_secret_key(cred_key='key', env_var_name='BAM_APIKEY',text_area_key="bam_api_key", text_area_label="BAM API key" )
+        handle_secret_key(cred_key='key', env_var_name='BAM_APIKEY', text_area_key="bam_api_key",
+                          text_area_label="BAM API key")
 
     if hasattr(st.session_state, "cred_error") and st.session_state.cred_error != "":
         st.error(st.session_state.cred_error)
@@ -350,54 +292,65 @@ def set_credentials():
 
 def init_set_up_page():
     st.title(":blue[IBM Research Conversational Prompt Engineering]")
-
+    REVIEWR_MODEL = "llama-3"
     # default setting
     st.session_state.model = 'llama-3'
     if not hasattr(st.session_state, "target_model"):
         st.session_state.target_model = 'llama-3'
 
     load_environment_variables()
-
+    reviewers_mode = st.session_state["config"].getboolean("General", "reviewers_mode", fallback=False)
     credentials_are_set = 'credentials' in st.session_state and 'key' in st.session_state['credentials']
     email_is_set = hasattr(st.session_state, "email_address")
     OK_to_proceed_to_chat = credentials_are_set and email_is_set
-
-    if OK_to_proceed_to_chat:
-        return True
-
-    else:
-        st.empty()
-        # with entry_page.form("my_form"):
+    if reviewers_mode and not OK_to_proceed_to_chat:
+        st.session_state.API = APIName.Watsonx
         st.write(instructions_for_user.get(st.session_state["config"].get("General", "welcome_instruction")))
+        st.text_input(label="Reviewer API key", key="reviewers_key")
+        if hasattr(st.session_state, "reviewer_key_error") and st.session_state.reviewer_key_error != "":
+            st.error(st.session_state.reviewer_key_error)
 
-        only_watsonx = st.session_state["config"].getboolean("General", "only_watsonx")
-        if not only_watsonx:
-            api = st.radio(
+        st.button("Submit", on_click=submit_button_clicked, args=[REVIEWR_MODEL])
+        if OK_to_proceed_to_chat:
+            st.write(instructions_for_user.get(st.session_state["config"].get("General", "welcome_instruction")))
+            return True
+    else:
+        if OK_to_proceed_to_chat:
+            return True
+
+        else:
+            st.empty()
+            # with entry_page.form("my_form"):
+            st.write(instructions_for_user.get(st.session_state["config"].get("General", "welcome_instruction")))
+
+            only_watsonx = st.session_state["config"].getboolean("General", "only_watsonx")
+            if not only_watsonx:
+                api = st.radio(
                     "",
                     # add dummy option to make it the default selection
-                options=["BAM", "Watsonx"] ,
-                horizontal=True, key=f"bam_watsonx_radio",
-                index=0 if st.session_state.API == APIName.BAM else 1)
-        else:
-            api = APIName.Watsonx
-        st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
+                    options=["BAM", "Watsonx"],
+                    horizontal=True, key=f"bam_watsonx_radio",
+                    index=0 if st.session_state.API == APIName.BAM else 1)
+            else:
+                api = APIName.Watsonx
+            st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
 
-        set_credentials()
+            set_credentials()
 
-        if USE_ONLY_LLAMA:
-            target_model = 'llama-3'
-        else:
-            target_model = st.radio(
-                label="Select the target model. The prompt that you will build will be formatted for this model.",
-                options=["llama-3", "mixtral", "granite"],
-                key="target_model_radio",
-                captions=["llama-3-70B-instruct. ",
-                          "mixtral-8x7B-instruct-v01. ",
-                          "granite-13b-chat-v2  (Beta version)"])
+            if USE_ONLY_LLAMA:
+                target_model = 'llama-3'
+            else:
+                target_model = st.radio(
+                    label="Select the target model. The prompt that you will build will be formatted for this model.",
+                    options=["llama-3", "mixtral", "granite"],
+                    key="target_model_radio",
+                    captions=["llama-3-70B-instruct. ",
+                              "mixtral-8x7B-instruct-v01. ",
+                              "granite-13b-chat-v2  (Beta version)"])
 
-        st.text_input(label="Organization email address", key="email_address_input")
-        if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
-            st.error(st.session_state.email_error)
+            st.text_input(label="Organization email address", key="email_address_input")
+            if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
+                st.error(st.session_state.email_error)
 
         st.button("Submit", on_click=submit_button_clicked, args=[target_model])
         return False
@@ -416,6 +369,7 @@ def init_config():
     st.session_state["config"] = config
     st.session_state["dataset_name_to_dir"] = load_dataset_mapping(config)
 
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     if not "config" in st.session_state:
@@ -423,4 +377,3 @@ if __name__ == "__main__":
     set_up_is_done = init_set_up_page()
     if set_up_is_done:
         callback_cycle()
-
