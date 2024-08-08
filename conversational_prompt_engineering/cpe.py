@@ -13,8 +13,6 @@ from genai.schema import ChatRole
 from streamlit_js_eval import streamlit_js_eval
 
 from conversational_prompt_engineering.backend.callback_chat_manager import CallbackChatManager
-from conversational_prompt_engineering.backend.double_chat_manager import DoubleChatManager
-from conversational_prompt_engineering.backend.manager import Manager, Mode
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
     create_choose_dataset_component_train, add_evaluator_input, StartType
@@ -42,10 +40,6 @@ class APIName(Enum):
     def __hash__(self):
         return hash((type(self).__qualname__, self.name))
 
-
-def old_reset_chat():
-    st.session_state.manager = Manager(st.session_state.mode, st.session_state.key)
-    st.session_state.messages = []
 
 
 def reset_chat():
@@ -236,7 +230,6 @@ instructions_for_user = {
         "Generating the summaries for stage 5 could take several minutes, so this stage can be done at a later time.\n\n" \
         "Do not include PII or confidential information in your responses, nor in the data you share.\n\n" \
         "Thank you for your time!"
-
 }
 
 
@@ -365,7 +358,6 @@ def init_config():
         st._config._set_option("theme.secondaryBackgroundColor", config.get("General", "backgroundColor"), where_defined=None)
 
 
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     if not "config" in st.session_state:
@@ -374,6 +366,7 @@ if __name__ == "__main__":
     show_pages(
         [
             Page("cpe.py", "Chat", ""),
+            Page("pages_/faq.py", "FAQ", ""),
             Page("pages_/survey.py", "Survey", ""),
             Page("pages_/evaluation.py", "Evaluate", ""),
         ]
