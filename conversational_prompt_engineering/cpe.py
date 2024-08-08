@@ -26,7 +26,7 @@ version = "callback manager v1.0.7"
 st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"})
 
 MUST_HAVE_UPLOADED_DATA_TO_START = True
-USE_ONLY_LLAMA = True
+USE_ONLY_LLAMA = False
 
 
 class APIName(Enum):
