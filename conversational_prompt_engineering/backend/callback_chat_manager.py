@@ -138,6 +138,7 @@ class CallbackChatManager(ChatManagerBase):
             'llama-3': Llama3Prompts,
         }[model]()
         self.model = model
+        self.target_model = target_model
 
         self.api_names = None
 
@@ -406,7 +407,7 @@ class CallbackChatManager(ChatManagerBase):
     def conversation_end(self):
         self.prompt_conv_end = True
         self._save_chat_result()
-        model_id = self.model
+        model_id = self.target_model
         self.few_shot_prompt = build_few_shot_prompt(self.prompts[-1], self.approved_outputs, model_id)
         model_id = self.target_bam_client.parameters['model_id']
         end = self.model_prompts.conversation_end_instruction.replace('TARGET_MODEL', model_id)
