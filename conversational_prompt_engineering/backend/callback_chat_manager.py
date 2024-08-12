@@ -138,7 +138,6 @@ class CallbackChatManager(ChatManagerBase):
             'llama-3': Llama3Prompts,
         }[model]()
         self.model = model
-        self.target_model = target_model
 
         self.api_names = None
 
