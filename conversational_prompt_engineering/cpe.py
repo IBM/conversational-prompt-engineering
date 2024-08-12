@@ -91,7 +91,7 @@ def callback_cycle():
         streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
     static_welcome_msg = \
-        "Hello! I'm an IBM prompt building assistant. In the following session we will work together through a natural conversation, to build an effective instruction – a.k.a. prompt – personalized for your task and data."
+        "Hello! I'm an IBM prompt building assistant. In the following session we will work together through a natural conversation, to build an effective instruction – a.k.a. prompt – personalized for your task and data. Note that the prompt will be created to operate on each example individually. Therefore, if your task involves multiple texts, such as multi-document summarization, a single input example should include multiple texts."
 
     with st.chat_message(ChatRole.ASSISTANT):
         st.write(static_welcome_msg)
