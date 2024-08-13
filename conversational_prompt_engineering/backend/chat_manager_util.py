@@ -85,6 +85,7 @@ class ChatManagerBase:
     def __init__(self, credentials, model, conv_id, target_model, api, email_address, output_dir, config_name) -> None:
         logging.info(f"selected {model}")
         logging.info(f"conv id: {conv_id}")
+        logging.info(f"selected target {target_model}")
         logging.info(f"credentials from environment variables: {credentials}")
         logging.info(f"user email address: {email_address}")
 
