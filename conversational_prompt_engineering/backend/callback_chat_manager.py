@@ -336,14 +336,16 @@ class CallbackChatManager(ChatManagerBase):
         self.model_chat[-1]['prompt_iteration'] = None
         self.model_chat[-1]['example_num'] = None
 
+        side_model = self.bam_client if 'granite' in self.target_bam_client.parameters['model_id'] \
+            else self.target_bam_client
         futures = {}
         with ThreadPoolExecutor(max_workers=len(self.examples)) as executor:
             for i, example in enumerate(self.examples):
                 prompt_str = build_few_shot_prompt(prompt,
                                                    [],  # currently doing zero-shot summarization
-                                                   self.target_bam_client.parameters['model_id'])
+                                                   side_model.parameters['model_id'])
                 prompt_str = prompt_str.format(text=example)
-                futures[i] = executor.submit(self._generate_output, prompt_str)
+                futures[i] = executor.submit(self._generate_output, prompt_str, side_model)
 
         self.output_discussion_state = {
             'model_outputs': [None] * len(self.examples),

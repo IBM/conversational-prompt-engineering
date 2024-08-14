@@ -158,8 +158,10 @@ class ChatManagerBase:
         self.timing_report.append(timing_dict)
         return generated_texts
 
-    def _generate_output(self, prompt_str):
-        generated_texts = self._generate_output_and_log_stats(prompt_str, client=self.target_bam_client)
+    def _generate_output(self, prompt_str, client=None):
+        if client is None:
+            client = self.target_bam_client
+        generated_texts = self._generate_output_and_log_stats(prompt_str, client=client)
         agent_response = generated_texts[0]
         logging.info(f"got response from model: {agent_response}")
         return agent_response.strip()
