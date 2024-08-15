@@ -389,6 +389,11 @@ class CallbackChatManager(ChatManagerBase):
                 self.calls_queue.append('self.end_outputs_discussion()')
 
     def end_outputs_discussion(self):
+        # end the conversation after 3 iterations
+        if self.prompt_iteration >= 3:
+            self.conversation_end()
+            return
+
         self.calls_queue = []
         temp_chat = []
         self._add_msg(temp_chat, ChatRole.SYSTEM,
