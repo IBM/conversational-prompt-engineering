@@ -116,7 +116,7 @@ class ModelPrompts:
         self.conversation_end_instruction = \
             'This is the end of conversation. Say goodbye to the user, ' \
             'and inform that the final prompt that includes few-shot examples and is formatted for the *TARGET_MODEL* ' \
-            'can be downloaded via **Download few shot prompt** button below. ' \
+            'can be downloaded via **Download zero shot prompt** and **Download few shot prompt** buttons below. ' \
             'Also, kindly refer the user to the survey tab that is now available, and let the user know that we will appreciate any feedback.'
 
 
@@ -155,6 +155,7 @@ class CallbackChatManager(ChatManagerBase):
         self.prompts = []
         self.baseline_prompts = {}
         self.prompt_conv_end = False
+        self.zero_shot_prompt = None
         self.few_shot_prompt = None
 
         self.output_discussion_state = None
@@ -414,6 +415,7 @@ class CallbackChatManager(ChatManagerBase):
         self.prompt_conv_end = True
         self._save_chat_result()
         model_id = self.target_bam_client.parameters['model_id']
+        self.zero_shot_prompt = build_few_shot_prompt(self.prompts[-1], [], model_id)
         self.few_shot_prompt = build_few_shot_prompt(self.prompts[-1], self.approved_outputs, model_id)
         end = self.model_prompts.conversation_end_instruction.replace('TARGET_MODEL', model_id)
         self.add_system_message(end)

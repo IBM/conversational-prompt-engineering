@@ -140,6 +140,14 @@ def callback_cycle():
                     tooltip = None
                 st.markdown(msg['content'], help=tooltip)
 
+    if manager.zero_shot_prompt is not None:
+        btn = st.download_button(
+            label="Download zero shot prompt",
+            data=manager.zero_shot_prompt,
+            file_name='zero_shot_prompt.txt',
+            mime="text"
+        )
+
     if manager.few_shot_prompt is not None:
         btn = st.download_button(
             label="Download few shot prompt",
