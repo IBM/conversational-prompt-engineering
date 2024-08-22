@@ -38,7 +38,7 @@ class ModelPrompts:
             'self.output_accepted(example_num, output)': 'call this function every time the user unequivocally accepts an output. Pass the example number and the output text as parameters. ',
             'self.end_outputs_discussion()': 'call this function after all the outputs have been discussed with the user and all NUM_EXAMPLES outputs were accepted by the user. ',
             'self.conversation_end()': 'call this function when the user wants to end the conversation. ',
-            'self.task_is_defined()': 'call this function when the user has defined the task and it\'s clear to you. You should only use this callback once. '
+            'self.task_is_defined(initial_prompt)': 'call this function when the user has defined the task and it\'s clear to you. You should only use this callback once. '
         }
 
         self.examples_intro = \
@@ -47,8 +47,10 @@ class ModelPrompts:
             'Note that your goal to build a generic prompt, and not for these specific examples.'
 
         self.task_definition_instruction = \
-            'Start with asking the user which task they would like to perform on the texts. ' \
-            'Once the task is clear to you, call task_is_defined API. '
+            'Start with asking the user if they already have a prompt to begin from. ' \
+            'If they have, pass that prompt to task_is_defined API. If they don\'t, ' \
+            'ask which task they would like to perform on the texts, and once the task is clear to you, ' \
+            'call task_is_defined API with empty string.'
 
         self.analyze_examples = \
             'Before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences. Please take into account the specific characteristics of the data. ' \
@@ -309,20 +311,26 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg=txt)
         self.add_system_message(f'The original text for Example {example_num} was shown to the user.')
 
-    def task_is_defined(self):
-        # open side chat with model
-        tmp_chat = self.model_chat[:]
-        self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.generate_baseline_instruction_task)
-        resp = self._get_assistant_response(tmp_chat)
-        submit_prmpt_call = self._parse_model_response(resp)[0]
-        self.baseline_prompts["model_baseline_prompt"] = submit_prmpt_call[:-2].replace("self.submit_prompt(\"", "")
-        logging.info(f"baseline prompt is {self.baseline_prompts['model_baseline_prompt']}")
+    def task_is_defined(self, init_prompt):
+        if len(init_prompt) == 0:
+            # open side chat with model
+            tmp_chat = self.model_chat[:]
+            self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.generate_baseline_instruction_task)
+            resp = self._get_assistant_response(tmp_chat)
+            submit_prmpt_call = self._parse_model_response(resp)[0]
+            self.baseline_prompts["model_baseline_prompt"] = submit_prmpt_call[:-2].replace("self.submit_prompt(\"", "")
+            logging.info(f"baseline prompt is {self.baseline_prompts['model_baseline_prompt']}")
 
-        self.calls_queue = []
-        self.add_system_message(self.model_prompts.analyze_examples)
+            self.calls_queue = []
+            self.add_system_message(self.model_prompts.analyze_examples)
+        else:
+            self.baseline_prompts["model_baseline_prompt"] = init_prompt
+            logging.info(f"baseline prompt is {self.baseline_prompts['model_baseline_prompt']}")
+            self.submit_prompt(init_prompt)
 
     def switch_to_example(self, example_num):
-        self.model_chat[-1]['example_num'] = None #this is the call to switch to example - we want it to be in the general chat
+        # this is the call to switch to example - we want it to be in the general chat
+        self.model_chat[-1]['example_num'] = None
 
         example_num = int(example_num)
         self.example_num = example_num
@@ -360,7 +368,7 @@ class CallbackChatManager(ChatManagerBase):
                                     example_num=example_num, prompt_iteration=self.prompt_iteration)
             self.output_discussion_state['model_outputs'][i] = output
 
-        #side chat - generated output of new prompt vs. the outputs that were accepted outputs
+        # side chat - generated output of new prompt vs. the outputs that were accepted outputs
         if len(self.prompts) > 1 and prev_discussion_cot is not None:
             tmp_chat = [{'role': ChatRole.SYSTEM, 'content': '\n'.join([
                 self.model_prompts.analyze_new_prompt_task,
