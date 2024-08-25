@@ -151,7 +151,7 @@ class AutoChat:
         # prepare the user
         user_out_dir = os.path.join(user_time_dir, 'user')
         os.makedirs(user_out_dir, exist_ok=True)
-        self.user_manager = ModelBasedUser(bam_client=self.assistant_manager.bam_client,
+        self.user_manager = ModelBasedUser(bam_client=self.assistant_manager.llm_client,
                                            persona=persona, task=task)
 
     def create_prompt(self):
@@ -163,7 +163,7 @@ class AutoChat:
 
     def evaluate(self):
         def _build_prompt_fn(prompt, few_shot):
-            model_id = self.assistant_manager.target_bam_client.parameters['model_id']
+            model_id = self.assistant_manager.target_llm_client.parameters['model_id']
             return partial(build_few_shot_prompt, prompt=prompt, texts_and_summaries=few_shot, model_id=model_id)
 
         prompt_type_metadata = {
@@ -184,7 +184,7 @@ class AutoChat:
         eval_texts = read_user_csv_file(self.eval_csv).text.tolist()
         eval_prompts = [prompt_type_metadata[t]["build_func"]() for t in prompt_types]
 
-        evaluation = Evaluation(self.assistant_manager.target_bam_client)
+        evaluation = Evaluation(self.assistant_manager.target_llm_client)
         generated_data = evaluation.summarize(eval_prompts, prompt_types, eval_texts)
 
         dim = dimensions[0]

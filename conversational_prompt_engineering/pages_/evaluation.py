@@ -43,12 +43,12 @@ if hasattr(st.session_state, "config") and st.session_state["config"].has_option
 def build_baseline_prompt():
     baseline_prompt_type = st.session_state["config"].get("Evaluation", "main_baseline_prompt")
     return build_few_shot_prompt(st.session_state.manager.baseline_prompts[baseline_prompt_type], [],
-                          st.session_state.manager.target_bam_client.parameters['model_id'])
+                                 st.session_state.manager.target_llm_client.parameters['model_id'])
 
 def build_z_sh_prompt():
     return build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
-                                                 [],
-                                                 st.session_state.manager.target_bam_client.parameters['model_id'])
+                                 [],
+                                 st.session_state.manager.target_llm_client.parameters['model_id'])
 
 def build_f_sh_prompt():
     few_shot_examples = st.session_state.manager.approved_outputs[:st.session_state.manager.validated_example_idx]
@@ -56,7 +56,7 @@ def build_f_sh_prompt():
     return build_few_shot_prompt(
         st.session_state.manager.approved_prompts[-2 if work_mode == WorkMode.DUMMY_PROMPT else -1]['prompt'],
         few_shot_examples,
-        st.session_state.manager.target_bam_client.parameters['model_id'])
+        st.session_state.manager.target_llm_client.parameters['model_id'])
 
 prompt_type_metadata = {"baseline": {"title": "Prompt 1 (Baseline prompt)", "build_func": build_baseline_prompt},
                         "zero_shot": {"title": "Prompt 2 (CPE zero shot prompt)", "build_func": build_z_sh_prompt},
@@ -234,7 +234,7 @@ def run():
             if st.button("Reset evaluation"):
                 reset_evaluation()
 
-            st.write(f"Using model [{st.session_state.manager.target_bam_client.parameters['model_id']}](https://bam.res.ibm.com/docs/models#{st.session_state.manager.target_bam_client.parameters['model_id'].replace('/', '-')})")
+            st.write(f"Using model [{st.session_state.manager.target_llm_client.parameters['model_id']}](https://bam.res.ibm.com/docs/models#{st.session_state.manager.target_llm_client.parameters['model_id'].replace('/', '-')})")
 
         test_texts = create_choose_dataset_component_eval(st)
         if DEBUG_LLM_AS_A_JUDGE:
@@ -242,7 +242,7 @@ def run():
 
         # get prompts to evaluate
         if 'evaluation' not in st.session_state:
-            st.session_state.evaluation = Evaluation(st.session_state.manager.target_bam_client)
+            st.session_state.evaluation = Evaluation(st.session_state.manager.target_llm_client)
 
         if "llm_judge" not in st.session_state and DEBUG_LLM_AS_A_JUDGE:
             st.session_state.llm_judge = LlmAsAJudge(bam_api_key=st.session_state.key, model="prometheus_7b",

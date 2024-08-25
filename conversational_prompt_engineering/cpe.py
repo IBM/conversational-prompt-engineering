@@ -1,25 +1,23 @@
+import datetime
+import hashlib
 import logging
 import os
-import datetime
 import sys
-import configparser
-import importlib
-
-import pandas as pd
-import streamlit as st
-import hashlib
 from enum import Enum
+
+import streamlit as st
 from genai.schema import ChatRole
+from st_pages import Page, show_pages
 from streamlit_js_eval import streamlit_js_eval
 
+from configs.config_utils import load_config
 from conversational_prompt_engineering.backend.callback_chat_manager import CallbackChatManager
+from conversational_prompt_engineering.backend.util.llm_clients.llm_clients_loader import get_client_classes
+from conversational_prompt_engineering.backend.util.llm_clients.watsonx_client import WatsonXClient
+from conversational_prompt_engineering.data.dataset_utils import load_dataset_mapping
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
     create_choose_dataset_component_train, add_evaluator_input, StartType
-from configs.config_names import load_config
-from conversational_prompt_engineering.data.dataset_utils import load_dataset_mapping
-
-from st_pages import Page, show_pages
 
 version = "callback manager v1.0.7"
 
@@ -29,16 +27,6 @@ MUST_HAVE_UPLOADED_DATA_TO_START = True
 USE_ONLY_LLAMA = False
 
 
-class APIName(Enum):
-    BAM, Watsonx = "bam", "watsonx"
-
-    def __eq__(self, other):
-        if type(self).__qualname__ != type(other).__qualname__:
-            return NotImplemented
-        return self.name == other.name and self.value == other.value
-
-    def __hash__(self):
-        return hash((type(self).__qualname__, self.name))
 
 
 
@@ -68,7 +56,7 @@ def callback_cycle():
 
     if "manager" not in st.session_state:
         sha1 = hashlib.sha1()
-        sha1.update(st.session_state.credentials["key"].encode('utf-8'))
+        sha1.update("-".join(st.session_state.credentials.values()).encode('utf-8'))
         st.session_state.conv_id = sha1.hexdigest()[:16]  # deterministic hash of 16 characters
 
         output_dir = set_output_dir()
@@ -79,7 +67,7 @@ def callback_cycle():
         st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials,
                                                        model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
-                                                       conv_id=st.session_state.conv_id, api=st.session_state.API.value,
+                                                       conv_id=st.session_state.conv_id, llm_client=st.session_state.llm_client_class,
                                                        email_address=st.session_state.email_address,
                                                        output_dir=output_dir,
                                                        config_name=st.session_state["config_name"])
@@ -164,19 +152,17 @@ def submit_button_clicked(target_model):
     # verify credentials
     st.session_state.cred_error = ""
     st.session_state.email_error = ""
-    creds_are_ok = False
-    if st.session_state.API == APIName.BAM:
-        api_key = get_secret_key("BAM_APIKEY", "bam_api_key")
-        if api_key != "":
-            st.session_state.credentials = {'key': api_key}
-            creds_are_ok = True
-    elif st.session_state.API == APIName.Watsonx:
-        api_key = get_secret_key("WATSONX_APIKEY", "watsonx_api_key")
-        project_id = get_secret_key("PROJECT_ID", "project_id")
-        if api_key != "" and project_id != "":
-            st.session_state.credentials = {'key': api_key,
-                                            'project_id': project_id}
-            creds_are_ok = True
+    creds_are_ok = True
+    creds_from_ui = {}
+    for cred in st.session_state.llm_client_class.credentials_params():
+        cred_value = get_secret_key(cred, cred)
+        if cred_value != "": #value is set
+            creds_from_ui[cred] = cred_value
+        else:
+            creds_are_ok = False
+    if creds_are_ok:
+        st.session_state.credentials = creds_from_ui
+    creds_are_ok = True
 
     if creds_are_ok:
         st.session_state.model = 'llama-3'
@@ -187,7 +173,7 @@ def submit_button_clicked(target_model):
     if st.session_state["config"].getboolean("General", "reviewers_mode", fallback=False):
         if verify_reviewer_key(st.session_state.reviewers_key):
             st.session_state.email_address = "anonymous_reviewer@il.ibm.com"
-            st.session_state.API = APIName.Watsonx
+            st.session_state.API = WatsonXClient
         else:
             st.session_state.reviewer_key_error = ':heavy_exclamation_mark: Key error. Please try another key or contact the authors'
     else:
@@ -241,28 +227,27 @@ instructions_for_user = {
 }
 
 
-def load_environment_variables():
-    if "API" not in st.session_state:  # do it only once
-        if "BAM_APIKEY" in os.environ and os.environ["BAM_APIKEY"] != "":
-            st.session_state.credentials = {}
-            st.session_state.API = APIName.BAM
-            st.session_state.credentials["key"] = os.environ["BAM_APIKEY"]
-        elif "WATSONX_APIKEY" in os.environ and os.environ["WATSONX_APIKEY"] != "":
-            st.session_state.credentials = {}
-            st.session_state.credentials = {"project_id": os.environ["PROJECT_ID"]}
-            st.session_state.API = APIName.Watsonx
-            st.session_state.credentials["key"] = os.environ["WATSONX_APIKEY"]
-            logging.info(f"credentials from environment variables: {st.session_state.credentials}")
-        else:
-            st.session_state.API = APIName.BAM
-            st.session_state["credentials"] = {}
+def load_environment_variables(llm_api_classes):
+    if "API" not in st.session_state:
+        st.session_state.API = llm_api_classes[0]
+        st.session_state["credentials"] = {}
+        # do it only once
+        for llm_client_class in llm_api_classes:
+            creds = {}
+            for env_var in llm_client_class.credentials_params():
+                if env_var in os.environ and os.environ[env_var] != "":
+                    creds[env_var] = os.environ[env_var]
+            if len(creds) == llm_client_class.credentials_params(): # all required params are set:
+                st.session_state.credentials = {}
+                st.session_state.llm_client_class = llm_client_class
+                break
 
     if "IBM_EMAIL" in os.environ and verify_email(os.environ["IBM_EMAIL"]):
         st.session_state.email_address = os.environ["IBM_EMAIL"]
 
 
 def set_credentials():
-    def handle_secret_key(cred_key, env_var_name, text_area_key, text_area_label):
+    def handle_secret_key(env_var_name, text_area_key, text_area_label):
         is_disabled = False
         val = "" if not hasattr(st.session_state, text_area_key) else getattr(st.session_state, text_area_key)
         if env_var_name in os.environ:
@@ -270,15 +255,9 @@ def set_credentials():
             is_disabled = True
         st.text_input(label=text_area_label, key=text_area_key, disabled=is_disabled, value=val)
 
-    # st.session_state.API = APIName.Watsonx if api == "Watsonx" else APIName.BAM
-    if st.session_state.API == APIName.Watsonx:
-        handle_secret_key(cred_key='key', env_var_name='WATSONX_APIKEY', text_area_key="watsonx_api_key",
-                          text_area_label="Watsonx API key")
-        handle_secret_key(cred_key='project_id', env_var_name='PROJECT_ID', text_area_key="project_id",
-                          text_area_label="project ID")
-    else:
-        handle_secret_key(cred_key='key', env_var_name='BAM_APIKEY', text_area_key="bam_api_key",
-                          text_area_label="BAM API key")
+    for cred_key, cred_label in st.session_state.llm_client_class.credentials_params().items():
+        handle_secret_key(env_var_name=cred_key, text_area_key=cred_key,
+                          text_area_label=cred_label)
 
     if hasattr(st.session_state, "cred_error") and st.session_state.cred_error != "":
         st.error(st.session_state.cred_error)
@@ -292,13 +271,17 @@ def init_set_up_page():
     if not hasattr(st.session_state, "target_model"):
         st.session_state.target_model = 'llama-3'
 
-    load_environment_variables()
+    llm_client_names_from_config = eval(st.session_state["config"].get("General", "llm_api"))
+    llm_client_class = get_client_classes(llm_client_names_from_config)
+    llm_client_display_name_to_class = {x.display_name() : x for x in llm_client_class}
+    load_environment_variables(llm_client_class)
     reviewers_mode = st.session_state["config"].getboolean("General", "reviewers_mode", fallback=False)
-    credentials_are_set = 'credentials' in st.session_state and 'key' in st.session_state['credentials']
+    credentials_are_set = 'llm_client_class' in st.session_state and 'credentials' in st.session_state \
+                                        and len(st.session_state['credentials']) == len(st.session_state.llm_client_class.credentials_params())
     email_is_set = hasattr(st.session_state, "email_address")
     OK_to_proceed_to_chat = credentials_are_set and email_is_set
     if reviewers_mode and not OK_to_proceed_to_chat:
-        st.session_state.API = APIName.Watsonx
+        st.session_state.llm_client_class = WatsonXClient
         st.write(instructions_for_user.get(st.session_state["config"].get("General", "welcome_instruction")))
         st.text_input(label="Reviewer API key", key="reviewers_key")
         if hasattr(st.session_state, "reviewer_key_error") and st.session_state.reviewer_key_error != "":
@@ -317,17 +300,17 @@ def init_set_up_page():
             # with entry_page.form("my_form"):
             st.write(instructions_for_user.get(st.session_state["config"].get("General", "welcome_instruction")))
 
-            only_watsonx = st.session_state["config"].getboolean("General", "only_watsonx")
-            if not only_watsonx:
-                api = st.radio(
-                    "",
+            if len(llm_client_class) > 1:
+                llm_client_name = st.radio(
+                    label="Please select your llm client",
+                    label_visibility='hidden',
                     # add dummy option to make it the default selection
-                    options=["BAM", "Watsonx"],
-                    horizontal=True, key=f"bam_watsonx_radio",
-                    index=0 if st.session_state.API == APIName.BAM else 1)
+                    options=[x.display_name() for x in llm_client_class],
+                    horizontal=True, key=f"llm_client_radio")
+                llm_client = llm_client_display_name_to_class[llm_client_name]
             else:
-                api = APIName.Watsonx
-            st.session_state.API = APIName.BAM if api == "BAM" else APIName.Watsonx
+                llm_client = llm_client_class[0]
+            st.session_state.llm_client_class = llm_client
 
             set_credentials()
 

@@ -133,8 +133,8 @@ class Llama3Prompts(ModelPrompts):
 
 
 class CallbackChatManager(ChatManagerBase):
-    def __init__(self, credentials, model, conv_id, target_model, api, email_address, output_dir, config_name) -> None:
-        super().__init__(credentials, model, conv_id, target_model, api, email_address, output_dir, config_name)
+    def __init__(self, credentials, model, conv_id, target_model, llm_client, email_address, output_dir, config_name) -> None:
+        super().__init__(credentials, model, conv_id, target_model, llm_client, email_address, output_dir, config_name)
         self.model_prompts = {
             'mixtral': MixtralPrompts,
             'llama-3': Llama3Prompts,
@@ -345,8 +345,8 @@ class CallbackChatManager(ChatManagerBase):
         self.model_chat[-1]['prompt_iteration'] = None
         self.model_chat[-1]['example_num'] = None
 
-        side_model = self.bam_client if 'granite' in self.target_bam_client.parameters['model_id'] \
-            else self.target_bam_client
+        side_model = self.llm_client if 'granite' in self.target_llm_client.parameters['model_id'] \
+            else self.target_llm_client
         futures = {}
         with ThreadPoolExecutor(max_workers=len(self.examples)) as executor:
             for i, example in enumerate(self.examples):
@@ -422,7 +422,7 @@ class CallbackChatManager(ChatManagerBase):
     def conversation_end(self):
         self.prompt_conv_end = True
         self._save_chat_result()
-        model_id = self.target_bam_client.parameters['model_id']
+        model_id = self.target_llm_client.parameters['model_id']
         self.zero_shot_prompt = build_few_shot_prompt(self.prompts[-1], [], model_id)
         self.few_shot_prompt = build_few_shot_prompt(self.prompts[-1], self.approved_outputs, model_id)
         end = self.model_prompts.conversation_end_instruction.replace('TARGET_MODEL', model_id)
@@ -470,10 +470,10 @@ class CallbackChatManager(ChatManagerBase):
             'accepted_outputs': self.outputs,
             'prompts': self.prompts,
             'baseline_prompts': self.baseline_prompts,
-            'target_model': self.target_bam_client.parameters['model_id'],
+            'target_model': self.target_llm_client.parameters['model_id'],
             'dataset_name': self.dataset_name,
-            'sent_words_count': self.bam_client.sent_words_count,
-            'received_words_count': self.bam_client.received_words_count,
+            'sent_words_count': self.llm_client.sent_words_count,
+            'received_words_count': self.llm_client.received_words_count,
             'config_name': self.config_name
         }
         with open(self.result_json_file, 'w') as f:
