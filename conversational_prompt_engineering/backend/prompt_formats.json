@@ -1,0 +1,41 @@
+{
+    "mistralai/mixtral-8x7b-instruct-v01": {
+      "short_name": "mixtral",
+      "prompt_formats": {
+        "start_of_input": "[INST] ",
+        "prompt_prefix": "",
+        "test_example_prefix": "\n\nNow, please generate a desired output for the following text.\n\n",
+        "test_example_placeholder": "{text}\n\n",
+        "end_of_input": "[\\INST]",
+        "input_prefix": "Text: ",
+        "output_prefix": "Desired output: "
+      }
+    },
+    "meta-llama/llama-3-70b-instruct": {
+      "short_name": "llama-3",
+      "prompt_formats": {
+        "prompt_prefix": "<|start_header_id|>user<|end_header_id|>\n\n",
+        "few_shot_examples_prefix": "<|start_header_id|>user<|end_header_id|>",
+        "test_example_prefix": "<|start_header_id|>user<|end_header_id|>\n\nNow, please generate a desired output to the following text.\n\n",
+        "test_example_placeholder": "{text}\n\n",
+        "end_of_message": "<|eot_id|>",
+        "start_of_input": "<|begin_of_text|>",
+        "input_prefix": "Text: ",
+        "output_prefix": "<|start_header_id|>assistant<|end_header_id|>Here is a desired output of the text:"
+      }
+    },
+    "ibm/granite-13b-chat-v2": {
+      "short_name": "granite",
+      "prompt_formats": {
+        "start_of_input": "<|system|>\n",
+        "prompt_prefix": "<|user|>\n",
+        "prompt_suffix": "\nYour response should only include the answer. Do not provide any further explanation.",
+        "test_example_prefix": "\n\n",
+        "test_example_placeholder": "{text}\n",
+        "end_of_input": "<|assistant|>",
+        "system_message": "You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with \"Hello! I am Granite Chat, created by IBM. How can I help you today?\". Please do not say anything else and do not start a conversation.\n",
+        "input_prefix": "Text:\n",
+        "output_prefix": "Desired output:\n"
+      }
+    }
+}

@@ -6,7 +6,7 @@ import pandas as pd
 from genai.schema import ChatRole
 
 from conversational_prompt_engineering.backend.chat_manager_util import ChatManagerBase
-from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
+from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler
 from conversational_prompt_engineering.data.main_dataset_name_to_dir import dataset_name_to_dir
 
 
@@ -341,9 +341,9 @@ class CallbackChatManager(ChatManagerBase):
         futures = {}
         with ThreadPoolExecutor(max_workers=len(self.examples)) as executor:
             for i, example in enumerate(self.examples):
-                prompt_str = build_few_shot_prompt(prompt,
-                                                   [],  # currently doing zero-shot summarization
-                                                   side_model.parameters['model_id'])
+                prompt_str = TargetModelHandler().format_prompt(model=side_model.parameters['model_id'],
+                                                   prompt=prompt, texts_and_summaries=[] # currently doing zero-shot summarization
+                                                   )
                 prompt_str = prompt_str.format(text=example)
                 futures[i] = executor.submit(self._generate_output, prompt_str, side_model)
 
@@ -414,7 +414,8 @@ class CallbackChatManager(ChatManagerBase):
         self.prompt_conv_end = True
         self._save_chat_result()
         model_id = self.target_bam_client.parameters['model_id']
-        self.few_shot_prompt = build_few_shot_prompt(self.prompts[-1], self.approved_outputs, model_id)
+        self.few_shot_prompt = TargetModelHandler().format_prompt(model=model_id, prompt=self.prompts[-1], texts_and_summaries=self.approved_prompts)
+        # self.few_shot_prompt = build_few_shot_prompt(self.prompts[-1], self.approved_outputs, model_id)
         end = self.model_prompts.conversation_end_instruction.replace('TARGET_MODEL', model_id)
         self.add_system_message(end)
 

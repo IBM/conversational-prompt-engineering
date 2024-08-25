@@ -13,6 +13,7 @@ from genai.schema import ChatRole
 from streamlit_js_eval import streamlit_js_eval
 
 from conversational_prompt_engineering.backend.callback_chat_manager import CallbackChatManager
+from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
     create_choose_dataset_component_train, add_evaluator_input, StartType
@@ -326,13 +327,12 @@ def init_set_up_page():
             if USE_ONLY_LLAMA:
                 target_model = 'llama-3'
             else:
+                models = TargetModelHandler().get_models()
                 target_model = st.radio(
                     label="Select the target model. The prompt that you will build will be formatted for this model.",
-                    options=["llama-3", "mixtral", "granite"],
+                    options=[m['short_name'] for m in models],
                     key="target_model_radio",
-                    captions=["llama-3-70B-instruct. ",
-                              "mixtral-8x7B-instruct-v01. ",
-                              "granite-13b-chat-v2  (Beta version)"])
+                    captions=[m['full_name'] for m in models])
 
             st.text_input(label="Organization email address", key="email_address_input")
             if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
