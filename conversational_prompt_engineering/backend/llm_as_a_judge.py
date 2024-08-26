@@ -144,7 +144,7 @@ class LlmAsAJudge(ChatManagerBase):
         return outputs, "-1"
 
     def _generate_texts_output(self, prompt, texts, few_shot_examples=[]):
-        prompt_str = TargetModelHandler().format_prompt(model=self.target_bam_client.parameters['model_id'],
+        prompt_str = TargetModelHandler().format_prompt(model=self.target_llm_client.parameters['model_id'],
                                                         prompt=prompt, texts_and_outputs=few_shot_examples)
         futures = {}
         with ThreadPoolExecutor(max_workers=len(texts)) as executor:
@@ -219,7 +219,7 @@ class LlmAsAJudge(ChatManagerBase):
 
         # select the prompt fpr llm-as-a-judge evaluation: use the CPE zero-shot prompt
         prompt_instruction = chat_params['prompts'][-1]
-        prompt_str = TargetModelHandler().format_prompt(model=self.target_bam_client.parameters['model_id'], prompt=prompt_instruction, texts_and_outputs=[])
+        prompt_str = TargetModelHandler().format_prompt(model=self.target_llm_client.parameters['model_id'], prompt=prompt_instruction, texts_and_outputs=[])
         prompt_to_evaluate = remove_tags_from_zero_shot_prompt(prompt_str, target_model)
         print(f'LLM AS A JUDGE: Offline evaluation of the CPE zero-shot prompt:\n\n {prompt_to_evaluate}')
 

@@ -38,7 +38,7 @@ class ModelPrompts:
             'self.output_accepted(example_num, output)': 'call this function every time the user unequivocally accepts an output. Pass the example number and the output text as parameters. ',
             'self.end_outputs_discussion()': 'call this function after all the outputs have been discussed with the user and all NUM_EXAMPLES outputs were accepted by the user. ',
             'self.conversation_end()': 'call this function when the user wants to end the conversation. ',
-            'self.task_is_defined()': 'call this function when the user has defined the task and it\'s clear to you. You should only use this callback once. '
+            'self.task_is_defined(initial_prompt)': 'call this function when the user has defined the task and it\'s clear to you. You should only use this callback once. '
         }
 
         self.examples_intro = \
@@ -47,8 +47,10 @@ class ModelPrompts:
             'Note that your goal to build a generic prompt, and not for these specific examples.'
 
         self.task_definition_instruction = \
-            'Start with asking the user which task they would like to perform on the texts. ' \
-            'Once the task is clear to you, call task_is_defined API. '
+            'Start with asking the user if they already have a prompt to begin from. ' \
+            'If they have, pass that prompt to task_is_defined API. If they don\'t, ' \
+            'ask which task they would like to perform on the texts, and once the task is clear to you, ' \
+            'call task_is_defined API with empty string.'
 
         self.analyze_examples = \
             'Before suggesting the prompt, briefly discuss the text examples with the user and ask them relevant questions regarding their output requirements and preferences. Please take into account the specific characteristics of the data. ' \
@@ -116,7 +118,7 @@ class ModelPrompts:
         self.conversation_end_instruction = \
             'This is the end of conversation. Say goodbye to the user, ' \
             'and inform that the final prompt that includes few-shot examples and is formatted for the *TARGET_MODEL* ' \
-            'can be downloaded via **Download few shot prompt** button below. ' \
+            'can be downloaded via **Download zero shot prompt** and **Download few shot prompt** buttons below. ' \
             'Also, kindly refer the user to the survey tab that is now available, and let the user know that we will appreciate any feedback.'
 
 
@@ -131,8 +133,8 @@ class Llama3Prompts(ModelPrompts):
 
 
 class CallbackChatManager(ChatManagerBase):
-    def __init__(self, credentials, model, conv_id, target_model, api, email_address, output_dir, config_name) -> None:
-        super().__init__(credentials, model, conv_id, target_model, api, email_address, output_dir, config_name)
+    def __init__(self, credentials, model, conv_id, target_model, llm_client, email_address, output_dir, config_name) -> None:
+        super().__init__(credentials, model, conv_id, target_model, llm_client, email_address, output_dir, config_name)
         self.model_prompts = {
             'mixtral': MixtralPrompts,
             'llama-3': Llama3Prompts,
@@ -155,6 +157,7 @@ class CallbackChatManager(ChatManagerBase):
         self.prompts = []
         self.baseline_prompts = {}
         self.prompt_conv_end = False
+        self.zero_shot_prompt = None
         self.few_shot_prompt = None
 
         self.output_discussion_state = None
@@ -308,20 +311,26 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg=txt)
         self.add_system_message(f'The original text for Example {example_num} was shown to the user.')
 
-    def task_is_defined(self):
-        # open side chat with model
-        tmp_chat = self.model_chat[:]
-        self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.generate_baseline_instruction_task)
-        resp = self._get_assistant_response(tmp_chat)
-        submit_prmpt_call = self._parse_model_response(resp)[0]
-        self.baseline_prompts["model_baseline_prompt"] = submit_prmpt_call[:-2].replace("self.submit_prompt(\"", "")
-        logging.info(f"baseline prompt is {self.baseline_prompts['model_baseline_prompt']}")
+    def task_is_defined(self, init_prompt):
+        if len(init_prompt) == 0:
+            # open side chat with model
+            tmp_chat = self.model_chat[:]
+            self._add_msg(tmp_chat, ChatRole.SYSTEM, self.model_prompts.generate_baseline_instruction_task)
+            resp = self._get_assistant_response(tmp_chat)
+            submit_prmpt_call = self._parse_model_response(resp)[0]
+            self.baseline_prompts["model_baseline_prompt"] = submit_prmpt_call[:-2].replace("self.submit_prompt(\"", "")
+            logging.info(f"baseline prompt is {self.baseline_prompts['model_baseline_prompt']}")
 
-        self.calls_queue = []
-        self.add_system_message(self.model_prompts.analyze_examples)
+            self.calls_queue = []
+            self.add_system_message(self.model_prompts.analyze_examples)
+        else:
+            self.baseline_prompts["model_baseline_prompt"] = init_prompt
+            logging.info(f"baseline prompt is {self.baseline_prompts['model_baseline_prompt']}")
+            self.submit_prompt(init_prompt)
 
     def switch_to_example(self, example_num):
-        self.model_chat[-1]['example_num'] = None #this is the call to switch to example - we want it to be in the general chat
+        # this is the call to switch to example - we want it to be in the general chat
+        self.model_chat[-1]['example_num'] = None
 
         example_num = int(example_num)
         self.example_num = example_num
@@ -336,8 +345,8 @@ class CallbackChatManager(ChatManagerBase):
         self.model_chat[-1]['prompt_iteration'] = None
         self.model_chat[-1]['example_num'] = None
 
-        side_model = self.bam_client if 'granite' in self.target_bam_client.parameters['model_id'] \
-            else self.target_bam_client
+        side_model = self.llm_client if 'granite' in self.target_llm_client.parameters['model_id'] \
+            else self.target_llm_client
         futures = {}
         with ThreadPoolExecutor(max_workers=len(self.examples)) as executor:
             for i, example in enumerate(self.examples):
@@ -412,9 +421,13 @@ class CallbackChatManager(ChatManagerBase):
     def conversation_end(self):
         self.prompt_conv_end = True
         self._save_chat_result()
-        model_id = self.target_bam_client.parameters['model_id']
+
+        model_id = self.target_llm_client.parameters['model_id']
         self.few_shot_prompt = TargetModelHandler().format_prompt(model=model_id, prompt=self.prompts[-1],
                                                                   texts_and_outputs=self.approved_outputs)
+        self.zero_shot_prompt = TargetModelHandler().format_prompt(model=model_id, prompt=self.prompts[-1],
+                                                                  texts_and_outputs=[])
+
         end = self.model_prompts.conversation_end_instruction.replace('TARGET_MODEL', model_id)
         self.add_system_message(end)
 
@@ -460,10 +473,10 @@ class CallbackChatManager(ChatManagerBase):
             'accepted_outputs': self.outputs,
             'prompts': self.prompts,
             'baseline_prompts': self.baseline_prompts,
-            'target_model': self.target_bam_client.parameters['model_id'],
+            'target_model': self.target_llm_client.parameters['model_id'],
             'dataset_name': self.dataset_name,
-            'sent_words_count': self.bam_client.sent_words_count,
-            'received_words_count': self.bam_client.received_words_count,
+            'sent_words_count': self.llm_client.sent_words_count,
+            'received_words_count': self.llm_client.received_words_count,
             'config_name': self.config_name
         }
         with open(self.result_json_file, 'w') as f:

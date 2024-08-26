@@ -7,7 +7,6 @@ from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 from tqdm import tqdm
 import argparse
-from conversational_prompt_engineering.util.bam import BamGenerate
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 

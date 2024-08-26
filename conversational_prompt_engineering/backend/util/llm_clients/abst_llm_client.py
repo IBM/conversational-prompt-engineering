@@ -1,8 +1,15 @@
 import abc
 
 import logging
+from enum import Enum
 
-class AbstGenerate:
+class HumanRole(Enum):
+    User = "user"
+    Admin = "admin"
+
+
+
+class AbstLLMClient:
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
@@ -11,6 +18,9 @@ class AbstGenerate:
 
     @abc.abstractmethod
     def do_send_messages(self, conversation, max_new_tokens=None):
+        """
+        return the list of replies.
+        """
         raise NotImplementedError()
 
 

@@ -1,4 +1,3 @@
-import json
 import logging
 import time
 import os
@@ -9,10 +8,9 @@ from genai.schema import ChatRole
 
 from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler, LLAMA_END_OF_MESSAGE, \
     _get_llama_header, LLAMA_START_OF_INPUT
-from conversational_prompt_engineering.backend.output_dir_mapping import output_dir_hash_to_name
 
-from conversational_prompt_engineering.util.bam import BamGenerate
-from conversational_prompt_engineering.util.watsonx import WatsonXGenerate
+from conversational_prompt_engineering.backend.util.llm_clients.bam_client import BamClient
+from conversational_prompt_engineering.backend.util.llm_clients.watsonx_client import WatsonXClient
 
 
 def extract_delimited_text(txt, delims):
@@ -29,19 +27,15 @@ def extract_delimited_text(txt, delims):
         return txt
 
 
-def create_model_client(credentials, model_name, api):
+def create_model_client(credentials, model_name, llm_client):
     with open(os.path.join(os.path.dirname(__file__),"model_params.json"), "r") as f:
         params = json.load(f)
     model_params = {x: y for x, y in params['models'][model_name].items()}
-    model_params.update({'api_key' if x == 'key' else x: y for x, y in credentials.items()})
-    model_params['api_endpoint'] = params[f'{api}_api_endpoint']
-
-    if api == "watsonx":
-        return WatsonXGenerate(model_params)
-    elif api == "bam":
-        return BamGenerate(model_params)
-    else:
-        raise ValueError(f'Invalid api: {api}. Should be either watsonx or bam')
+    endpoint = params["endpoints"][llm_client.__name__]
+    try:
+        return llm_client(credentials, endpoint, model_params)
+    except:
+        raise ValueError(f'Invalid api: {llm_client.__name__}. Should be either watsonx or bam')
 
 
 def format_chat(chat, model_id):
@@ -82,15 +76,15 @@ def format_chat(chat, model_id):
 
 
 class ChatManagerBase:
-    def __init__(self, credentials, model, conv_id, target_model, api, email_address, output_dir, config_name) -> None:
+    def __init__(self, credentials, model, conv_id, target_model, llm_client, email_address, output_dir, config_name) -> None:
         logging.info(f"selected {model}")
         logging.info(f"conv id: {conv_id}")
         logging.info(f"selected target {target_model}")
         logging.info(f"credentials from environment variables: {credentials}")
         logging.info(f"user email address: {email_address}")
 
-        self.bam_client = create_model_client(credentials, model, api)
-        self.target_bam_client = create_model_client(credentials, target_model, api)
+        self.llm_client = create_model_client(credentials, model, llm_client)
+        self.target_llm_client = create_model_client(credentials, target_model, llm_client)
         self.conv_id = conv_id
         self.dataset_name = None
         self.state = None
@@ -106,14 +100,14 @@ class ChatManagerBase:
         os.makedirs(chat_dir, exist_ok=True)
         with open(os.path.join(chat_dir, "prompts.json"), "w") as f:
             for p in approved_prompts:
-                p['prompt_with_format'] = TargetModelHandler().format_prompt(model=self.target_bam_client.parameters['model_id'],
+                p['prompt_with_format'] = TargetModelHandler().format_prompt(model=self.target_llm_client.parameters['model_id'],
                                                                              prompt=p['prompt'],
                                                                              texts_and_outputs=[])
-                p['prompt_with_format_and_few_shots'] = TargetModelHandler().format_prompt(model=self.target_bam_client.parameters['model_id'],
+                p['prompt_with_format_and_few_shots'] = TargetModelHandler().format_prompt(model=self.target_llm_client.parameters['model_id'],
                                                                                            prompt=p['prompt'], texts_and_outputs=approved_outputs)
             json.dump(approved_prompts, f)
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
-            json.dump({"model": self.bam_client.parameters['model_id'], "dataset": self.dataset_name,
+            json.dump({"model": self.llm_client.parameters['model_id'], "dataset": self.dataset_name,
                        "example_num": self.example_num, "model_chat_length": self.model_chat_length,
                        "user_chat_length": self.user_chat_length}, f)
 
@@ -160,15 +154,15 @@ class ChatManagerBase:
 
     def _generate_output(self, prompt_str, client=None):
         if client is None:
-            client = self.target_bam_client
+            client = self.target_llm_client
         generated_texts = self._generate_output_and_log_stats(prompt_str, client=client)
         agent_response = generated_texts[0]
         logging.info(f"got response from model: {agent_response}")
         return agent_response.strip()
 
     def _get_assistant_response(self, chat, max_new_tokens=None):
-        conversation = format_chat(chat, self.bam_client.parameters['model_id'])
-        generated_texts = self._generate_output_and_log_stats(conversation, client=self.bam_client,
+        conversation = format_chat(chat, self.llm_client.parameters['model_id'])
+        generated_texts = self._generate_output_and_log_stats(conversation, client=self.llm_client,
                                                               max_new_tokens=max_new_tokens)
         agent_response = ''
         for txt in generated_texts:
