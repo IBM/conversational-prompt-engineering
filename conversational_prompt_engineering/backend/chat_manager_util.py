@@ -6,7 +6,7 @@ import json
 import pandas as pd
 from genai.schema import ChatRole
 
-from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt, LLAMA_END_OF_MESSAGE, \
+from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler, LLAMA_END_OF_MESSAGE, \
     _get_llama_header, LLAMA_START_OF_INPUT
 
 from conversational_prompt_engineering.backend.util.llm_clients.bam_client import BamClient
@@ -100,11 +100,11 @@ class ChatManagerBase:
         os.makedirs(chat_dir, exist_ok=True)
         with open(os.path.join(chat_dir, "prompts.json"), "w") as f:
             for p in approved_prompts:
-                p['prompt_with_format'] = build_few_shot_prompt(p['prompt'], [],
-                                                                self.target_llm_client.parameters['model_id'])
-                p['prompt_with_format_and_few_shots'] = build_few_shot_prompt(p['prompt'], approved_outputs,
-                                                                              self.target_llm_client.parameters[
-                                                                                  'model_id'])
+                p['prompt_with_format'] = TargetModelHandler().format_prompt(model=self.target_llm_client.parameters['model_id'],
+                                                                             prompt=p['prompt'],
+                                                                             texts_and_outputs=[])
+                p['prompt_with_format_and_few_shots'] = TargetModelHandler().format_prompt(model=self.target_llm_client.parameters['model_id'],
+                                                                                           prompt=p['prompt'], texts_and_outputs=approved_outputs)
             json.dump(approved_prompts, f)
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
             json.dump({"model": self.llm_client.parameters['model_id'], "dataset": self.dataset_name,

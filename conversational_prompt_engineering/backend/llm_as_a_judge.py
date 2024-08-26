@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from genai.schema import ChatRole
 from conversational_prompt_engineering.backend.chat_manager_util import ChatManagerBase
-from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt, remove_tags_from_zero_shot_prompt
+from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler, remove_tags_from_zero_shot_prompt
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.data.dataset_utils import load_dataset_mapping
 from conversational_prompt_engineering.configs.config_names import load_config
@@ -144,9 +144,8 @@ class LlmAsAJudge(ChatManagerBase):
         return outputs, "-1"
 
     def _generate_texts_output(self, prompt, texts, few_shot_examples=[]):
-        prompt_str = build_few_shot_prompt(prompt,
-                                           few_shot_examples,
-                                           self.target_llm_client.parameters['model_id'])
+        prompt_str = TargetModelHandler().format_prompt(model=self.target_llm_client.parameters['model_id'],
+                                                        prompt=prompt, texts_and_outputs=few_shot_examples)
         futures = {}
         with ThreadPoolExecutor(max_workers=len(texts)) as executor:
             for i, example in enumerate(texts):
@@ -220,7 +219,7 @@ class LlmAsAJudge(ChatManagerBase):
 
         # select the prompt fpr llm-as-a-judge evaluation: use the CPE zero-shot prompt
         prompt_instruction = chat_params['prompts'][-1]
-        prompt_str = build_few_shot_prompt(prompt_instruction, [], self.target_llm_client.parameters['model_id'])
+        prompt_str = TargetModelHandler().format_prompt(model=self.target_llm_client.parameters['model_id'], prompt=prompt_instruction, texts_and_outputs=[])
         prompt_to_evaluate = remove_tags_from_zero_shot_prompt(prompt_str, target_model)
         print(f'LLM AS A JUDGE: Offline evaluation of the CPE zero-shot prompt:\n\n {prompt_to_evaluate}')
 
