@@ -95,21 +95,14 @@ class ChatManagerBase:
         logging.info(f"output is saved to {os.path.abspath(self.out_dir)}")
 
 
-    def save_prompts_and_config(self, approved_prompts, approved_outputs):
+    def save_config(self):
         chat_dir = os.path.join(self.out_dir, "chat")
         os.makedirs(chat_dir, exist_ok=True)
-        with open(os.path.join(chat_dir, "prompts.json"), "w") as f:
-            for p in approved_prompts:
-                p['prompt_with_format'] = TargetModelHandler().format_prompt(model=self.target_llm_client.parameters['model_id'],
-                                                                             prompt=p['prompt'],
-                                                                             texts_and_outputs=[])
-                p['prompt_with_format_and_few_shots'] = TargetModelHandler().format_prompt(model=self.target_llm_client.parameters['model_id'],
-                                                                                           prompt=p['prompt'], texts_and_outputs=approved_outputs)
-            json.dump(approved_prompts, f)
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
-            json.dump({"model": self.llm_client.parameters['model_id'], "dataset": self.dataset_name,
-                       "example_num": self.example_num, "model_chat_length": self.model_chat_length,
-                       "user_chat_length": self.user_chat_length}, f)
+            json.dump({"model": self.llm_client.parameters['model_id'],
+                       "dataset": self.dataset_name,
+                       "config_name": self.config_name,
+                       "target_model": self.target_llm_client.parameters['model_id']}, f)
 
     def save_chat_html(self, chat, file_name):
         def _format(msg):

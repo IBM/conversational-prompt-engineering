@@ -1,18 +1,19 @@
+import ast
 import json
 import logging
 import os
+from enum import Enum
 
-import streamlit as st
 import pandas as pd
-import ast
+import streamlit as st
 from streamlit.components.v1 import html
 
 from enum import Enum
 from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
-from conversational_prompt_engineering.backend.llm_as_a_judge import LlmAsAJudge
-from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_eval
-import time
+from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
+from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
+    create_choose_dataset_component_eval
 
 MIN_NUM_EXAMPLES_TO_UPLOAD = 5
 
@@ -66,9 +67,6 @@ prompt_type_metadata = {"baseline": {"title": "Prompt 1 (Baseline prompt)", "bui
                          "few_shot": {"title": "Prompt 3 (CPE few shot prompt)", "build_func": build_f_sh_prompt}}
 
 
-DEBUG_LLM_AS_A_JUDGE = False
-
-
 def display_text():
     text = st.session_state.generated_data[st.session_state.count]['text']
     add_text_area(text=text, height=400)
@@ -93,29 +91,6 @@ def display_output(side):
     output = st.session_state.generated_data[st.session_state.count][f"{mixed_to_real}_output"]
     st.write(f"Output {side+1}")
     add_text_area(text=output, height=200)
-
-
-def display_llm_judge(side):
-    mixed_to_real = st.session_state.generated_data[st.session_state.count]["mixed_indices_mapping_to_prompt_type"][side]
-    judge = "ABS: " + \
-            st.session_state.generated_data[st.session_state.count][f'{mixed_to_real}_llm_judge_abs_result'] \
-            + " Feedback: " + \
-            st.session_state.generated_data[st.session_state.count][f'{mixed_to_real}_llm_judge_abs_feedback'] \
-            + "\n\n" + "REL BL_FS: " + \
-            st.session_state.generated_data[st.session_state.count]['BL_FS_llm_judge_rel_result'] \
-            + " Feedback: " + \
-            st.session_state.generated_data[st.session_state.count]['BL_FS_llm_judge_rel_feedback'] \
-            + "\n\n" + "REL BL_ZS: " + \
-            st.session_state.generated_data[st.session_state.count]['BL_ZS_llm_judge_rel_result'] \
-            + " Feedback: " + \
-            st.session_state.generated_data[st.session_state.count]['BL_ZS_llm_judge_rel_feedback'] \
-            + "\n\n" + "REL ZS_FS: " + \
-            st.session_state.generated_data[st.session_state.count]['ZS_FS_llm_judge_rel_result'] \
-            + " Feedback: " + \
-            st.session_state.generated_data[st.session_state.count]['ZS_FS_llm_judge_rel_feedback']
-
-    st.text_area(label=f"judge_{side}", value=judge, label_visibility="collapsed", height=200)
-
 
 def calculate_results():
     ranked_elements = [d['prompts'] for d in st.session_state.generated_data if len(d['prompts']) > 0]
@@ -239,16 +214,10 @@ def run():
             st.write(f"Using model [{st.session_state.manager.target_llm_client.parameters['model_id']}](https://bam.res.ibm.com/docs/models#{st.session_state.manager.target_llm_client.parameters['model_id'].replace('/', '-')})")
 
         test_texts = create_choose_dataset_component_eval(st)
-        if DEBUG_LLM_AS_A_JUDGE:
-            test_texts = test_texts[:1]
 
         # get prompts to evaluate
         if 'evaluation' not in st.session_state:
             st.session_state.evaluation = Evaluation(st.session_state.manager.target_llm_client)
-
-        if "llm_judge" not in st.session_state and DEBUG_LLM_AS_A_JUDGE:
-            st.session_state.llm_judge = LlmAsAJudge(bam_api_key=st.session_state.key, model="prometheus_7b",
-                                                     conv_id=st.session_state.conv_id)
 
         assert len(st.session_state.eval_prompts) == len(prompt_types), "number of prompts should be equal to the number of prompt types"
         if 'count' not in st.session_state:
@@ -273,10 +242,6 @@ def run():
                 generated_data = \
                     st.session_state.evaluation.generate_evaluation_examples(st.session_state.eval_prompts, prompt_types,
                                                           test_texts)
-                if "llm_judge" in st.session_state:
-                    assert "zero_shot" in prompt_types, "cannot run llm as a judge without a zero shot prompt!"
-                    zero_shot_prompt = st.session_state.eval_prompts[prompt_types.index("zero_shot")]
-                    st.session_state.llm_judge.evaluate_prompt(zero_shot_prompt, generated_data)
                 st.session_state.generated_data = generated_data
                 for row in st.session_state.generated_data:
                     row['sides'] = {}
@@ -309,8 +274,6 @@ def run():
             for i in range(len(prompt_types)):
                 with output_cols_list[i]:
                     display_output(i)
-                    if "llm_judge" in st.session_state:
-                        display_llm_judge(i)
             add_next_buttons("bellow_summaries")
             options = annotation_options
             if len(prompt_types) == 2:

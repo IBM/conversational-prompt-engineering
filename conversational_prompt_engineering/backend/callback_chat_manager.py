@@ -1,3 +1,8 @@
+# (c) Copyright contributors to the conversational-prompt-engineering project
+
+# LICENSE: Apache License 2.0 (Apache-2.0)
+# http://www.apache.org/licenses/LICENSE-2.0
+
 import json
 import logging
 import os.path
@@ -9,6 +14,9 @@ from conversational_prompt_engineering.backend.chat_manager_util import ChatMana
 from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler
 from conversational_prompt_engineering.data.main_dataset_name_to_dir import dataset_name_to_dir
 
+
+ITERATIONS_NUM = 3 #max number of iterations of the outputs approval
+NUM_OF_EXAMPLES_TO_DISCUSS = 3 #num of examples from the input file to discuss and approve their outputs
 
 class ModelPrompts:
     def __init__(self) -> None:
@@ -122,23 +130,11 @@ class ModelPrompts:
             'Also, kindly refer the user to the survey tab that is now available, and let the user know that we will appreciate any feedback.'
 
 
-class MixtralPrompts(ModelPrompts):
-    def __init__(self) -> None:
-        super().__init__()
-
-
-class Llama3Prompts(ModelPrompts):
-    def __init__(self) -> None:
-        super().__init__()
-
-
 class CallbackChatManager(ChatManagerBase):
-    def __init__(self, credentials, model, conv_id, target_model, llm_client, email_address, output_dir, config_name) -> None:
+    def __init__(self, credentials, model, conv_id, target_model, llm_client, email_address, output_dir,
+                 config_name) -> None:
         super().__init__(credentials, model, conv_id, target_model, llm_client, email_address, output_dir, config_name)
-        self.model_prompts = {
-            'mixtral': MixtralPrompts,
-            'llama-3': Llama3Prompts,
-        }[model]()
+        self.model_prompts = ModelPrompts()
         self.model = model
 
         self.api_names = None
@@ -182,6 +178,13 @@ class CallbackChatManager(ChatManagerBase):
 
     @property
     def _filtered_model_chat(self):
+        """
+        At some point, the context of the conversation is too long so we apply context filtering. The call to
+        switch_to_example set self.example_num. Once it's set, all messages that are associated with other examples are filtered out.
+        When example_num is None, we use the full context.
+        :return:
+        """
+
         def _include_msg(m):
             tag_values = {
                 'example_num': self.example_num,
@@ -214,19 +217,29 @@ class CallbackChatManager(ChatManagerBase):
                 self._save_chat_state()
 
     def _save_chat_state(self):
+        self.save_config()
+
         self.save_chat_html(self.user_chat, "user_chat.html")
         self.save_chat_html(self.model_chat, "model_chat.html")
         if self.example_num is not None:
             self.save_chat_html(self._filtered_model_chat, f'model_chat_example_{self.example_num}.html')
-
         chat_dir = os.path.join(self.out_dir, "chat")
-        with open(os.path.join(chat_dir, "output_discussion_state.json"), "w") as f:
-            json.dump(self.output_discussion_state, f)
-        with open(os.path.join(chat_dir, "outputs.json"),
-                  "w") as f:
-            json.dump(self.outputs, f)
+
+        curr_stats = {x : getattr(self, x) for x in ["example_num", "model_chat_length", "user_chat_length", "cot_count", "baseline_prompts"]}
         if self.prompts:
-            self.save_prompts_and_config(self.approved_prompts, self.approved_outputs)
+            prompts = [{"prompt": x["prompt"]} for x in self.approved_prompts] #add "prompt" : prompt (the instruction)
+            for p in prompts:
+                p['prompt_with_format'] = TargetModelHandler().format_prompt(p['prompt'], [],
+                                                                self.target_llm_client.parameters['model_id'])
+                p['prompt_with_format_and_few_shots'] = TargetModelHandler().format_prompt(p['prompt'], self.approved_outputs,
+                                                                              self.target_llm_client.parameters[
+                                                                                  'model_id'])
+            curr_stats["prompts"] = prompts
+            curr_stats.update({"outputs": self.outputs, "output_discussion_state": self.output_discussion_state})
+
+        with open(os.path.join(chat_dir, "chat_state.json"), "w") as f:
+            json.dump(curr_stats, f)
+
 
     def _parse_model_response(self, resp, max_attempts=2):
         err = ''
@@ -311,6 +324,8 @@ class CallbackChatManager(ChatManagerBase):
         self._add_msg(chat=self.user_chat, role=ChatRole.ASSISTANT, msg=txt)
         self.add_system_message(f'The original text for Example {example_num} was shown to the user.')
 
+    # we use this callback to define a baseline prompt. Once the task is defined by the user, the LLM constructs the
+    # baseline prompt before discussing the unlabeled examples
     def task_is_defined(self, init_prompt):
         if len(init_prompt) == 0:
             # open side chat with model
@@ -399,8 +414,8 @@ class CallbackChatManager(ChatManagerBase):
                 self.calls_queue.append('self.end_outputs_discussion()')
 
     def end_outputs_discussion(self):
-        # end the conversation after 3 iterations
-        if self.prompt_iteration >= 3:
+        # end the conversation after ITERATIONS_NUM iterations
+        if self.prompt_iteration >= ITERATIONS_NUM:
             self.conversation_end()
             return
 
@@ -460,7 +475,7 @@ class CallbackChatManager(ChatManagerBase):
     def process_examples(self, df, dataset_name):
         self.dataset_name = dataset_name
         self.enable_upload_file = False
-        examples = df['text'].tolist()[:3]
+        examples = df['text'].tolist()[:NUM_OF_EXAMPLES_TO_DISCUSS]
         self.init_chat(examples)
 
     @property
@@ -494,28 +509,23 @@ class CallbackChatManager(ChatManagerBase):
         user_chat_list = user_chat_df.to_dict("records")
         user_chat_list = [{k: v for k, v in record.items() if pd.notna(v)} for record in user_chat_list]
 
-        with open(os.path.join(os.path.join(f"{path}/chat/", "prompts.json")), "r") as f:
-            prompts = [x['prompt'] for x in json.load(f)]
-        with open(os.path.join(f"{path}/chat/", "config.json"), "r") as f:
+        with open(os.path.join(os.path.join(f"{path}/chat/", "chat_state.json")), "r") as f:
+            chat_state = json.load(f)
+        with open(os.path.join(os.path.join(f"{path}/chat/", "config.json")), "r") as f:
             config = json.load(f)
-        with open(os.path.join(f"{path}/chat/", "output_discussion_state.json"), "r") as f:
-            discussion_state = json.load(f)
-        with open(os.path.join(f"{path}/chat/", "outputs.json"), "r") as f:
-            outputs = json.load(f)
-        return model_chat_list, user_chat_list, prompts, discussion_state, outputs, config
+
+        return model_chat_list, user_chat_list, chat_state, config
 
     def load_chat_to_manager(self, path):
-        model_chat, user_chat, prompts, discussion_state, outputs, config = self._read_chat_outputs(path)
+        model_chat, user_chat, chat_state, config = self._read_chat_outputs(path)
         dataset_dirs = dataset_name_to_dir[config['dataset']]
         data_df = pd.read_csv(os.path.join(os.path.dirname(__file__), "..", dataset_dirs["train"]))
         self.process_examples(data_df, config['dataset'])
         self.model_chat = model_chat
-        self.model_chat_length = config["model_chat_length"]
         self.user_chat = user_chat
-        self.user_chat_length = config["user_chat_length"]
-        self.prompts = prompts
-        self.output_discussion_state = discussion_state
-        self.example_num = config["example_num"]
         self.enable_upload_file = False
-        self.outputs = outputs
+        for key in chat_state:
+            setattr(self, key, chat_state[key])
+        self.prompts = [x["prompt"] for x in self.prompts] #we save a dictionary with the formatted prompts as well
+        self.outputs = chat_state["outputs"]
         return self, config['dataset']
