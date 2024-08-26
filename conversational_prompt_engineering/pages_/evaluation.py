@@ -8,7 +8,7 @@ import ast
 from streamlit.components.v1 import html
 
 from enum import Enum
-from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
+from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
 from conversational_prompt_engineering.backend.llm_as_a_judge import LlmAsAJudge
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import create_choose_dataset_component_eval
@@ -42,26 +42,27 @@ if hasattr(st.session_state, "config") and st.session_state["config"].has_option
 
 def build_baseline_prompt():
     baseline_prompt_type = st.session_state["config"].get("Evaluation", "main_baseline_prompt")
-    return build_few_shot_prompt(st.session_state.manager.baseline_prompts[baseline_prompt_type], [],
-                          st.session_state.manager.target_bam_client.parameters['model_id'])
+    return TargetModelHandler().format_prompt(model=st.session_state.manager.target_bam_client.parameters['model_id'],
+                                              prompt=st.session_state.manager.baseline_prompts[baseline_prompt_type],
+                                              texts_and_outputs=[])
+
 
 def build_z_sh_prompt():
-    return build_few_shot_prompt(st.session_state.manager.approved_prompts[-1]['prompt'],
-                                                 [],
-                                                 st.session_state.manager.target_bam_client.parameters['model_id'])
+    return TargetModelHandler().format_prompt(model=st.session_state.manager.target_bam_client.parameters['model_id'],
+                                              prompt=st.session_state.manager.approved_prompts[-1]['prompt'],
+                                              texts_and_outputs=[])
+
 
 def build_f_sh_prompt():
     few_shot_examples = st.session_state.manager.approved_outputs[:st.session_state.manager.validated_example_idx]
+    return TargetModelHandler().format_prompt(model=st.session_state.manager.target_bam_client.parameters['model_id'],
+                                              prompt=st.session_state.manager.approved_prompts[-2 if work_mode == WorkMode.DUMMY_PROMPT else -1]['prompt'],
+                                              texts_and_outputs=few_shot_examples)
 
-    return build_few_shot_prompt(
-        st.session_state.manager.approved_prompts[-2 if work_mode == WorkMode.DUMMY_PROMPT else -1]['prompt'],
-        few_shot_examples,
-        st.session_state.manager.target_bam_client.parameters['model_id'])
 
 prompt_type_metadata = {"baseline": {"title": "Prompt 1 (Baseline prompt)", "build_func": build_baseline_prompt},
                         "zero_shot": {"title": "Prompt 2 (CPE zero shot prompt)", "build_func": build_z_sh_prompt},
                          "few_shot": {"title": "Prompt 3 (CPE few shot prompt)", "build_func": build_f_sh_prompt}}
-
 
 
 DEBUG_LLM_AS_A_JUDGE = False
@@ -161,12 +162,12 @@ def validate_annotation():
             # fill in "worst" annotation in case we only annotated "best"
             if len(prompt_types) == 2:
                 worst_index = 1 - best
-                st.session_state.generated_data[st.session_state.count]["sides"][
+                st.session_state.generated_data[i]["sides"][
                     (dim, "Worst")] = worst_index  # (sides are only 1 and 0)
                 real_prompt_type = \
-                st.session_state.generated_data[st.session_state.count]["mixed_indices_mapping_to_prompt_type"][
+                st.session_state.generated_data[i]["mixed_indices_mapping_to_prompt_type"][
                     worst_index]
-                st.session_state.generated_data[st.session_state.count]['prompts'][(dim, "Worst")] = real_prompt_type
+                st.session_state.generated_data[i]['prompts'][(dim, "Worst")] = real_prompt_type
 
             worst = st.session_state.generated_data[i]["sides"][(dim, "Worst")]
             if best is not None and (best == worst):

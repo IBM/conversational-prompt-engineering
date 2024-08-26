@@ -328,6 +328,12 @@ def init_set_up_page():
                 target_model = 'llama-3'
             else:
                 models = TargetModelHandler().get_models()
+                # make llama-3 the first model
+                default_model = 'llama-3'
+                llama_index = [m['short_name'] for m in models].index(default_model)
+                temp_value = models[0]
+                models[0] = models[llama_index]
+                models[llama_index] = temp_value
                 target_model = st.radio(
                     label="Select the target model. The prompt that you will build will be formatted for this model.",
                     options=[m['short_name'] for m in models],

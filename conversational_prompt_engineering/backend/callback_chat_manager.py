@@ -167,7 +167,7 @@ class CallbackChatManager(ChatManagerBase):
 
     @property
     def approved_outputs(self):
-        return [{'text': t, 'summary': s} for t, s in zip(self.examples, self.outputs) if s is not None]
+        return [{'text': t, 'output': s} for t, s in zip(self.examples, self.outputs) if s is not None]
 
     @property
     def validated_example_idx(self):
@@ -342,8 +342,7 @@ class CallbackChatManager(ChatManagerBase):
         with ThreadPoolExecutor(max_workers=len(self.examples)) as executor:
             for i, example in enumerate(self.examples):
                 prompt_str = TargetModelHandler().format_prompt(model=side_model.parameters['model_id'],
-                                                   prompt=prompt, texts_and_summaries=[] # currently doing zero-shot summarization
-                                                   )
+                                                                prompt=prompt, texts_and_outputs=[])
                 prompt_str = prompt_str.format(text=example)
                 futures[i] = executor.submit(self._generate_output, prompt_str, side_model)
 
@@ -359,7 +358,7 @@ class CallbackChatManager(ChatManagerBase):
                                     example_num=example_num, prompt_iteration=self.prompt_iteration)
             self.output_discussion_state['model_outputs'][i] = output
 
-        #side chat - generated output of new prompt vs. the outputs that were accepted outputs
+        # side chat - generated output of new prompt vs. the outputs that were accepted outputs
         if len(self.prompts) > 1 and prev_discussion_cot is not None:
             tmp_chat = [{'role': ChatRole.SYSTEM, 'content': '\n'.join([
                 self.model_prompts.analyze_new_prompt_task,
@@ -414,8 +413,8 @@ class CallbackChatManager(ChatManagerBase):
         self.prompt_conv_end = True
         self._save_chat_result()
         model_id = self.target_bam_client.parameters['model_id']
-        self.few_shot_prompt = TargetModelHandler().format_prompt(model=model_id, prompt=self.prompts[-1], texts_and_summaries=self.approved_prompts)
-        # self.few_shot_prompt = build_few_shot_prompt(self.prompts[-1], self.approved_outputs, model_id)
+        self.few_shot_prompt = TargetModelHandler().format_prompt(model=model_id, prompt=self.prompts[-1],
+                                                                  texts_and_outputs=self.approved_outputs)
         end = self.model_prompts.conversation_end_instruction.replace('TARGET_MODEL', model_id)
         self.add_system_message(end)
 
