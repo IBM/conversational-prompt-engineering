@@ -1,7 +1,10 @@
-import enum
+# (c) Copyright contributors to the conversational-prompt-engineering project
+
+# LICENSE: Apache License 2.0 (Apache-2.0)
+# http://www.apache.org/licenses/LICENSE-2.0
+
 from enum import Enum
 
-from conversational_prompt_engineering.backend.prompt_building_util import BASELINE_SUMMARIZATION_INSTRUCTION
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 
 
@@ -81,10 +84,3 @@ def create_choose_dataset_component_eval(st):
     if "csv_file_eval" in st.session_state:
         return read_user_csv_file(st.session_state["csv_file_eval"]).text.tolist()[:10]
 
-
-def add_evaluator_input(st):
-    # provide_your_instruction_label = "(Optional) You can override baseline instruction for summarization. "\
-    #                "This instruction will be compared to the prompt you build in this session at the evaluation phase."
-    # user_default_prompt = st.text_input(label=provide_your_instruction_label, value="Summarize this text.", key="user_instruction")
-    st.session_state.manager.baseline_prompts[
-        "user_baseline_prompt"] = BASELINE_SUMMARIZATION_INSTRUCTION  # This is temporary

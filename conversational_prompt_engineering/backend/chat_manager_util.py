@@ -1,3 +1,8 @@
+# (c) Copyright contributors to the conversational-prompt-engineering project
+
+# LICENSE: Apache License 2.0 (Apache-2.0)
+# http://www.apache.org/licenses/LICENSE-2.0
+
 import logging
 import time
 import os
@@ -8,9 +13,6 @@ from genai.schema import ChatRole
 
 from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler, LLAMA_END_OF_MESSAGE, \
     _get_llama_header, LLAMA_START_OF_INPUT
-
-from conversational_prompt_engineering.backend.util.llm_clients.bam_client import BamClient
-from conversational_prompt_engineering.backend.util.llm_clients.watsonx_client import WatsonXClient
 
 
 def extract_delimited_text(txt, delims):

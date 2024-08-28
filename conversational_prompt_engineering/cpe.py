@@ -87,7 +87,6 @@ def callback_cycle():
     with st.chat_message(ChatRole.ASSISTANT):
         st.write(static_welcome_msg)
 
-    add_evaluator_input(st)
     if not "csv_file_train" in st.session_state:
         st.session_state[f"csv_file_train"] = None
     start_type = create_choose_dataset_component_train(st=st, manager=manager)
