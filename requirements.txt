@@ -8,5 +8,6 @@ chardet
 ibm_watsonx_ai==1.0.9
 scipy
 matplotlib
+python-dotenv
 # wikipediaapi # for downloading wiki pages
 # openpyxl # for downloading wiki pages

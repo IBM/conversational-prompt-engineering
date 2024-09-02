@@ -131,9 +131,10 @@ class ModelPrompts:
 
 
 class CallbackChatManager(ChatManagerBase):
-    def __init__(self, credentials, model, conv_id, target_model, llm_client, email_address, output_dir,
+    def __init__(self, model, target_model, llm_client, email_address, output_dir,
                  config_name) -> None:
-        super().__init__(credentials, model, conv_id, target_model, llm_client, email_address, output_dir, config_name)
+        super().__init__(model=model, target_model=target_model, llm_client=llm_client,
+                         email_address=email_address, output_dir=output_dir, config_name=config_name)
         self.model_prompts = ModelPrompts()
         self.model = model
 

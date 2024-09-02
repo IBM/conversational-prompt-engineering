@@ -29,15 +29,15 @@ def extract_delimited_text(txt, delims):
         return txt
 
 
-def create_model_client(credentials, model_name, llm_client):
+def create_model_client(model_name, llm_client):
     with open(os.path.join(os.path.dirname(__file__),"model_params.json"), "r") as f:
         params = json.load(f)
     model_params = {x: y for x, y in params['models'][model_name].items()}
     endpoint = params["endpoints"][llm_client.__name__]
     try:
-        return llm_client(credentials, endpoint, model_params)
-    except:
-        raise ValueError(f'Invalid api: {llm_client.__name__}. Should be either watsonx or bam')
+        return llm_client(endpoint, model_params)
+    except Exception as e:
+        raise ValueError(f'Error generating model client: {e.error_msg}')
 
 
 def format_chat(chat, model_id):
@@ -78,16 +78,13 @@ def format_chat(chat, model_id):
 
 
 class ChatManagerBase:
-    def __init__(self, credentials, model, conv_id, target_model, llm_client, email_address, output_dir, config_name) -> None:
+    def __init__(self, model, target_model, llm_client, email_address, output_dir, config_name) -> None:
         logging.info(f"selected {model}")
-        logging.info(f"conv id: {conv_id}")
         logging.info(f"selected target {target_model}")
-        logging.info(f"credentials from environment variables: {credentials}")
         logging.info(f"user email address: {email_address}")
 
-        self.llm_client = create_model_client(credentials, model, llm_client)
-        self.target_llm_client = create_model_client(credentials, target_model, llm_client)
-        self.conv_id = conv_id
+        self.llm_client = create_model_client(model, llm_client)
+        self.target_llm_client = create_model_client(target_model, llm_client)
         self.dataset_name = None
         self.state = None
         self.timing_report = []

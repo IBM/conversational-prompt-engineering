@@ -1,3 +1,8 @@
+# (c) Copyright contributors to the conversational-prompt-engineering project
+
+# LICENSE: Apache License 2.0 (Apache-2.0)
+# http://www.apache.org/licenses/LICENSE-2.0
+
 import pandas as pd
 
 # dataset_name = 'legal_plain_english'

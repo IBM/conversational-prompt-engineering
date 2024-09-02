@@ -8,7 +8,7 @@ import hashlib
 import logging
 import os
 import sys
-from enum import Enum
+import dotenv
 
 import streamlit as st
 from genai.schema import ChatRole
@@ -19,12 +19,11 @@ from configs.config_utils import load_config
 from conversational_prompt_engineering.backend.callback_chat_manager import CallbackChatManager
 from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler
 from conversational_prompt_engineering.backend.util.llm_clients.llm_clients_loader import get_client_classes
-from conversational_prompt_engineering.backend.util.llm_clients.watsonx_client import WatsonXClient
 from conversational_prompt_engineering.data.dataset_utils import load_dataset_mapping
 
 from conversational_prompt_engineering.util.csv_file_utils import read_user_csv_file
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
-    create_choose_dataset_component_train, add_evaluator_input, StartType
+    create_choose_dataset_component_train,  StartType
 
 version = "callback manager v1.0.7"
 
@@ -32,14 +31,19 @@ st.set_page_config(layout="wide", menu_items={"About": f"CPE version: {version}"
 
 MUST_HAVE_UPLOADED_DATA_TO_START = True
 
+dotenv.load_dotenv()
 
 def reset_chat():
     streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
 
 def set_output_dir():
-    subfolder = st.session_state.email_address.split("@")[0]  # default is self.conv_id
-    out_folder = f'_out/{subfolder}/{datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}'
+    if st.session_state["config"].has_option("General", "output_dir"):
+        output_dir = st.session_state['config'].get('General', 'output_dir')
+    else:
+        subfolder = st.session_state.email_address.split("@")[0]  # default is self.conv_id
+        output_dir = f'_out/{subfolder}/'
+    out_folder = os.path.join(output_dir, {datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")})
     os.makedirs(out_folder, exist_ok=True)
     return out_folder
 
@@ -58,19 +62,14 @@ def callback_cycle():
     #     existing_chat_path = ""
 
     if "manager" not in st.session_state:
-        sha1 = hashlib.sha1()
-        sha1.update("-".join(st.session_state.credentials.values()).encode('utf-8'))
-        st.session_state.conv_id = sha1.hexdigest()[:16]  # deterministic hash of 16 characters
-
         output_dir = set_output_dir()
         file_handler = logging.FileHandler(os.path.join(output_dir, "out.log"))
         logger = logging.getLogger()
         logger.addHandler(file_handler)
 
-        st.session_state.manager = CallbackChatManager(credentials=st.session_state.credentials,
-                                                       model=st.session_state.model,
+        st.session_state.manager = CallbackChatManager(model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
-                                                       conv_id=st.session_state.conv_id, llm_client=st.session_state.llm_client_class,
+                                                       llm_client=st.session_state.llm_client_class,
                                                        email_address=st.session_state.email_address,
                                                        output_dir=output_dir,
                                                        config_name=st.session_state["config_name"])
@@ -155,17 +154,12 @@ def submit_button_clicked(target_model):
     st.session_state.cred_error = ""
     st.session_state.email_error = ""
     creds_are_ok = True
-    creds_from_ui = {}
     for cred in st.session_state.llm_client_class.credentials_params():
         cred_value = get_secret_key(cred, cred)
         if cred_value != "": #value is set
-            creds_from_ui[cred] = cred_value
+            os.environ[cred] = cred_value
         else:
             creds_are_ok = False
-    if creds_are_ok:
-        st.session_state.credentials = creds_from_ui
-    creds_are_ok = True
-
     if creds_are_ok:
         st.session_state.model = 'llama-3'
         st.session_state.target_model = target_model
@@ -197,23 +191,12 @@ instructions_for_user = {
 def load_environment_variables(llm_api_classes):
     if "llm_client_class" not in st.session_state:
         st.session_state.llm_client_class = llm_api_classes[0]
-        st.session_state["credentials"] = {}
-        # do it only once
-        for llm_client_class in llm_api_classes:
-            creds = {}
-            for env_var in llm_client_class.credentials_params():
-                if env_var in os.environ and os.environ[env_var] != "":
-                    creds[env_var] = os.environ[env_var]
-            if len(creds) == llm_client_class.credentials_params(): # all required params are set:
-                st.session_state.credentials = {}
-                st.session_state.llm_client_class = llm_client_class
-                break
 
     if "IBM_EMAIL" in os.environ and verify_email(os.environ["IBM_EMAIL"]):
         st.session_state.email_address = os.environ["IBM_EMAIL"]
 
 
-def set_credentials():
+def set_credentials_in_ui():
     def handle_secret_key(env_var_name, text_area_key, text_area_label):
         is_disabled = False
         val = "" if not hasattr(st.session_state, text_area_key) else getattr(st.session_state, text_area_key)
@@ -229,6 +212,11 @@ def set_credentials():
     if hasattr(st.session_state, "cred_error") and st.session_state.cred_error != "":
         st.error(st.session_state.cred_error)
 
+def verify_credentials():
+    for env_var in st.session_state.llm_client_class.credentials_params():
+        if env_var not in os.environ or os.environ[env_var] == "":
+            return False
+    return True
 
 def init_set_up_page():
     st.title(":blue[IBM Research Conversational Prompt Engineering]")
@@ -241,8 +229,7 @@ def init_set_up_page():
     llm_client_class = get_client_classes(llm_client_names_from_config)
     llm_client_display_name_to_class = {x.display_name() : x for x in llm_client_class}
     load_environment_variables(llm_client_class)
-    credentials_are_set = 'llm_client_class' in st.session_state and 'credentials' in st.session_state \
-                                        and len(st.session_state['credentials']) == len(st.session_state.llm_client_class.credentials_params())
+    credentials_are_set = 'llm_client_class' in st.session_state and verify_credentials()
     email_is_set = hasattr(st.session_state, "email_address")
     OK_to_proceed_to_chat = credentials_are_set and email_is_set
     if OK_to_proceed_to_chat:
@@ -264,7 +251,7 @@ def init_set_up_page():
             llm_client = llm_client_class[0]
         st.session_state.llm_client_class = llm_client
 
-        set_credentials()
+        set_credentials_in_ui()
 
         models = TargetModelHandler().get_models()
         # make llama-3 the first model
@@ -299,8 +286,8 @@ def init_config():
     st.session_state["config_name"] = config_name
     st.session_state["config"] = config
     st.session_state["dataset_name_to_dir"] = load_dataset_mapping(config)
-    if config.has_option("General", "backgroundColor"):
-        st._config._set_option("theme.secondaryBackgroundColor", config.get("General", "backgroundColor"), where_defined=None)
+    if config.has_option("UI", "background_color"):
+        st._config._set_option("theme.secondaryBackgroundColor", config.get("UI", "background_color"), where_defined=None)
 
 
 if __name__ == "__main__":
@@ -310,7 +297,7 @@ if __name__ == "__main__":
         st.rerun()
     show_pages(
         [
-            Page("cpe.py", "Chat", ""),
+            Page("cpe_ui.py", "Chat", ""),
             Page("pages_/faq.py", "FAQ", ""),
             Page("pages_/survey.py", "Survey", ""),
             Page("pages_/evaluation.py", "Evaluate", ""),

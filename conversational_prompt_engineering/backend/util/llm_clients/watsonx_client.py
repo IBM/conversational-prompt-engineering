@@ -1,7 +1,3 @@
-import logging
-import sys
-
-
 from ibm_watsonx_ai import APIClient
 from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
 from ibm_watsonx_ai.foundation_models import ModelInference
@@ -21,12 +17,12 @@ class WatsonXClient(AbstLLMClient):
     def display_name(self):
         return "WatsonX"
 
-    def __init__(self, credentials, api_endpoint, model_params):
+    def __init__(self, api_endpoint, model_params):
         super(WatsonXClient, self).__init__()
         self.parameters = model_params
         self.api_endpoint = api_endpoint
-        self.project_id = credentials["PROJECT_ID"]
-        self.api_key = credentials["WATSONX_APIKEY"]
+        self.project_id = self._get_env_var("PROJECT_ID")
+        self.api_key = self._get_env_var("WATSONX_APIKEY")
 
         credentials = {
             "url": self.api_endpoint,
@@ -54,21 +50,9 @@ class WatsonXClient(AbstLLMClient):
                     api_client=self.client
             )
 
-
-    def do_send_messages(self, conversation, max_new_tokens=None):
-        sys.tracebacklimit = 1000
+    def prompt_llm(self, conversation, max_new_tokens=None):
         model = self._get_model(max_new_tokens)
-        for i in [0,1]:
-            try:
-                res = model.generate_text(prompt=[conversation])
-                texts = [x.strip() for x in res]
-                return texts
-            except Exception as e:
-                if i == 0:
-                    logging.warning(
-                        f"ERROR Got API response exception: {e.response.model_dump_json()}")
-                else:
-                    logging.error("ERROR Got API response exception", e)
-        sys.tracebacklimit = 0
-        raise Exception("There is an error connecting to WatsonX. Either check your API key or try again in a few minutes.")
+        res = model.generate_text(prompt=[conversation])
+        texts = [x.strip() for x in res]
+        return texts
 

@@ -1,3 +1,8 @@
+# (c) Copyright contributors to the conversational-prompt-engineering project
+
+# LICENSE: Apache License 2.0 (Apache-2.0)
+# http://www.apache.org/licenses/LICENSE-2.0
+
 dataset_name_to_dir = {"Movie Reviews" : {"train":
                                             "./data/public/movie reviews/train.csv",
                                           "eval": "./data/public/movie reviews/eval.csv",
