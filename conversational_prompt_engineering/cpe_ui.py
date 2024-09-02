@@ -43,7 +43,7 @@ def set_output_dir():
     else:
         subfolder = st.session_state.email_address.split("@")[0]  # default is self.conv_id
         output_dir = f'_out/{subfolder}/'
-    out_folder = os.path.join(output_dir, {datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")})
+    out_folder = os.path.join(output_dir, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
     os.makedirs(out_folder, exist_ok=True)
     return out_folder
 
