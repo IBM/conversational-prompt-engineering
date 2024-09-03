@@ -41,8 +41,7 @@ def set_output_dir():
     if st.session_state["config"].has_option("General", "output_dir"):
         output_dir = st.session_state['config'].get('General', 'output_dir')
     else:
-        subfolder = st.session_state.email_address.split("@")[0]  # default is self.conv_id
-        output_dir = f'_out/{subfolder}/'
+        output_dir = f'_out/'
     out_folder = os.path.join(output_dir, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
     os.makedirs(out_folder, exist_ok=True)
     return out_folder
@@ -70,7 +69,6 @@ def callback_cycle():
         st.session_state.manager = CallbackChatManager(model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
                                                        llm_client=st.session_state.llm_client_class,
-                                                       email_address=st.session_state.email_address,
                                                        output_dir=output_dir,
                                                        config_name=st.session_state["config_name"])
 
@@ -152,7 +150,6 @@ def submit_button_clicked(target_model):
 
     # verify credentials
     st.session_state.cred_error = ""
-    st.session_state.email_error = ""
     creds_are_ok = True
     for cred in st.session_state.llm_client_class.credentials_params():
         cred_value = get_secret_key(cred, cred)
@@ -165,17 +162,6 @@ def submit_button_clicked(target_model):
         st.session_state.target_model = target_model
     else:
         st.session_state.cred_error = ':heavy_exclamation_mark: Please provide your credentials'
-
-    # verify email:
-    if verify_email(st.session_state.email_address_input):  # check text area
-        st.session_state.email_address = st.session_state.email_address_input
-    else:
-        st.session_state.email_error = ':heavy_exclamation_mark: Please provide your email address'
-
-
-def verify_email(email_address):
-    return "@" in email_address and "ibm" in email_address and email_address.index("@") != 0
-
 
 instructions_for_user = {
     "main_instructions_for_user":
@@ -191,10 +177,6 @@ instructions_for_user = {
 def load_environment_variables(llm_api_classes):
     if "llm_client_class" not in st.session_state:
         st.session_state.llm_client_class = llm_api_classes[0]
-
-    if "IBM_EMAIL" in os.environ and verify_email(os.environ["IBM_EMAIL"]):
-        st.session_state.email_address = os.environ["IBM_EMAIL"]
-
 
 def set_credentials_in_ui():
     def handle_secret_key(env_var_name, text_area_key, text_area_label):
@@ -230,8 +212,7 @@ def init_set_up_page():
     llm_client_display_name_to_class = {x.display_name() : x for x in llm_client_class}
     load_environment_variables(llm_client_class)
     credentials_are_set = 'llm_client_class' in st.session_state and verify_credentials()
-    email_is_set = hasattr(st.session_state, "email_address")
-    OK_to_proceed_to_chat = credentials_are_set and email_is_set
+    OK_to_proceed_to_chat = credentials_are_set
     if OK_to_proceed_to_chat:
         return True
 
@@ -266,9 +247,6 @@ def init_set_up_page():
                     key="target_model_radio",
                     captions=[m['full_name'] for m in models])
 
-        st.text_input(label="Organization email address", key="email_address_input")
-        if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
-            st.error(st.session_state.email_error)
 
     st.button("Submit", on_click=submit_button_clicked, args=[target_model])
     return False

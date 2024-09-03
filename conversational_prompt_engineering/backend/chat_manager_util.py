@@ -78,17 +78,15 @@ def format_chat(chat, model_id):
 
 
 class ChatManagerBase:
-    def __init__(self, model, target_model, llm_client, email_address, output_dir, config_name) -> None:
+    def __init__(self, model, target_model, llm_client, output_dir, config_name) -> None:
         logging.info(f"selected {model}")
         logging.info(f"selected target {target_model}")
-        logging.info(f"user email address: {email_address}")
 
         self.llm_client = create_model_client(model, llm_client)
         self.target_llm_client = create_model_client(target_model, llm_client)
         self.dataset_name = None
         self.state = None
         self.timing_report = []
-        self.email_address = email_address
         self.out_dir = output_dir
         self.config_name = config_name
         logging.info(f"output is saved to {os.path.abspath(self.out_dir)}")
