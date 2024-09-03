@@ -225,16 +225,15 @@ class CallbackChatManager(ChatManagerBase):
         if self.example_num is not None:
             self.save_chat_html(self._filtered_model_chat, f'model_chat_example_{self.example_num}.html')
         chat_dir = os.path.join(self.out_dir, "chat")
-
+        model_id = self.target_llm_client.parameters['model_id']
         curr_stats = {x : getattr(self, x) for x in ["example_num", "model_chat_length", "user_chat_length", "cot_count", "baseline_prompts"]}
         if self.prompts:
             prompts = [{"prompt": x["prompt"]} for x in self.approved_prompts] #add "prompt" : prompt (the instruction)
             for p in prompts:
-                p['prompt_with_format'] = TargetModelHandler().format_prompt(p['prompt'], [],
-                                                                self.target_llm_client.parameters['model_id'])
-                p['prompt_with_format_and_few_shots'] = TargetModelHandler().format_prompt(p['prompt'], self.approved_outputs,
-                                                                              self.target_llm_client.parameters[
-                                                                                  'model_id'])
+                p['prompt_with_format'] = TargetModelHandler().format_prompt(model=model_id,
+                                                                prompt=p['prompt'], texts_and_outputs=[])
+                p['prompt_with_format_and_few_shots'] = TargetModelHandler().format_prompt(model=model_id, prompt=p['prompt'],
+                                                                texts_and_outputs=self.approved_outputs)
             curr_stats["prompts"] = prompts
             curr_stats.update({"outputs": self.outputs, "output_discussion_state": self.output_discussion_state})
 
