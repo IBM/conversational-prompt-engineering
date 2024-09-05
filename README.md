@@ -72,7 +72,7 @@ The configurable parameters of the system are specified config files that are pl
 ### Using the system 
 
 To use and evaluate CPE, proceed according to the following steps: 
-1. When you run the system, you need to select your `target model`, which is the model you'll be creating prompts for. Currently we support 3 target models:   `llama-3-70b-instruct`, `mixtral-8x7b-instruct-v01` and 
+1. When you run the system, you need to select your `target model`, which is the model you'll be creating prompts for. Currently we support 3 target models:   `llama-3-70b-instruct`, `mixtral-8x7b-instruct-v01` and `granite-13b-chat-v2`.
 2. Start by generating a cvs file with 3 examples of texts most related to your daily work, and upload it. Your csv file should contain a single column titled "text". Each row is a single input example to CPE. If your input examples should contain multiple sentences/paragraphs, make sure they fit a single row. Alternatively, you can select a dataset from our catalog.
 3. Follow the chat with the system. These are the phases of the chat:
 
