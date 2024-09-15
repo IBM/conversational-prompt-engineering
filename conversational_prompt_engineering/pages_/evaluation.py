@@ -11,7 +11,6 @@ from streamlit.components.v1 import html
 from enum import Enum
 from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler
 from conversational_prompt_engineering.backend.evaluation_core import Evaluation
-from conversational_prompt_engineering.backend.prompt_building_util import build_few_shot_prompt
 from conversational_prompt_engineering.util.upload_csv_or_choose_dataset_component import \
     create_choose_dataset_component_eval
 
