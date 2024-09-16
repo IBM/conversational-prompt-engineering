@@ -61,7 +61,7 @@ The system requires Python 3.10 (other versions are currently not supported and 
 
 IBM offers a free WastonX trial. To get a free acount with 200 USD cloud credit for free you should:
 1. Go to [Create an IBM Cloud account](https://cloud.ibm.com/registration) page . 
-2. Create you account in a 4 steps process: 
+2. Create your account in a 4 steps process: 
    1. Enter your email and choose a password. 
    2. Verify your email by entering the verification code that was sent to your email (look for an email with the subject "Your IBM Cloud verification code")
    3. Fill in the text boxes with your personal information. You can enter "None" in the company name text box, if this is irrelevant you use).
@@ -69,7 +69,7 @@ IBM offers a free WastonX trial. To get a free acount with 200 USD cloud credit 
 3. Verify your identity by card - You must provide credit card info to get your 200 usd credit. Don't worry - IBM will not bill you as long as you don't exceed you free credit.
 <img src="./images/verify_identity.png" alt="drawing" width="400" style="display: block; margin: auto;"/>
 after you enter your billing address and credit card details, click on "Create Account".
-4. You account is ready! Now you are ready to obtain your credentials.
+4. Your account is ready! Now you are ready to obtain your credentials.
 5. In your [cloud account dashboard] (https://cloud.ibm.com/), go to "manage" (on the top panel) and choose Access(IAM). On the left panel, choose "API keys" and click on "create"
 <img src="./images/create_api_key.png" alt="drawing" width="400" style="display: block; margin: auto;"/>
 6. Once the key is created, you can copy it and/or download it. You won't be able to access this key again once you finish this key generation session, so make sure you have it backed up for further usage.
