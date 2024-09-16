@@ -75,7 +75,7 @@ after you enter your billing address and credit card details, click on "Create A
 <img src="./images/create_api_key.png" alt="drawing" width="500" />
 
 6. Once the key is created, you can copy it and/or download it. You won't be able to access this key again once you finish this key generation session, so make sure you have it backed up for further usage.
-7. After you have your API key, proceed to the opening a project in [IBM Watsonx](dataplatform.cloud.ibm.com). Begin with login in and selecting a region (we suggest you select the dallas region (us-south). If you select another region, please update the endpoint in [the models config file](https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/backend/model_params.json) accordingly.). 
+7. After you have your API key, proceed to the opening a project in [IBM Watsonx](http://dataplatform.cloud.ibm.com). Begin with login in and selecting a region (we suggest you select the dallas region (us-south). If you select another region, please update the endpoint in [the models config file](https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/backend/model_params.json) accordingly.). 
 8. On the top right menu, select projects->view all projects 
 <img src="./images/projects.png" alt="drawing" width="300" style="display: block; margin: auto;"/>
 
