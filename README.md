@@ -67,16 +67,18 @@ IBM offers a free WastonX trial. To get a free acount with 200 USD cloud credit 
    3. Fill in the text boxes with your personal information. You can enter "None" in the company name text box, if this is irrelevant you use).
    4. Accept the terms and conditions of the registration form. 
 3. Verify your identity by card - You must provide credit card info to get your 200 usd credit. Don't worry - IBM will not bill you as long as you don't exceed you free credit.
-<img src="./images/verify_identity.png" alt="drawing" width="400" style="display: block; margin: auto;"/>
-after you enter your billing address and credit card details, click on "Create Account".
+after you enter your billing address and credit card details, click on "Create Account". 
+<img src="./images/verify_identity.png" alt="drawing" width="600" style="display: block; margin: auto;"/>
+
 4. Your account is ready! Now you are ready to obtain your credentials.
-5. In your [cloud account dashboard] (https://cloud.ibm.com/), go to "manage" (on the top panel) and choose Access(IAM). On the left panel, choose "API keys" and click on "create"
-<img src="./images/create_api_key.png" alt="drawing" width="400" style="display: block; margin: auto;"/>
+5. In your [cloud account dashboard](https://cloud.ibm.com/), go to "manage" (on the top panel) and choose Access(IAM). On the left panel, choose "API keys" and click on "create". 
+<img src="./images/create_api_key.png" alt="drawing" width="500" />
+
 6. Once the key is created, you can copy it and/or download it. You won't be able to access this key again once you finish this key generation session, so make sure you have it backed up for further usage.
-<img src="./images/copy_api_key.png" alt="drawing" width="300" style="display: block; margin: auto;"/>
-7. After you have your API key, proceed to the opening a project in [IBM Watsonx](dataplatform.cloud.ibm.com). Begin with login in and selecting a region (we suggest you select the dallas region (us-south). If you select another region, please update the endpoint in [the models config file] (https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/backend/model_params.json) accordingly.). 
+7. After you have your API key, proceed to the opening a project in [IBM Watsonx](dataplatform.cloud.ibm.com). Begin with login in and selecting a region (we suggest you select the dallas region (us-south). If you select another region, please update the endpoint in [the models config file](https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/backend/model_params.json) accordingly.). 
 8. On the top right menu, select projects->view all projects 
-<img src="./images/projects.png" alt="drawing" width="200" style="display: block; margin: auto;"/>
+<img src="./images/projects.png" alt="drawing" width="300" style="display: block; margin: auto;"/>
+
 9. Click on "Create a new project" and fill in the necessary information (You only need to provide the project name).
 10. Copy your project id that is located in the "Manage" panel.
 <img src="./images/copy_project_id.png" alt="drawing" width="300" style="display: block; margin: auto;"/>
@@ -137,4 +139,5 @@ Please cite:
       url={https://arxiv.org/abs/2408.04560}, 
 }
 ```
+
 
