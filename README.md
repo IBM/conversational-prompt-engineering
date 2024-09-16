@@ -57,7 +57,7 @@ The system requires Python 3.10 (other versions are currently not supported and 
 6. By default all project files are written to `<home_directory>/_out`, to change the directory, please update the property OUTPUT_DIR in your config file.
 
 
-### Free Access To Watsonx
+## Free Access To Watsonx
 
 IBM offers a free WastonX trial. To get a free acount with 200 USD cloud credit for free you should:
 1. Go to [Create an IBM Cloud account](https://cloud.ibm.com/registration) page . 
@@ -82,7 +82,7 @@ after you enter your billing address and credit card details, click on "Create A
 <img src="./images/copy_project_id.png" alt="drawing" width="300" style="display: block; margin: auto;"/>
 11. You are all set!
 
-### Using the system 
+## Using the system 
 
 To use and evaluate CPE, proceed according to the following steps: 
 1. When you run the system, you need to select your `target model`, which is the model you'll be creating prompts for. Currently we support 3 target models:   `llama-3-70b-instruct`, `mixtral-8x7b-instruct-v01` and `granite-13b-chat-v2`.
@@ -100,7 +100,7 @@ To use and evaluate CPE, proceed according to the following steps:
       4. Once you reach the required minimum of annotated examples, you can submit your annotation and get the analysis per each prompt.
 
 
-### System configuration
+## System configuration
 
 CPE will be available at http://localhost:PORT, where PORT is the port assigned by Streamlit (usually between 8501 to 8505). If you wish to specify the port you want to use, run `streamlit run cpe_ui.py --server.port YOUR_PORT` where YOUR_PORT is the port you wish to use.
 
