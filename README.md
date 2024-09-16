@@ -42,10 +42,12 @@ The system requires Python 3.10 (other versions are currently not supported and 
     conda activate cpe-env
     # Install requirements
     pip install -r requirements.txt
+    # Go to conversational_prompt_engineering folder
+    cd conversational_prompt_engineering
     ```
 
 
-4. Start the CPE: run `streamlit run cpe_ui.py`. CPE will be available at http://localhost:PORT, where PORT is the port assigned by Streamlit (usually between 8501 to 8505). If you wish to specify the port you want to use, run `streamlit run cpe_ui.py --port YOUR_PORT` where YOUR_PORT is the port you wish to use.
+4. Start the CPE: run `streamlit run cpe_ui.py`. CPE will be available at http://localhost:PORT, where PORT is the port assigned by Streamlit (usually between 8501 to 8505). If you wish to specify the port you want to use, run `streamlit run cpe_ui.py --server.port YOUR_PORT` where YOUR_PORT is the port you wish to use.
 5. Different system properties can be set up in configurations files. The default configuration used by the system is `main` (config file is [here](https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/configs/main_config.conf). If you want to use different configuration, run `streamlit run cpe_ui.py CONFIG`, where CONFIG is the name of the desired configuration. Make sure you add a file named CONFIG_config.conf to `conversational_prompt_engineering/configs`
 6. Currently, the system only supports WatsonX LLM api. If you wish to intergrate another LLM api, you can easily do so by adding a new class that inherits from [AbstLLMClient](https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/backend/util/llm_clients/abst_llm_client.py#L17). To use WatsonX, you need to provide you api key and project id in one of three ways:
    1. Enter your credentials in the UI.
