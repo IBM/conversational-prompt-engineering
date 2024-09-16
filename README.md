@@ -19,7 +19,7 @@ This is an overview of the system:
 
 [System configuration](#system-configuration)
 
-[Free access to WatsonX](#free-access-to-watsonx)
+[Free access to Watsonx](#free-access-to-watsonx)
 
 [Using the system](#using-the-system)
 
@@ -47,33 +47,17 @@ The system requires Python 3.10 (other versions are currently not supported and 
     ```
 
 
-4. Start the CPE: run `streamlit run cpe_ui.py`. CPE will be available at http://localhost:PORT, where PORT is the port assigned by Streamlit (usually between 8501 to 8505). If you wish to specify the port you want to use, run `streamlit run cpe_ui.py --server.port YOUR_PORT` where YOUR_PORT is the port you wish to use.
-5. Different system properties can be set up in configurations files. The default configuration used by the system is `main` (config file is [here](https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/configs/main_config.conf). If you want to use different configuration, run `streamlit run cpe_ui.py CONFIG`, where CONFIG is the name of the desired configuration. Make sure you add a file named CONFIG_config.conf to `conversational_prompt_engineering/configs`
-6. Currently, the system only supports WatsonX LLM api. If you wish to intergrate another LLM api, you can easily do so by adding a new class that inherits from [AbstLLMClient](https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/backend/util/llm_clients/abst_llm_client.py#L17). To use WatsonX, you need to provide you api key and project id in one of three ways:
+4. Start the CPE: run `streamlit run cpe_ui.py`. 
+
+5. Currently, the system only supports Watsonx LLM api. If you wish to intergrate another LLM api, you can easily do so by adding a new class that inherits from [AbstLLMClient](https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/backend/util/llm_clients/abst_llm_client.py#L17). To use Watsonx, you need to provide you api key and project id in one of three ways ([see below on how to get access to Watsonx](https://github.com/IBM/conversational-prompt-engineering?tab=readme-ov-file#free-access-to-watsonx)):
    1. Enter your credentials in the UI.
    2. Add environment arguments to you execution environment. The aguments are: WATSONX_APIKEY and PROJECT_ID.
    3. Add .env file with your credentials (see the file .env.example for example)
 
-7. By default all project files are written to `<home_directory>/_out`, to change the directory, please update the property OUTPUT_DIR in your config file.
-
-   
-
-### System configuration
-The configurable parameters of the system are specified config files that are placed in `conversational_prompt_engineering/configs`.
-
-**Configurable parameters:**
-
-| Section    | Parameter                  | Description                                                                                                                                                                                                                                                                          |
-|------------|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| General    | `llm_api`                  | The list of supported LLM clients. Currently we only support [WatsonXClient](https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/backend/util/llm_clients/watsonx_client.py#L9)                                                               |
-| General    | `output_dir`               | The output repository where all output files and logs are stored.                                                                                                                                                                                                                    |
-| UI         | `background_color`         | The background color of the UI.                                                                                                                                                                                                                                                      |
-| UI         | `ds_script`                | The scripts the load the list of supported dataset in the datasets droplist in the UI.                                                                                                                                                                                               |                                                                                                                                                                                                                                                             |
-| Evaluation | `prompt_types`             | The list of prompts that are compared in the evaluation tab. The options are: `baseline`, `zero_shot` and `few_shot`. `baseline` is generated by the LLM after the user briefly explain their task. `zero_shot` and `few_shot` prompts are generated at the end of the conversation. |
-| Evaluation | `min_examples_to_evaluate` | In the evaluation tab, the minimal number of examples the user needs to annotate before submitting threir annotations.                                                                                                                                                               |
+6. By default all project files are written to `<home_directory>/_out`, to change the directory, please update the property OUTPUT_DIR in your config file.
 
 
-### Free Access To WatsonX
+### Free Access To Watsonx
 
 IBM offers a free WastonX trial. To get a free acount with 200 USD cloud credit for free you should:
 1. Go to [Create an IBM Cloud account](https://cloud.ibm.com/registration) page . 
@@ -90,7 +74,7 @@ after you enter your billing address and credit card details, click on "Create A
 <img src="./images/create_api_key.png" alt="drawing" width="400" style="display: block; margin: auto;"/>
 6. Once the key is created, you can copy it and/or download it. You won't be able to access this key again once you finish this key generation session, so make sure you have it backed up for further usage.
 <img src="./images/copy_api_key.png" alt="drawing" width="300" style="display: block; margin: auto;"/>
-7. After you have your API key, proceed to the opening a project in [IBM WatsonX](dataplatform.cloud.ibm.com). Begin with login in and selecting a region (we suggest you select the dallas region (us-south). If you select another region, please update the endpoint in [the models config file] (https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/backend/model_params.json) accordingly.). 
+7. After you have your API key, proceed to the opening a project in [IBM Watsonx](dataplatform.cloud.ibm.com). Begin with login in and selecting a region (we suggest you select the dallas region (us-south). If you select another region, please update the endpoint in [the models config file] (https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/backend/model_params.json) accordingly.). 
 8. On the top right menu, select projects->view all projects 
 <img src="./images/projects.png" alt="drawing" width="200" style="display: block; margin: auto;"/>
 9. Click on "Create a new project" and fill in the necessary information (You only need to provide the project name).
@@ -114,6 +98,29 @@ To use and evaluate CPE, proceed according to the following steps:
       2. When you click on the "generate outputs" button, the system generates all the output for the compared prompts over the examples in your csv file. 
       3. You will be presented, for each example, the generated output. These outputs are shuffled and source prompt is not disclosed to you. For each example, select the best and worst output.
       4. Once you reach the required minimum of annotated examples, you can submit your annotation and get the analysis per each prompt.
+
+
+### System configuration
+
+CPE will be available at http://localhost:PORT, where PORT is the port assigned by Streamlit (usually between 8501 to 8505). If you wish to specify the port you want to use, run `streamlit run cpe_ui.py --server.port YOUR_PORT` where YOUR_PORT is the port you wish to use.
+
+Different system properties can be set up in configurations files. The default configuration used by the system is `main` (config file is [here](https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/configs/main_config.conf)). If you want to use different configuration, run `streamlit run cpe_ui.py CONFIG`, where CONFIG is the name of the desired configuration. Make sure you add a file named CONFIG_config.conf to `conversational_prompt_engineering/configs`
+
+The configurable parameters of the system are specified config files that are placed in `conversational_prompt_engineering/configs`.
+
+**Configurable parameters:**
+
+| Section    | Parameter                  | Description                                                                                                                                                                                                                                                                          |
+|------------|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| General    | `llm_api`                  | The list of supported LLM clients. Currently we only support [WatsonXClient](https://github.com/IBM/conversational-prompt-engineering/blob/main/conversational_prompt_engineering/backend/util/llm_clients/watsonx_client.py#L9)                                                               |
+| General    | `output_dir`               | The output repository where all output files and logs are stored.                                                                                                                                                                                                                    |
+| UI         | `background_color`         | The background color of the UI.                                                                                                                                                                                                                                                      |
+| UI         | `ds_script`                | The scripts the load the list of supported dataset in the datasets droplist in the UI.                                                                                                                                                                                               |                                                                                                                                                                                                                                                             |
+| Evaluation | `prompt_types`             | The list of prompts that are compared in the evaluation tab. The options are: `baseline`, `zero_shot` and `few_shot`. `baseline` is generated by the LLM after the user briefly explain their task. `zero_shot` and `few_shot` prompts are generated at the end of the conversation. |
+| Evaluation | `min_examples_to_evaluate` | In the evaluation tab, the minimal number of examples the user needs to annotate before submitting threir annotations.                                                                                                                                                               |
+
+
+
 
 ## Reference
 Liat Ein-Dor, Orith Toledo-Ronen, Artem Spector, Shai Gretz, Lena Dankin, Alon Halfon, Yoav Katz, Noam Slonim. [Conversational Prompt Engineering](https://arxiv.org/abs/2408.04560).
