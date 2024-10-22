@@ -206,15 +206,16 @@ def init_set_up_page():
     st.title(":blue[IBM Research Conversational Prompt Engineering]")
     # default setting
     st.session_state.model = 'llama-3'
-    if not hasattr(st.session_state, "target_model"):
-        st.session_state.target_model = 'llama-3'
+    #if not hasattr(st.session_state, "target_model"):
+    #    st.session_state.target_model = 'llama-3'
 
     llm_client_names_from_config = eval(st.session_state["config"].get("General", "llm_api"))
     llm_client_class = get_client_classes(llm_client_names_from_config)
     llm_client_display_name_to_class = {x.display_name() : x for x in llm_client_class}
     load_environment_variables(llm_client_class)
     credentials_are_set = 'llm_client_class' in st.session_state and verify_credentials()
-    OK_to_proceed_to_chat = credentials_are_set
+    target_model_is_set = hasattr(st.session_state, "target_model")
+    OK_to_proceed_to_chat = credentials_are_set and target_model_is_set
     if OK_to_proceed_to_chat:
         return True
 
