@@ -150,6 +150,8 @@ def callback_cycle():
 
 
 def submit_button_clicked(target_model):
+    st.session_state.target_model_error = ""
+    st.session_state.cred_error = ""
     def get_secret_key(env_var_name, text_area_key):
         return getattr(st.session_state, text_area_key) if env_var_name not in os.environ else os.environ[env_var_name]
 
@@ -162,9 +164,14 @@ def submit_button_clicked(target_model):
             os.environ[cred] = cred_value
         else:
             creds_are_ok = False
+
     if creds_are_ok:
         st.session_state.model = 'llama-3'
-        st.session_state.target_model = target_model
+        if target_model:
+            st.session_state.target_model = target_model
+        else:
+            st.session_state.target_model_error = ':heavy_exclamation_mark: Please select the target model'
+
     else:
         st.session_state.cred_error = ':heavy_exclamation_mark: Please provide your credentials'
 
@@ -266,7 +273,10 @@ def init_set_up_page():
                     label="Select the target model. The prompt that you will build will be formatted for this model.",
                     options=[m['short_name'] for m in models],
                     key="target_model_radio",
-                    captions=[m['full_name'] for m in models])
+                    captions=[m['full_name'] for m in models], index=None)
+        if hasattr(st.session_state, "target_model_error") and st.session_state.target_model_error != "":
+            st.error(st.session_state.target_model_error)
+
         if email_is_required:
             st.text_input(label="Organization email address", key="email_address_input")
             if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
