@@ -24,7 +24,7 @@
       }
     },
     "ibm/granite-13b-chat-v2": {
-      "short_name": "granite",
+      "short_name": "granite-13b",
       "prompt_formats": {
         "start_of_input": "<|system|>\n",
         "system_message": "You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with \"Hello! I am Granite Chat, created by IBM. How can I help you today?\". Please do not say anything else and do not start a conversation.\n",
@@ -35,6 +35,20 @@
         "end_of_input": "<|assistant|>",
         "input_prefix": "Text:\n",
         "output_prefix": "Desired output:\n"
+      }
+    },
+
+      "ibm/granite-3-8b-instruct": {
+      "short_name": "granite-3-8b (Experimental)",
+      "prompt_formats": {
+        "prompt_prefix": "<|start_of_role|>user<|end_of_role|>\n",
+        "few_shot_examples_prefix": "<|start_of_role|>user<|end_of_role|>",
+        "test_example_prefix": "<|start_of_role|>user<|end_of_role|>\nNow, please generate a desired output to the following text.\n",
+        "test_example_placeholder": "{text}",
+        "end_of_message": "<|end_of_text|>\n",
+        "start_of_input": "",
+        "input_prefix": "Text: ",
+        "output_prefix": "<|start_of_role|>assistant<|start_of_role|>Here is a desired output of the text:"
       }
     }
 }

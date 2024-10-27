@@ -44,6 +44,9 @@ def set_output_dir():
         output_dir = st.session_state['config'].get('General', 'output_dir')
     else:
         output_dir = f'_out/'
+    if "email_address" in st.session_state:
+        subfolder = st.session_state.email_address.split("@")[0]
+        output_dir = os.path.join(output_dir, subfolder)
     out_folder = os.path.join(output_dir, datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
     os.makedirs(out_folder, exist_ok=True)
     return out_folder
@@ -165,6 +168,15 @@ def submit_button_clicked(target_model):
     else:
         st.session_state.cred_error = ':heavy_exclamation_mark: Please provide your credentials'
 
+    # verify email, if needed:
+    email_is_required = st.session_state["config"].getboolean("UI", "email_is_required", fallback=False)
+    if email_is_required:
+        if verify_email(st.session_state.email_address_input):  # check text area
+            st.session_state.email_address = st.session_state.email_address_input
+        else:
+            st.session_state.email_error = ':heavy_exclamation_mark: Please provide your email address'
+
+
 instructions_for_user = {
     "main_instructions_for_user":
         "Welcome to IBM Research Conversational Prompt Engineering (CPE) service.\n" \
@@ -202,6 +214,10 @@ def verify_credentials():
             return False
     return True
 
+def verify_email(email_address):
+    return "@" in email_address and email_address.index("@") != 0
+
+
 def init_set_up_page():
     st.title(":blue[IBM Research Conversational Prompt Engineering]")
     # default setting
@@ -215,7 +231,10 @@ def init_set_up_page():
     load_environment_variables(llm_client_class)
     credentials_are_set = 'llm_client_class' in st.session_state and verify_credentials()
     target_model_is_set = hasattr(st.session_state, "target_model")
-    OK_to_proceed_to_chat = credentials_are_set and target_model_is_set
+    email_is_required = st.session_state["config"].getboolean("UI", "email_is_required", fallback=False)
+    email_is_set = not email_is_required or hasattr(st.session_state, "email_address")
+    print(f'1 - {datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}')
+    OK_to_proceed_to_chat = credentials_are_set and target_model_is_set and email_is_set
     if OK_to_proceed_to_chat:
         return True
 
@@ -223,7 +242,6 @@ def init_set_up_page():
         st.empty()
         # with entry_page.form("my_form"):
         st.write(instructions_for_user.get("main_instructions_for_user"))
-
         if len(llm_client_class) > 1:
             llm_client_name = st.radio(
                 label="Please select your llm client",
@@ -249,7 +267,10 @@ def init_set_up_page():
                     options=[m['short_name'] for m in models],
                     key="target_model_radio",
                     captions=[m['full_name'] for m in models])
-
+        if email_is_required:
+            st.text_input(label="Organization email address", key="email_address_input")
+            if hasattr(st.session_state, "email_error") and st.session_state.email_error != "":
+                st.error(st.session_state.email_error)
 
     st.button("Submit", on_click=submit_button_clicked, args=[target_model])
     return False

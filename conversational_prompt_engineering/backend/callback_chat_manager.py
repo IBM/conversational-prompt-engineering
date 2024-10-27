@@ -360,15 +360,15 @@ class CallbackChatManager(ChatManagerBase):
         self.model_chat[-1]['prompt_iteration'] = None
         self.model_chat[-1]['example_num'] = None
 
-        side_model = self.llm_client if 'granite' in self.target_llm_client.parameters['model_id'] \
-            else self.target_llm_client
+        #side_model = self.llm_client if 'granite' in self.target_llm_client.parameters['model_id'] \
+        #    else self.target_llm_client
         futures = {}
         with ThreadPoolExecutor(max_workers=len(self.examples)) as executor:
             for i, example in enumerate(self.examples):
-                prompt_str = TargetModelHandler().format_prompt(model=side_model.parameters['model_id'],
+                prompt_str = TargetModelHandler().format_prompt(model=self.target_llm_client.parameters['model_id'],
                                                                 prompt=prompt, texts_and_outputs=[])
                 prompt_str = prompt_str.format(text=example)
-                futures[i] = executor.submit(self._generate_output, prompt_str, side_model)
+                futures[i] = executor.submit(self._generate_output, prompt_str, self.target_llm_client)
 
         self.output_discussion_state = {
             'model_outputs': [None] * len(self.examples),
