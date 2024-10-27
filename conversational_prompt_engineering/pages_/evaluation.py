@@ -116,7 +116,8 @@ def save_results(output_suffix):
     df.to_csv(os.path.join(out_path, f"eval_results{output_suffix}.csv"))
     with open(os.path.join(out_path, f"metadata.json"), "w") as f:
         prompts_dict = {}
-        res_dict = {"dataset": st.session_state["selected_dataset"], "prompts" : prompts_dict}
+        res_dict = {"dataset": st.session_state[
+            "selected_dataset"] if "selected_dataset" in st.session_state else "user", "prompts": prompts_dict}
         for i in range(len(st.session_state.eval_prompts)):
             prompts_dict[f"prompt_{i}"] = {"prompt_text": st.session_state.eval_prompts[i], "prompt_type": prompt_types[i]}
         json.dump(res_dict, f)
