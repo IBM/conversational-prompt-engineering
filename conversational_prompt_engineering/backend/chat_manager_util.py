@@ -9,10 +9,9 @@ import os
 import json
 
 import pandas as pd
-from genai.schema import ChatRole
 
-from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler, LLAMA_END_OF_MESSAGE, \
-    _get_llama_header, LLAMA_START_OF_INPUT
+from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler
+from genai.schema import ChatRole
 
 
 def extract_delimited_text(txt, delims):
@@ -33,57 +32,24 @@ def create_model_client(model_name, llm_client):
     with open(os.path.join(os.path.dirname(__file__),"model_params.json"), "r") as f:
         params = json.load(f)
     model_params = {x: y for x, y in params['models'][model_name].items()}
-    endpoint = params["endpoints"][llm_client.__name__]
+    model_params["model_short_name"] = model_name
+    model_params["llm_client"] = llm_client.__name__
+    endpoint = params["endpoints"].get(llm_client.__name__) #end point is not always needed, so we allow it to be None
     try:
         return llm_client(endpoint, model_params)
     except Exception as e:
         raise ValueError(f'Error generating model client: {e.error_msg}')
 
 
-def format_chat(chat, model_id):
-    if any([name in model_id for name in ['mixtral', 'prometheus']]):
-        bos_token = '<s>'
-        eos_token = '</s>'
-        chat_for_mixtral = []
-        prev_role = None
-        for m in chat:
-            if m["role"] == prev_role:
-                chat_for_mixtral[-1]["content"] += "\n" + m["content"]
-            else:
-                chat_for_mixtral.append(m)
-            prev_role = m["role"]
-
-        for m in chat_for_mixtral:
-            if m["role"] == 'user':
-                m["content"] = 'user: ' + m["content"]
-            elif m["role"] == 'system':
-                m["role"] = 'user'
-                m["content"] = 'system: ' + m["content"]
-
-        prompt = bos_token
-        for m in chat_for_mixtral:
-            if m['role'] == 'user':
-                prompt += '[INST] ' + m['content'] + ' [/INST] '
-            else:
-                prompt += m['content'] + eos_token + ' '
-        return prompt
-    elif 'llama' in model_id:
-        msg_str = LLAMA_START_OF_INPUT
-        for m in chat:
-            msg_str += _get_llama_header(m['role']) + "\n\n" + m['content'] + LLAMA_END_OF_MESSAGE
-        msg_str += _get_llama_header(ChatRole.ASSISTANT)
-        return msg_str
-    else:
-        raise ValueError(f"model {model_id} not supported")
 
 
 class ChatManagerBase:
-    def __init__(self, model, target_model, llm_client, output_dir, config_name) -> None:
+    def __init__(self, model, target_model, chat_llm_client, target_model_llm_client, output_dir, config_name) -> None:
         logging.info(f"selected {model}")
         logging.info(f"selected target {target_model}")
 
-        self.llm_client = create_model_client(model, llm_client)
-        self.target_llm_client = create_model_client(target_model, llm_client)
+        self.llm_client = create_model_client(model, chat_llm_client)
+        self.target_llm_client = create_model_client(target_model, target_model_llm_client)
         self.dataset_name = None
         self.state = None
         self.timing_report = []
@@ -96,10 +62,10 @@ class ChatManagerBase:
         chat_dir = os.path.join(self.out_dir, "chat")
         os.makedirs(chat_dir, exist_ok=True)
         with open(os.path.join(chat_dir, "config.json"), "w") as f:
-            json.dump({"model": self.llm_client.parameters['model_id'],
+            json.dump({"model_params": self.llm_client.parameters,
                        "dataset": self.dataset_name,
                        "config_name": self.config_name,
-                       "target_model": self.target_llm_client.parameters['model_id']}, f)
+                       "target_model_params": self.target_llm_client.parameters}, f)
 
     def save_chat_html(self, chat, file_name):
         def _format(msg):
@@ -142,16 +108,16 @@ class ChatManagerBase:
         self.timing_report.append(timing_dict)
         return generated_texts
 
-    def _generate_output(self, prompt_str, client=None):
+    def _generate_output(self, prompt, client=None):
         if client is None:
             client = self.target_llm_client
-        generated_texts = self._generate_output_and_log_stats(prompt_str, client=client)
+        generated_texts = self._generate_output_and_log_stats(prompt, client=client)
         agent_response = generated_texts[0]
         logging.info(f"got response from model: {agent_response}")
         return agent_response.strip()
 
     def _get_assistant_response(self, chat, max_new_tokens=None):
-        conversation = format_chat(chat, self.llm_client.parameters['model_id'])
+        conversation = self.llm_client.format_chat(chat)
         generated_texts = self._generate_output_and_log_stats(conversation, client=self.llm_client,
                                                               max_new_tokens=max_new_tokens)
         agent_response = ''

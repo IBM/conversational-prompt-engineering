@@ -5,9 +5,13 @@ ibm-generative-ai==2.3.0
 tqdm
 python-calamine
 chardet
-ibm_watsonx_ai==1.0.9
+ibm_watsonx_ai==1.1.16
 scipy
 matplotlib
 python-dotenv
+# huggingface_hub # for HF integration
+# transformers # for HF integration
+# torch # for HF integration
+
 # wikipediaapi # for downloading wiki pages
 # openpyxl # for downloading wiki pages

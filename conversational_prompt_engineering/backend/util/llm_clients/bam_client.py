@@ -1,3 +1,8 @@
+# (c) Copyright contributors to the conversational-prompt-engineering project
+
+# LICENSE: Apache License 2.0 (Apache-2.0)
+# http://www.apache.org/licenses/LICENSE-2.0
+
 import logging
 from urllib.parse import quote_plus
 import sys
@@ -11,15 +16,16 @@ from genai.schema import (
     DecodingMethod,
     TextGenerationParameters, )
 
-from conversational_prompt_engineering.backend.util.llm_clients.abst_llm_client import AbstLLMClient, HumanRole
+from conversational_prompt_engineering.backend.util.llm_clients.abst_llm_client import HumanRole
+from conversational_prompt_engineering.backend.util.llm_clients.abst_watson_client import AbstWatsonClient
 
 
 
 
 
-class BamClient(AbstLLMClient):
+class BamClient(AbstWatsonClient):
     def __init__(self, api_endpoint, model_params):
-        super(BamClient, self).__init__()
+        super(BamClient, self).__init__(model_id=model_params['watsonx_model_id'])
         self.client = Client(credentials=Credentials(api_key=self._get_env_var('BAM_APIKEY'), api_endpoint=api_endpoint))
         self.parameters = model_params
 
@@ -39,7 +45,7 @@ class BamClient(AbstLLMClient):
             repetition_penalty=self.parameters['repetition_penalty'] if 'repetition_penalty' in self.parameters else 1
             )
         response = self.client.text.generation.create(
-            model_id=self.parameters['model_id'],
+            model_id=self.model_id,
             inputs=[conversation],
             parameters=parameters,
         )

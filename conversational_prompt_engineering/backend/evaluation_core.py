@@ -26,8 +26,8 @@ parser.add_argument('--out_dir', help='path for saving evaluation files')
 
 class Evaluation:
 
-    def __init__(self, bam_client):
-        self.bam_client = bam_client
+    def __init__(self, llm_client):
+        self.llm_client = llm_client
 
     def get_prompts_to_evaluate(self, prompts):
         if len(prompts) > 2:
@@ -43,7 +43,7 @@ class Evaluation:
             test_df = test_df.sample(n=NUM_EXAMPLES_TO_LABEL, random_state=0)
         texts = test_df['text'].tolist()
 
-        generated_data_mixed, generated_data_ordered = self.summarize(prompts, [f"{i}" for i in range(len(prompts))], texts)
+        generated_data_mixed, generated_data_ordered = self.generate_output(prompts, [f"{i}" for i in range(len(prompts))], texts)
 
         os.makedirs(out_dir, exist_ok=True)
 
@@ -57,11 +57,12 @@ class Evaluation:
 
         logging.info(f"evaluation files saved to {out_dir}")
 
-    def summarize(self, prompts, prompt_types, row_data_for_text):
+    def generate_output(self, prompts, prompt_types, row_data_for_text):
+        logging.info(f"Generating output for a text of {len(row_data_for_text['text'].split())} words")
         prompts_responses = []
         for _, prompt in enumerate(tqdm(prompts)):
-            prompt_str = prompt.format(text=row_data_for_text["text"])
-            resp = self.bam_client.send_messages(prompt_str)[0]
+            prompt_with_text = prompt.update_text(text=row_data_for_text["text"])
+            resp = self.llm_client.send_messages(prompt_with_text)[0]
             prompts_responses.append(resp[0].replace("\n", " \n"))
         mixed_indices = list(range(len(prompts)))
         random.shuffle(mixed_indices)
@@ -80,7 +81,7 @@ class Evaluation:
             for i, t in enumerate(texts):
                 row_data_ordered = {"text": t, "index": i}
                 generated_ordered.append(row_data_ordered)
-                futures[i] = executor.submit(self.summarize, prompts, prompt_types, generated_ordered[i])
+                futures[i] = executor.submit(self.generate_output, prompts, prompt_types, generated_ordered[i])
 
         for i, f in futures.items():
             output = f.result()

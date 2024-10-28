@@ -1,3 +1,8 @@
+# (c) Copyright contributors to the conversational-prompt-engineering project
+
+# LICENSE: Apache License 2.0 (Apache-2.0)
+# http://www.apache.org/licenses/LICENSE-2.0
+
 import abc
 import sys
 import logging
@@ -17,9 +22,10 @@ class HumanRole(Enum):
 class AbstLLMClient:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self):
+    def __init__(self, model_id):
         self.sent_words_count = 0
         self.received_words_count = 0
+        self.model_id=model_id
 
     def _get_env_var(self, var_name):
         val = os.environ.get(var_name)
@@ -32,6 +38,14 @@ class AbstLLMClient:
         """
         return the list of replies.
         """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def format_chat(self, conversation):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def format_prompt_for_target_model(self, prompt, texts_and_outputs, text):
         raise NotImplementedError()
 
     def do_send_message(self, conversation, max_new_tokens):
@@ -52,7 +66,10 @@ class AbstLLMClient:
     def send_messages(self, conversation, max_new_tokens=None):
         def log_message(text, member_to_update):
             if isinstance(text, list):
-                cnt = sum(len(x) for x in text)
+                if isinstance(text[0], dict) and "content" in text[0]:
+                    cnt = sum(1+len(x["content"]) for x in text)
+                else:
+                    cnt = sum(len(x) for x in text)
             else:
                 cnt = len(text.split())
             setattr(self, member_to_update, getattr(self, member_to_update) + cnt)

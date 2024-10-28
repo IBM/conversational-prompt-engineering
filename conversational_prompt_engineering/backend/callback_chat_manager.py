@@ -11,7 +11,6 @@ import pandas as pd
 from genai.schema import ChatRole
 
 from conversational_prompt_engineering.backend.chat_manager_util import ChatManagerBase
-from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler
 from conversational_prompt_engineering.data.main_dataset_name_to_dir import dataset_name_to_dir
 
 
@@ -131,9 +130,9 @@ class ModelPrompts:
 
 
 class CallbackChatManager(ChatManagerBase):
-    def __init__(self, model, target_model, llm_client,  output_dir,
+    def __init__(self, model, target_model, chat_llm_client, target_model_llm_client, output_dir,
                  config_name) -> None:
-        super().__init__(model=model, target_model=target_model, llm_client=llm_client,
+        super().__init__(model=model, target_model=target_model, chat_llm_client=chat_llm_client, target_model_llm_client=target_model_llm_client,
                           output_dir=output_dir, config_name=config_name)
         self.model_prompts = ModelPrompts()
         self.model = model
@@ -225,15 +224,14 @@ class CallbackChatManager(ChatManagerBase):
         if self.example_num is not None:
             self.save_chat_html(self._filtered_model_chat, f'model_chat_example_{self.example_num}.html')
         chat_dir = os.path.join(self.out_dir, "chat")
-        model_id = self.target_llm_client.parameters['model_id']
         curr_stats = {x : getattr(self, x) for x in ["example_num", "model_chat_length", "user_chat_length", "cot_count", "baseline_prompts"]}
         if self.prompts:
             prompts = [{"prompt": x["prompt"]} for x in self.approved_prompts] #add "prompt" : prompt (the instruction)
             for p in prompts:
-                p['prompt_with_format'] = TargetModelHandler().format_prompt(model=model_id,
-                                                                prompt=p['prompt'], texts_and_outputs=[])
-                p['prompt_with_format_and_few_shots'] = TargetModelHandler().format_prompt(model=model_id, prompt=p['prompt'],
-                                                                texts_and_outputs=self.approved_outputs)
+                p['prompt_with_format'] = self.target_llm_client.format_prompt_for_target_model(
+                                                                prompt=p['prompt'], texts_and_outputs=[]).prompt
+                p['prompt_with_format_and_few_shots'] = self.target_llm_client.format_prompt_for_target_model(prompt=p['prompt'],
+                                                                texts_and_outputs=self.approved_outputs).prompt
             curr_stats["prompts"] = prompts
             curr_stats.update({"outputs": self.outputs, "output_discussion_state": self.output_discussion_state})
 
@@ -360,15 +358,12 @@ class CallbackChatManager(ChatManagerBase):
         self.model_chat[-1]['prompt_iteration'] = None
         self.model_chat[-1]['example_num'] = None
 
-        #side_model = self.llm_client if 'granite' in self.target_llm_client.parameters['model_id'] \
-        #    else self.target_llm_client
         futures = {}
         with ThreadPoolExecutor(max_workers=len(self.examples)) as executor:
             for i, example in enumerate(self.examples):
-                prompt_str = TargetModelHandler().format_prompt(model=self.target_llm_client.parameters['model_id'],
-                                                                prompt=prompt, texts_and_outputs=[])
-                prompt_str = prompt_str.format(text=example)
-                futures[i] = executor.submit(self._generate_output, prompt_str, self.target_llm_client)
+                formatted_prompt = self.target_llm_client.format_prompt_for_target_model(prompt=prompt, texts_and_outputs=[])
+                formatted_prompt = formatted_prompt.update_text(text=example)
+                futures[i] = executor.submit(self._generate_output, formatted_prompt, side_model)
 
         self.output_discussion_state = {
             'model_outputs': [None] * len(self.examples),
@@ -437,13 +432,13 @@ class CallbackChatManager(ChatManagerBase):
         self.prompt_conv_end = True
         self._save_chat_result()
 
-        model_id = self.target_llm_client.parameters['model_id']
-        self.few_shot_prompt = TargetModelHandler().format_prompt(model=model_id, prompt=self.prompts[-1],
+        target_model_short_name = self.target_llm_client.parameters['model_short_name']
+        self.few_shot_prompt = self.target_llm_client.format_prompt_for_target_model(prompt=self.prompts[-1],
                                                                   texts_and_outputs=self.approved_outputs)
-        self.zero_shot_prompt = TargetModelHandler().format_prompt(model=model_id, prompt=self.prompts[-1],
+        self.zero_shot_prompt = self.target_llm_client.format_prompt_for_target_model(prompt=self.prompts[-1],
                                                                   texts_and_outputs=[])
 
-        end = self.model_prompts.conversation_end_instruction.replace('TARGET_MODEL', model_id)
+        end = self.model_prompts.conversation_end_instruction.replace('TARGET_MODEL', target_model_short_name)
         self.add_system_message(end)
 
     def set_instructions(self, task_instruction, api_instruction, function2description):
@@ -488,7 +483,7 @@ class CallbackChatManager(ChatManagerBase):
             'accepted_outputs': self.outputs,
             'prompts': self.prompts,
             'baseline_prompts': self.baseline_prompts,
-            'target_model': self.target_llm_client.parameters['model_id'],
+            'target_model': self.target_llm_client.parameters['model_short_name'],
             'dataset_name': self.dataset_name,
             'sent_words_count': self.llm_client.sent_words_count,
             'received_words_count': self.llm_client.received_words_count,

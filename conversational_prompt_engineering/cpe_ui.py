@@ -9,6 +9,8 @@ import logging
 import os
 import sys
 import dotenv
+import json
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 
@@ -73,7 +75,8 @@ def callback_cycle():
 
         st.session_state.manager = CallbackChatManager(model=st.session_state.model,
                                                        target_model=st.session_state.target_model,
-                                                       llm_client=st.session_state.llm_client_class,
+                                                       chat_llm_client=st.session_state.chat_llm_client_class,
+                                                       target_model_llm_client=st.session_state.target_model_llm_client_class,
                                                        output_dir=output_dir,
                                                        config_name=st.session_state["config_name"])
 
@@ -135,7 +138,7 @@ def callback_cycle():
     if manager.zero_shot_prompt is not None:
         btn = st.download_button(
             label="Download zero shot prompt",
-            data=manager.zero_shot_prompt,
+            data=manager.zero_shot_prompt.get_display_format(),
             file_name='zero_shot_prompt.txt',
             mime="text"
         )
@@ -143,7 +146,7 @@ def callback_cycle():
     if manager.few_shot_prompt is not None:
         btn = st.download_button(
             label="Download few shot prompt",
-            data=manager.few_shot_prompt,
+            data=manager.few_shot_prompt.get_display_format(),
             file_name='few_shot_prompt.txt',
             mime="text"
         )
@@ -158,7 +161,7 @@ def submit_button_clicked(target_model):
     # verify credentials
     st.session_state.cred_error = ""
     creds_are_ok = True
-    for cred in st.session_state.llm_client_class.credentials_params():
+    for cred in get_creds_for_llm_clients():
         cred_value = get_secret_key(cred, cred)
         if cred_value != "": #value is set
             os.environ[cred] = cred_value
@@ -195,9 +198,10 @@ instructions_for_user = {
 }
 
 
-def load_environment_variables(llm_api_classes):
-    if "llm_client_class" not in st.session_state:
-        st.session_state.llm_client_class = llm_api_classes[0]
+def load_environment_variables(chat_llm_api_class, target_model_llm_client_class):
+    if "chat_llm_client_class" not in st.session_state:
+        st.session_state.chat_llm_client_class = chat_llm_api_class
+        st.session_state.target_model_llm_client_class = target_model_llm_client_class
 
 def set_credentials_in_ui():
     def handle_secret_key(env_var_name, text_area_key, text_area_label):
@@ -208,15 +212,23 @@ def set_credentials_in_ui():
             is_disabled = True
         st.text_input(label=text_area_label, key=text_area_key, disabled=is_disabled, value=val)
 
-    for cred_key, cred_label in st.session_state.llm_client_class.credentials_params().items():
+    for cred_key, cred_label in get_creds_for_llm_clients().items():
         handle_secret_key(env_var_name=cred_key, text_area_key=cred_key,
                           text_area_label=cred_label)
 
     if hasattr(st.session_state, "cred_error") and st.session_state.cred_error != "":
         st.error(st.session_state.cred_error)
 
+def get_creds_for_llm_clients():
+    all_creds = dict()
+    all_creds.update(st.session_state.chat_llm_client_class.credentials_params())
+    all_creds.update(st.session_state.target_model_llm_client_class.credentials_params())
+    return all_creds
+
+
+
 def verify_credentials():
-    for env_var in st.session_state.llm_client_class.credentials_params():
+    for env_var in get_creds_for_llm_clients():
         if env_var not in os.environ or os.environ[env_var] == "":
             return False
     return True
@@ -232,15 +244,19 @@ def init_set_up_page():
     #if not hasattr(st.session_state, "target_model"):
     #    st.session_state.target_model = 'llama-3'
 
-    llm_client_names_from_config = eval(st.session_state["config"].get("General", "llm_api"))
-    llm_client_class = get_client_classes(llm_client_names_from_config)
-    llm_client_display_name_to_class = {x.display_name() : x for x in llm_client_class}
-    load_environment_variables(llm_client_class)
-    credentials_are_set = 'llm_client_class' in st.session_state and verify_credentials()
+    llm_client_names_from_config = st.session_state["config"].get("General", "chat_llm_api")
+    chat_llm_client_class = get_client_classes(llm_client_names_from_config)
+
+    target_model_llm_client_names_from_config = st.session_state["config"].get("General", "target_model_llm_api")
+    target_model_llm_client_class = get_client_classes(target_model_llm_client_names_from_config)
+
+    llm_client_display_name_to_class = {chat_llm_client_class.display_name() : chat_llm_client_class}
+    load_environment_variables(chat_llm_client_class, target_model_llm_client_class)
+    credentials_are_set = 'chat_llm_client_class' in st.session_state and verify_credentials()
     target_model_is_set = hasattr(st.session_state, "target_model")
     email_is_required = st.session_state["config"].getboolean("UI", "email_is_required", fallback=False)
     email_is_set = not email_is_required or hasattr(st.session_state, "email_address")
-    print(f'1 - {datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S")}')
+
     OK_to_proceed_to_chat = credentials_are_set and target_model_is_set and email_is_set
     if OK_to_proceed_to_chat:
         return True
@@ -249,16 +265,19 @@ def init_set_up_page():
         st.empty()
         # with entry_page.form("my_form"):
         st.write(instructions_for_user.get("main_instructions_for_user"))
-        if len(llm_client_class) > 1:
+
+        if False: #len(llm_client_class) > 1:
             llm_client_name = st.radio(
                 label="Please select your llm client",
                 label_visibility='hidden',
-                options=[x.display_name() for x in llm_client_class],
+                options=[x.display_name() for x in chat_llm_client_class],
                 horizontal=True, key=f"llm_client_radio")
             llm_client = llm_client_display_name_to_class[llm_client_name]
         else:
-            llm_client = llm_client_class[0]
-        st.session_state.llm_client_class = llm_client
+            chat_llm_client = chat_llm_client_class
+            target_model_client = target_model_llm_client_class
+        st.session_state.chat_llm_client_class = chat_llm_client
+        st.session_state.target_model_llm_client_class = target_model_client
 
         set_credentials_in_ui()
 
@@ -273,7 +292,8 @@ def init_set_up_page():
                     label="Select the target model. The prompt that you will build will be formatted for this model.",
                     options=[m['short_name'] for m in models],
                     key="target_model_radio",
-                    captions=[m['full_name'] for m in models], index=None)
+                    captions=[m['watsonx_name'] for m in models])
+        #TODO lena: change this watsonx_name to the appropriate name
         if hasattr(st.session_state, "target_model_error") and st.session_state.target_model_error != "":
             st.error(st.session_state.target_model_error)
 
@@ -310,8 +330,8 @@ if __name__ == "__main__":
     show_pages(
         [
             Page("cpe_ui.py", "Chat", ""),
-            Page("pages_/faq.py", "FAQ", ""),
-            Page("pages_/survey.py", "Survey", ""),
+            #Page("pages_/faq.py", "FAQ", ""),
+            #Page("pages_/survey.py", "Survey", ""),
             Page("pages_/evaluation.py", "Evaluate", ""),
         ]
     )

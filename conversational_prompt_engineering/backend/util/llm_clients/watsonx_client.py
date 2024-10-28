@@ -1,12 +1,17 @@
+# (c) Copyright contributors to the conversational-prompt-engineering project
+
+# LICENSE: Apache License 2.0 (Apache-2.0)
+# http://www.apache.org/licenses/LICENSE-2.0
+
 from ibm_watsonx_ai import APIClient
 from ibm_watsonx_ai.metanames import GenTextParamsMetaNames as GenParams
 from ibm_watsonx_ai.foundation_models import ModelInference
 
 from conversational_prompt_engineering.backend.util.llm_clients.abst_llm_client import AbstLLMClient
+from conversational_prompt_engineering.backend.util.llm_clients.abst_watson_client import AbstWatsonClient
 
 
-
-class WatsonXClient(AbstLLMClient):
+class WatsonXClient(AbstWatsonClient):
 
     @classmethod
     def credentials_params(cls):
@@ -18,7 +23,7 @@ class WatsonXClient(AbstLLMClient):
         return "WatsonX"
 
     def __init__(self, api_endpoint, model_params):
-        super(WatsonXClient, self).__init__()
+        super(WatsonXClient, self).__init__(model_id=model_params['watsonx_model_id'])
         self.parameters = model_params
         self.api_endpoint = api_endpoint
         self.project_id = self._get_env_var("PROJECT_ID")
@@ -38,7 +43,6 @@ class WatsonXClient(AbstLLMClient):
                     GenParams.TRUNCATE_INPUT_TOKENS: self.parameters['max_total_tokens'],
                     GenParams.REPETITION_PENALTY : self.parameters['repetition_penalty'] if 'repetition_penalty' in self.parameters else 1
                 }
-        self.model_id =  self.parameters['model_id']
 
     def _get_model(self, max_new_tokens=None):
         params = {x: y for x, y in self.generate_params.items()}

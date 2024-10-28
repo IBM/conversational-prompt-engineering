@@ -26,14 +26,18 @@ class TargetModelHandler:
 
     def get_models(self):
         model_names = self.data.keys()
-        model_short_names_and_full_names = [{"full_name": key, "short_name": self.data[key]['short_name']} for key in
+        model_short_names_and_full_names = [{"watsonx_name": self.data[key].get('watsonx_name'), "short_name": key} for key in
                                             model_names]
         return model_short_names_and_full_names
 
-    def format_prompt(self, model, prompt, texts_and_outputs):
-        if 'prompt_formats' not in self.data[model]:
-            raise Exception(f"prompt format is not defined for model {model}")
-        model_vars = self.data[model]['prompt_formats']
+    def get_model_vars(self, model_short_name):
+        if 'prompt_formats' not in self.data[model_short_name]:
+            raise Exception(f"prompt format is not defined for model {model_short_name}")
+        model_vars = self.data[model_short_name]['prompt_formats']
+        return model_vars
+
+    def format_prompt(self, model_short_name, prompt, texts_and_outputs):
+        model_vars = self.get_model_vars(model_short_name)
         prompt = self.build_instruction(model_vars, prompt)
         if len(texts_and_outputs) > 0:
             if len(texts_and_outputs) > 1:  # we already have at least two approved summary examples
@@ -46,6 +50,7 @@ class TargetModelHandler:
                 text = item['text']
                 output = item['output']
                 prompt += self.build_icl_example(model_vars, output, text)
+            prompt += model_vars.get('test_example_header', '')
             prompt += model_vars.get('test_example_prefix', '')
         prompt += self.build_test_example(model_vars)
         return prompt
@@ -53,11 +58,11 @@ class TargetModelHandler:
     def build_test_example(self, model_vars):
         return f"{model_vars.get('input_prefix', '')}" + model_vars.get('test_example_placeholder',
                                                                         '') + f"{model_vars.get('end_of_message', '')}" \
-               + f"{model_vars.get('output_prefix', '')}{model_vars.get('end_of_input', '')}"
+               + f"{model_vars.get('output_header', '')}{model_vars.get('output_prefix', '')}{model_vars.get('end_of_input', '')}"
 
     def build_icl_example(self, model_vars, output, text):
         return f"\n\n{model_vars.get('input_prefix', '')}{model_vars.get('test_example_placeholder', '').format(text=text)}{model_vars.get('end_of_message', '')}" \
-               f"{model_vars.get('output_prefix', '')}{output}{model_vars.get('end_of_message', '')}"
+               f"{model_vars.get('output_header', '')}{model_vars.get('output_prefix', '')}{output}{model_vars.get('end_of_message', '')}"
 
     def build_instruction(self, model_vars, prompt):
         return ''.join([model_vars.get('start_of_input', ''), model_vars.get('system_message', ''),
