@@ -38,7 +38,12 @@ def create_model_client(model_name, llm_client):
     try:
         return llm_client(endpoint, model_params)
     except Exception as e:
-        raise ValueError(f'Error generating model client: {e.error_msg}')
+        message = ""
+        if hasattr(e, "error_msg"):
+            message = e.error_msg
+        if hasattr(e, 'args'):
+            message = e.args[0]
+        raise ValueError(f'Error generating model client: {message}')
 
 
 

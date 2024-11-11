@@ -5,10 +5,12 @@
 
 import configparser
 import os
-
+import pathlib
 
 def load_config(config_name):
-    config_file_name = os.path.join("configs", f"{config_name}_config.conf")
+    script_path = pathlib.Path(__file__).parent.resolve()
+
+    config_file_name = os.path.join(script_path, f"{config_name}_config.conf")
     config = configparser.ConfigParser()
     try:
         config.read(config_file_name)

@@ -363,7 +363,7 @@ class CallbackChatManager(ChatManagerBase):
             for i, example in enumerate(self.examples):
                 formatted_prompt = self.target_llm_client.format_prompt_for_target_model(prompt=prompt, texts_and_outputs=[])
                 formatted_prompt = formatted_prompt.update_text(text=example)
-                futures[i] = executor.submit(self._generate_output, formatted_prompt, side_model)
+                futures[i] = executor.submit(self._generate_output, formatted_prompt, self.target_llm_client)
 
         self.output_discussion_state = {
             'model_outputs': [None] * len(self.examples),
@@ -496,7 +496,7 @@ class CallbackChatManager(ChatManagerBase):
                 pass
 
     @classmethod
-    def _read_chat_outputs(self, path):
+    def _read_chat_outputs(cls, path):
         model_chat_df = pd.read_csv(os.path.join(f"{path}/chat/", "model_chat.csv"))
         model_chat_list = model_chat_df.to_dict("records")
         model_chat_list = [{k: v for k, v in record.items() if pd.notna(v)} for record in model_chat_list]
@@ -524,3 +524,21 @@ class CallbackChatManager(ChatManagerBase):
         self.prompts = [x["prompt"] for x in self.prompts] #we save a dictionary with the formatted prompts as well
         self.outputs = chat_state["outputs"]
         return self, config['dataset']
+
+    @classmethod
+    def static_load_chat(cls, path, output_dir):
+        from conversational_prompt_engineering.configs.config_utils import load_config
+        from conversational_prompt_engineering.backend.util.llm_clients.llm_clients_loader import get_client_classes
+
+        model_chat, user_chat, chat_state, session_config = CallbackChatManager._read_chat_outputs(path)
+        chat_llm_client_class = get_client_classes(session_config["model_params"]["llm_client"])
+        target_model_llm_client_class = get_client_classes(session_config["target_model_params"]["llm_client"])
+
+        manager = CallbackChatManager(model=session_config["model_params"]["model_short_name"],
+                                      target_model=session_config["target_model_params"]["model_short_name"],
+                                      chat_llm_client=chat_llm_client_class,
+                                      target_model_llm_client=target_model_llm_client_class,
+                                      output_dir=output_dir,
+                                      config_name=session_config["config_name"])
+        manager, _ = manager.load_chat_to_manager(path)
+        return manager, session_config

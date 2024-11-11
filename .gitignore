@@ -4,6 +4,7 @@ conversational_prompt_engineering/_out/
 # Project only
 conversational_prompt_engineering/_out*
 
+**/.env
 
 
 # Byte-compiled / optimized / DLL files

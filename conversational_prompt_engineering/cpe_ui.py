@@ -19,7 +19,7 @@ from genai.schema import ChatRole
 from st_pages import Page, show_pages
 from streamlit_js_eval import streamlit_js_eval
 
-from configs.config_utils import load_config
+from conversational_prompt_engineering.configs.config_utils import load_config
 from conversational_prompt_engineering.backend.callback_chat_manager import CallbackChatManager
 from conversational_prompt_engineering.backend.prompt_building_util import TargetModelHandler
 from conversational_prompt_engineering.backend.util.llm_clients.llm_clients_loader import get_client_classes
@@ -96,7 +96,8 @@ def callback_cycle():
         st.session_state[f"csv_file_train"] = None
     start_type = create_choose_dataset_component_train(st=st, manager=manager)
     if start_type == StartType.Uploaded:
-        manager.add_user_message_only_to_user_chat("Selected data")
+        dataset_str = st.session_state["selected_dataset"] if "selected_dataset" in st.session_state else "manually uploaded"
+        manager.add_user_message_only_to_user_chat(f"Selected data: {dataset_str}")
 
     static_upload_data_msg = "To begin, please select a dataset from our datasets catalog above."
     with st.chat_message(ChatRole.ASSISTANT):
@@ -292,7 +293,7 @@ def init_set_up_page():
                     label="Select the target model. The prompt that you will build will be formatted for this model.",
                     options=[m['short_name'] for m in models],
                     key="target_model_radio",
-                    captions=[m['watsonx_name'] for m in models])
+                    captions=[m['watsonx_name'] for m in models], index=None)
         #TODO lena: change this watsonx_name to the appropriate name
         if hasattr(st.session_state, "target_model_error") and st.session_state.target_model_error != "":
             st.error(st.session_state.target_model_error)
