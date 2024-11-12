@@ -85,9 +85,10 @@ after you enter your billing address and credit card details, click on "Create A
 <img src="./images/projects.png" alt="drawing" width="300" style="display: block; margin: auto;"/>
 
 9. Click on "Create a new project" and fill in the necessary information (You only need to provide the project name).
-10. Copy your project id that is located in the "Manage" panel.
+10. In the "Manage" tab, select "Services & Integrations" (left panel) and check add the service "Watson Machine Learning-ol"
+11. Still in the "Manage" tab, select "General" (left panel) and Copy your project.
 <img src="./images/copy_project_id.png" alt="drawing" width="300" style="display: block; margin: auto;"/>
-11. You are all set!
+12. You are all set!
 </details>
 
 ## Using the system 
