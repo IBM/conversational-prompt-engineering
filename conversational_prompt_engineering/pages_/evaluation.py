@@ -134,7 +134,7 @@ def validate_annotation():
     for i in range(len(st.session_state.generated_data)):
         for dim in dimensions:
             best = st.session_state.generated_data[i]["sides"].get((dim, "Best"))
-            worst = st.session_state.generated_data[i]["sides"].get((dim, "Worst"))
+            # worst = st.session_state.generated_data[i]["sides"].get((dim, "Worst"))
             # fill in "worst" annotation in case we only annotated "best"
             if len(prompt_types) == 2:
                 if best is not None:
@@ -146,13 +146,14 @@ def validate_annotation():
                         worst_index]
                     st.session_state.generated_data[i]['prompts'][(dim, "Worst")] = real_prompt_type
 
-            worst = st.session_state.generated_data[i]["sides"][(dim, "Worst")]
-            if best is not None and (best == worst):
-                suffix = f"in respect to {dim}"
-                if len(dimensions) == 1:
-                    suffix = ""
-                st.error(f':heavy_exclamation_mark: Illegal annotation for text {i+1}: you cannot select the same output as best and worst {suffix}')
-                is_valid = False
+            if best is not None:
+                worst = st.session_state.generated_data[i]["sides"][(dim, "Worst")]
+                if best == worst:
+                    suffix = f"in respect to {dim}"
+                    if len(dimensions) == 1:
+                        suffix = ""
+                    st.error(f':heavy_exclamation_mark: Illegal annotation for text {i+1}: you cannot select the same output as best and worst {suffix}')
+                    is_valid = False
     return is_valid
 
 def add_text_area(text, height):
