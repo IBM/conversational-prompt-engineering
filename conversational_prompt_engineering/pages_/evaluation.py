@@ -136,14 +136,15 @@ def validate_annotation():
             best = st.session_state.generated_data[i]["sides"].get((dim, "Best"))
             worst = st.session_state.generated_data[i]["sides"].get((dim, "Worst"))
             # fill in "worst" annotation in case we only annotated "best"
-            if best is not None and (len(prompt_types) == 2):
-                worst_index = 1 - best
-                st.session_state.generated_data[i]["sides"][
-                    (dim, "Worst")] = worst_index  # (sides are only 1 and 0)
-                real_prompt_type = \
-                st.session_state.generated_data[i]["mixed_indices_mapping_to_prompt_type"][
-                    worst_index]
-                st.session_state.generated_data[i]['prompts'][(dim, "Worst")] = real_prompt_type
+            if len(prompt_types) == 2:
+                if best is not None:
+                    worst_index = 1 - best
+                    st.session_state.generated_data[i]["sides"][
+                        (dim, "Worst")] = worst_index  # (sides are only 1 and 0)
+                    real_prompt_type = \
+                    st.session_state.generated_data[i]["mixed_indices_mapping_to_prompt_type"][
+                        worst_index]
+                    st.session_state.generated_data[i]['prompts'][(dim, "Worst")] = real_prompt_type
 
             worst = st.session_state.generated_data[i]["sides"][(dim, "Worst")]
             if best is not None and (best == worst):
